@@ -51,7 +51,7 @@ function PythonLevelPage({ level }: { level: Numbered<PythonLevel> }) {
     if (!code.current.trim()) return
     setOutput({ kind: 'running', label: busyLabel('Running') })
     try {
-      const result = await runPythonLab(level.setup, code.current)
+      const result = await runPythonLab(level.setup, code.current, level.files)
       setOutput({ kind: 'run', result })
     } catch (err) {
       setOutput({ kind: 'failed', message: err instanceof Error ? err.message : String(err) })
@@ -69,7 +69,9 @@ function PythonLevelPage({ level }: { level: Numbered<PythonLevel> }) {
         expect: level.expect,
         checkOutput: level.checkOutput,
         variants: level.variants,
-        calls: level.calls
+        calls: level.calls,
+        files: level.files,
+        ignoreRowOrder: level.ignoreRowOrder
       })
       const attempt = session.recordAttempt(result.pass)
       setOutput({ kind: 'check', result, attempt })
@@ -108,6 +110,15 @@ function PythonLevelPage({ level }: { level: Numbered<PythonLevel> }) {
             <SectionTitle>Your task</SectionTitle>
             <Markdown text={level.task} />
           </section>
+          {Object.entries(level.files).map(([name, text]) => (
+            <section key={name}>
+              <SectionTitle>File: {name}</SectionTitle>
+              <p className="mb-2 text-xs text-slate-500">This file is in the same folder as your code.</p>
+              <pre className="max-h-56 overflow-auto rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-[13px] text-slate-800">
+                {text}
+              </pre>
+            </section>
+          ))}
           {level.setup && (
             <section>
               <SectionTitle>Given data</SectionTitle>
@@ -172,8 +183,10 @@ function OutputBlock({ title, text, muted = false }: { title: string; text: stri
   )
 }
 
-function Variables({ variables }: { variables: PyVariable[] }) {
-  if (variables.length === 0) return null
+function Variables({ variables: all }: { variables: PyVariable[] }) {
+  if (all.length === 0) return null
+  // The learner's own variables first; given data (often a big table) after them.
+  const variables = [...all.filter((v) => !v.given), ...all.filter((v) => v.given)]
   return (
     <section>
       <SectionTitle>Variables</SectionTitle>
@@ -196,8 +209,15 @@ function Variables({ variables }: { variables: PyVariable[] }) {
                 <td className="px-3 py-1.5 font-mono whitespace-nowrap">{v.type}</td>
                 <td className="px-3 py-1.5 font-mono break-all">
                   {v.table ? (
-                    <div className="h-64 rounded border border-slate-200">
-                      <ResultTable columns={v.table.columns} rows={v.table.rows} />
+                    <div className="flex max-h-64 max-w-full flex-col rounded border border-slate-200">
+                      <ResultTable
+                        columns={v.table.columns}
+                        rows={v.table.rows}
+                        totalRows={v.table.totalRows}
+                        rowNumbers={false}
+                        indexColumn
+                        nullLabel="NaN"
+                      />
                     </div>
                   ) : (
                     v.value

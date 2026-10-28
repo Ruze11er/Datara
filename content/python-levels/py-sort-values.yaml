@@ -1,0 +1,53 @@
+id: py-sort-values
+title: Top 3 Most Expensive
+concepts: [sort_values, head, ascending]
+lesson: py-pandas-filter-sort
+task: |
+  Create `top3`: the **3 most expensive** products, with the most expensive first.
+setup: |
+  import pandas as pd
+
+  products = pd.DataFrame({
+      "product_id": [1, 2, 3, 4, 5, 6, 7, 8],
+      "name": ["Wireless Mouse", "USB-C Cable", "Desk Lamp", "Notebook",
+               "Water Bottle", "Headphones", "Yoga Mat", "Coffee Mug"],
+      "category": ["Electronics", "Electronics", "Home", "Office",
+                   "Sports", "Electronics", "Sports", "Home"],
+      "price": [24.99, 9.5, 32.0, 4.75, 15.0, 79.95, 28.5, 12.0],
+      "stock": [35, 120, 8, 200, 0, 12, 5, 40],
+  })
+starter: |
+  top3 =
+solution: |
+  top3 = products.sort_values("price", ascending=False).head(3)
+expect: [top3]
+variants:
+  - |
+    import pandas as pd
+
+    products = pd.DataFrame({
+        "product_id": [11, 12, 13, 14, 15],
+        "name": ["Backpack", "Pen Set", "Monitor", "Tea Kettle", "Jump Rope"],
+        "category": ["Sports", "Office", "Electronics", "Home", "Sports"],
+        "price": [45.0, 6.25, 189.0, 22.4, 11.8],
+        "stock": [9, 300, 4, 18, 60],
+    })
+hints:
+  - "First sort the whole table by price, from highest to lowest. Then keep the first rows."
+  - "sort_values(\"price\") sorts from lowest to highest. ascending=False reverses it. .head(3) keeps the first 3 rows."
+  - "top3 = products.sort_values(\"price\", ascending=False).head(3)"
+explanation: |
+  `sort_values("price", ascending=False)` orders the rows from the highest price to the lowest, and `.head(3)` keeps
+  the first three. Together they're pandas' version of SQL's `ORDER BY price DESC LIMIT 3`.
+
+  Methods can be **chained**: each one works on the result of the one before it, reading from left to right.
+  `products.nlargest(3, "price")` is a shortcut that does the same thing.
+tests:
+  accept:
+    - "top3 = products.nlargest(3, 'price')"
+    - "top3 = products.sort_values(by='price', ascending=False).iloc[:3]"
+  reject:
+    - "top3 = products.sort_values('price').head(3)"
+    - "top3 = products.sort_values('price').tail(3)"
+    - "top3 = products.sort_values('price', ascending=False)"
+    - "top3 = products.iloc[[5, 2, 6]]"

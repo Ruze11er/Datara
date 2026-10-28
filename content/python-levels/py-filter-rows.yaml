@@ -1,0 +1,56 @@
+id: py-filter-rows
+title: Filter Rows
+concepts: [boolean filtering, comparison]
+lesson: py-pandas-filter-sort
+task: |
+  Create `cheap`: the rows of `products` with a price **under 15** (less than 15).
+setup: |
+  import pandas as pd
+
+  products = pd.DataFrame({
+      "product_id": [1, 2, 3, 4, 5, 6, 7, 8],
+      "name": ["Wireless Mouse", "USB-C Cable", "Desk Lamp", "Notebook",
+               "Water Bottle", "Headphones", "Yoga Mat", "Coffee Mug"],
+      "category": ["Electronics", "Electronics", "Home", "Office",
+                   "Sports", "Electronics", "Sports", "Home"],
+      "price": [24.99, 9.5, 32.0, 4.75, 15.0, 79.95, 28.5, 12.0],
+      "stock": [35, 120, 8, 200, 0, 12, 5, 40],
+  })
+starter: |
+  cheap =
+solution: |
+  cheap = products[products["price"] < 15]
+expect: [cheap]
+variants:
+  - |
+    import pandas as pd
+
+    products = pd.DataFrame({
+        "product_id": [11, 12, 13, 14, 15],
+        "name": ["Backpack", "Pen Set", "Monitor", "Tea Kettle", "Jump Rope"],
+        "category": ["Sports", "Office", "Electronics", "Home", "Sports"],
+        "price": [45.0, 6.25, 189.0, 22.4, 11.8],
+        "stock": [9, 300, 4, 18, 60],
+    })
+hints:
+  - "First write a condition on the price column. Try printing products[\"price\"] < 15 to see what it gives."
+  - "The condition gives one True or False per row. Put it inside products[ ... ] to keep only the True rows."
+  - "cheap = products[products[\"price\"] < 15]"
+explanation: |
+  `products["price"] < 15` compares **every** price at once and gives a Series of `True`/`False` values, one per row.
+  Putting that inside `products[...]` keeps only the rows where it's `True`. This is pandas' version of SQL's `WHERE`.
+
+  The kept rows keep their original row labels (like 1, 3, 7). That's normal. `.reset_index(drop=True)` renumbers them
+  if you want 0, 1, 2.
+
+  The Water Bottle costs exactly 15, so it isn't **under** 15. `<=` would include it.
+tests:
+  accept:
+    - "cheap = products.query('price < 15')"
+    - "cheap = products.loc[products['price'] < 15]"
+    - "cheap = products[products.price < 15].reset_index(drop=True)"
+  reject:
+    - "cheap = products[products['price'] <= 15]"
+    - "cheap = products['price'] < 15"
+    - "cheap = products[products['price'] > 15]"
+    - "cheap = products.iloc[[1, 3, 7]]"

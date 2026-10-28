@@ -1,0 +1,61 @@
+id: py-pivot-table
+title: Build a Pivot Table
+concepts: [pivot_table, aggfunc, fill_value]
+lesson: py-pandas-groupby
+task: |
+  Create `pivot`: a pivot table of `sales` with
+
+  - one **row** per `region`
+  - one **column** per `quarter`
+  - the **total** (sum) of `revenue` in each cell
+  - `0` where a region had no sales in a quarter
+setup: |
+  import pandas as pd
+
+  sales = pd.DataFrame({
+      "region": ["North", "South", "North", "East", "South", "North", "North", "East", "South"],
+      "quarter": ["Q1", "Q1", "Q2", "Q2", "Q2", "Q2", "Q3", "Q3", "Q3"],
+      "revenue": [1200, 950, 1430, 780, 1010, 300, 1600, 820, 1100],
+  })
+starter: |
+  pivot = sales.pivot_table(
+      index=,
+      columns=,
+      values=,
+  )
+solution: |
+  pivot = sales.pivot_table(
+      index="region",
+      columns="quarter",
+      values="revenue",
+      aggfunc="sum",
+      fill_value=0,
+  )
+expect: [pivot]
+variants:
+  - |
+    import pandas as pd
+
+    sales = pd.DataFrame({
+        "region": ["West", "West", "North", "West"],
+        "quarter": ["Q1", "Q2", "Q2", "Q2"],
+        "revenue": [500, 250, 400, 150],
+    })
+hints:
+  - "pivot_table needs to know what goes in the rows (index), the columns, and the cells (values)."
+  - "The default calculation is the average, so set aggfunc=\"sum\". fill_value=0 fills the empty cells."
+  - "sales.pivot_table(index=\"region\", columns=\"quarter\", values=\"revenue\", aggfunc=\"sum\", fill_value=0)"
+explanation: |
+  A pivot table is a summary grid, the same idea as a spreadsheet pivot table. Each cell combines all the rows for one
+  region and one quarter. North has two Q2 rows (1430 and 300), so its Q2 cell is 1730.
+
+  Watch out: `pivot_table` **averages** by default (`aggfunc="mean"`), so you have to ask for `"sum"`. East had no Q1
+  sales, so that cell would be empty (`NaN`). `fill_value=0` puts 0 there instead.
+tests:
+  accept:
+    - "pivot = sales.groupby(['region', 'quarter'])['revenue'].sum().unstack(fill_value=0)"
+    - "pivot = pd.pivot_table(sales, index='region', columns='quarter', values='revenue', aggfunc='sum').fillna(0)"
+  reject:
+    - "pivot = sales.pivot_table(index='region', columns='quarter', values='revenue', fill_value=0)"
+    - "pivot = sales.pivot_table(index='region', columns='quarter', values='revenue', aggfunc='sum')"
+    - "pivot = sales.pivot_table(index='quarter', columns='region', values='revenue', aggfunc='sum', fill_value=0)"

@@ -1,0 +1,54 @@
+id: py-monthly-revenue
+title: Revenue per Month
+concepts: [to_datetime, dt accessor, groupby]
+lesson: py-pandas-clean-combine
+task: |
+  The `order_date` column is text. Convert it to real dates with `pd.to_datetime`, then create `monthly_revenue`: the
+  **sum of `total` for each month**, with the months labelled as text like `"2025-01"`.
+setup: |
+  import pandas as pd
+
+  orders = pd.DataFrame({
+      "order_id": [101, 102, 103, 104, 105, 106, 107, 108, 109, 110],
+      "order_date": ["2025-01-05", "2025-01-12", "2025-01-20", "2025-02-02", "2025-02-14",
+                     "2025-02-20", "2025-03-01", "2025-03-09", "2025-03-15", "2025-03-28"],
+      "total": [45.5, 120.0, 30.25, 89.99, 15.75, 64.0, 210.4, 52.3, 18.0, 99.95],
+  })
+starter: |
+  orders["order_date"] = pd.to_datetime(orders["order_date"])
+  orders["month"] =
+
+  monthly_revenue =
+solution: |
+  orders["order_date"] = pd.to_datetime(orders["order_date"])
+  orders["month"] = orders["order_date"].dt.strftime("%Y-%m")
+  monthly_revenue = orders.groupby("month")["total"].sum()
+expect: [monthly_revenue]
+variants:
+  - |
+    import pandas as pd
+
+    orders = pd.DataFrame({
+        "order_id": [201, 202, 203, 204],
+        "order_date": ["2024-11-30", "2024-12-01", "2024-12-24", "2025-01-02"],
+        "total": [12.0, 40.0, 25.5, 90.0],
+    })
+hints:
+  - "After pd.to_datetime, the column holds dates, and .dt gives you date tools. Make a month column, then group by it."
+  - ".dt.strftime(\"%Y-%m\") turns each date into text like \"2025-01\". Then groupby(\"month\")[\"total\"].sum()."
+  - "orders[\"month\"] = orders[\"order_date\"].dt.strftime(\"%Y-%m\"), then monthly_revenue = orders.groupby(\"month\")[\"total\"].sum()"
+explanation: |
+  `pd.to_datetime` turns date text into real dates. After that, the `.dt` accessor gives date tools for the whole
+  column: `.dt.year`, `.dt.month`, `.dt.day_name()`, and `.dt.strftime(...)` to format dates as text. `"%Y-%m"` means
+  "4-digit year, dash, 2-digit month", the same codes Python's `datetime` and SQLite's `strftime` use.
+
+  Here, slicing the text (`orders["order_date"].str[:7]`) would happen to work too, because the dates are written as
+  `YYYY-MM-DD`. Real dates are safer: they work with any date format, and you can calculate with them (for example, days
+  between two dates).
+tests:
+  accept:
+    - "orders['order_date'] = pd.to_datetime(orders['order_date'])\nmonthly_revenue = orders.groupby(orders['order_date'].dt.strftime('%Y-%m'))['total'].sum()"
+  reject:
+    - "orders['order_date'] = pd.to_datetime(orders['order_date'])\nmonthly_revenue = orders.groupby(orders['order_date'].dt.month)['total'].sum()"
+    - "orders['month'] = orders['order_date'].dt.strftime('%Y-%m')\nmonthly_revenue = orders.groupby('month')['total'].sum()"
+    - "orders['order_date'] = pd.to_datetime(orders['order_date'])\norders['month'] = orders['order_date'].dt.strftime('%Y-%m')\nmonthly_revenue = orders.groupby('month')['total'].count()"

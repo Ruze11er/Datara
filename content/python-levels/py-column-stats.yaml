@@ -1,0 +1,59 @@
+id: py-column-stats
+title: Quick Statistics
+concepts: [mean, sum, min, Series methods]
+lesson: py-pandas-intro
+task: |
+  Create three variables from `products`:
+
+  - `average_price`: the average price, **rounded to 2 decimals**
+  - `total_stock`: the total number of items in stock (sum of `stock`)
+  - `cheapest`: the lowest price
+setup: |
+  import pandas as pd
+
+  products = pd.DataFrame({
+      "product_id": [1, 2, 3, 4, 5, 6, 7, 8],
+      "name": ["Wireless Mouse", "USB-C Cable", "Desk Lamp", "Notebook",
+               "Water Bottle", "Headphones", "Yoga Mat", "Coffee Mug"],
+      "category": ["Electronics", "Electronics", "Home", "Office",
+                   "Sports", "Electronics", "Sports", "Home"],
+      "price": [24.99, 9.5, 32.0, 4.75, 15.0, 79.95, 28.5, 12.0],
+      "stock": [35, 120, 8, 200, 0, 12, 5, 40],
+  })
+starter: |
+  average_price =
+  total_stock =
+  cheapest =
+solution: |
+  average_price = round(products["price"].mean(), 2)
+  total_stock = products["stock"].sum()
+  cheapest = products["price"].min()
+expect: [average_price, total_stock, cheapest]
+variants:
+  - |
+    import pandas as pd
+
+    products = pd.DataFrame({
+        "product_id": [11, 12, 13, 14],
+        "name": ["Backpack", "Pen Set", "Monitor", "Tea Kettle"],
+        "price": [45.0, 6.25, 189.0, 22.4],
+        "stock": [9, 300, 4, 18],
+    })
+hints:
+  - "Select the column first, then call a method on it. A Series has methods for common statistics."
+  - "The methods are .mean(), .sum(), and .min(). Don't forget the () at the end."
+  - "average_price = round(products[\"price\"].mean(), 2), total_stock = products[\"stock\"].sum(), cheapest = products[\"price\"].min()"
+explanation: |
+  A Series has built-in statistics methods: `.mean()`, `.sum()`, `.min()`, `.max()`, `.count()`, and more. Each one
+  looks at the whole column at once, so there's no loop to write. This is the pandas version of SQL's `AVG`, `SUM`,
+  and `MIN`.
+
+  `products["price"].describe()` shows several statistics in one go. Try printing it.
+tests:
+  accept:
+    - "average_price = products.price.mean().round(2)\ntotal_stock = sum(products['stock'])\ncheapest = min(products['price'])"
+  reject:
+    - "average_price = products['price'].mean()\ntotal_stock = products['stock'].sum()\ncheapest = products['price'].min()"
+    - "average_price = round(products['price'].mean(), 2)\ntotal_stock = products['stock'].count()\ncheapest = products['price'].min()"
+    - "average_price = products['price'].mean\ntotal_stock = products['stock'].sum()\ncheapest = products['price'].min()"
+    - "average_price = 25.84\ntotal_stock = 420\ncheapest = 4.75"

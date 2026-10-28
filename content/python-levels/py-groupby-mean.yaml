@@ -1,0 +1,54 @@
+id: py-groupby-mean
+title: Average Price per Category
+concepts: [groupby, mean, round]
+lesson: py-pandas-groupby
+task: |
+  Create `avg_price`: the **average price in each category**, rounded to 2 decimals (a Series with one value per
+  category).
+setup: |
+  import pandas as pd
+
+  products = pd.DataFrame({
+      "product_id": [1, 2, 3, 4, 5, 6, 7, 8],
+      "name": ["Wireless Mouse", "USB-C Cable", "Desk Lamp", "Notebook",
+               "Water Bottle", "Headphones", "Yoga Mat", "Coffee Mug"],
+      "category": ["Electronics", "Electronics", "Home", "Office",
+                   "Sports", "Electronics", "Sports", "Home"],
+      "price": [24.99, 9.5, 32.0, 4.75, 15.0, 79.95, 28.5, 12.0],
+      "stock": [35, 120, 8, 200, 0, 12, 5, 40],
+  })
+starter: |
+  avg_price =
+solution: |
+  avg_price = products.groupby("category")["price"].mean().round(2)
+expect: [avg_price]
+variants:
+  - |
+    import pandas as pd
+
+    products = pd.DataFrame({
+        "product_id": [11, 12, 13, 14, 15],
+        "name": ["Backpack", "Pen Set", "Monitor", "Tea Kettle", "Jump Rope"],
+        "category": ["Sports", "Office", "Electronics", "Home", "Sports"],
+        "price": [45.0, 6.25, 189.0, 22.4, 11.8],
+        "stock": [9, 300, 4, 18, 60],
+    })
+hints:
+  - "Group the rows by category, pick the price column, then calculate the average for each group."
+  - "products.groupby(\"category\") makes the groups. Then [\"price\"] picks the column and .mean() averages each group."
+  - "avg_price = products.groupby(\"category\")[\"price\"].mean().round(2)"
+explanation: |
+  `groupby` follows a **split-apply-combine** pattern: it **splits** the rows into one group per category, **applies**
+  `.mean()` to each group's prices, and **combines** the answers into a Series labelled by category. It matches SQL's
+  `SELECT category, AVG(price) ... GROUP BY category`.
+
+  `.round(2)` then rounds every value. Electronics averages 38.1466…, which rounds to 38.15.
+tests:
+  accept:
+    - "avg_price = products.groupby('category').price.mean().round(2)"
+    - "avg_price = products.groupby('category')['price'].agg('mean').round(2)"
+  reject:
+    - "avg_price = products.groupby('category')['price'].mean()"
+    - "avg_price = products.groupby('category')['price'].sum().round(2)"
+    - "avg_price = round(products['price'].mean(), 2)"
+    - "avg_price = products.groupby('category')['price']"

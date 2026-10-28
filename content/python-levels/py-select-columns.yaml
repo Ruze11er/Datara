@@ -1,0 +1,51 @@
+id: py-select-columns
+title: Pick Several Columns
+concepts: [selecting columns, double brackets]
+lesson: py-pandas-intro
+task: |
+  Create `price_list`: a DataFrame with only the `name` and `price` columns of `products`.
+setup: |
+  import pandas as pd
+
+  products = pd.DataFrame({
+      "product_id": [1, 2, 3, 4, 5, 6, 7, 8],
+      "name": ["Wireless Mouse", "USB-C Cable", "Desk Lamp", "Notebook",
+               "Water Bottle", "Headphones", "Yoga Mat", "Coffee Mug"],
+      "category": ["Electronics", "Electronics", "Home", "Office",
+                   "Sports", "Electronics", "Sports", "Home"],
+      "price": [24.99, 9.5, 32.0, 4.75, 15.0, 79.95, 28.5, 12.0],
+      "stock": [35, 120, 8, 200, 0, 12, 5, 40],
+  })
+starter: |
+  price_list =
+solution: |
+  price_list = products[["name", "price"]]
+expect: [price_list]
+variants:
+  - |
+    import pandas as pd
+
+    products = pd.DataFrame({
+        "product_id": [11, 12, 13],
+        "name": ["Backpack", "Pen Set", "Monitor"],
+        "price": [45.0, 6.25, 189.0],
+        "stock": [9, 300, 4],
+    })
+hints:
+  - "To pick several columns, give pandas a list of column names."
+  - "A list goes inside the selection brackets, so you get double brackets: products[[ ... ]]."
+  - "price_list = products[[\"name\", \"price\"]]"
+explanation: |
+  The **inner** brackets make a Python list of column names: `["name", "price"]`. The **outer** brackets select those
+  columns from the DataFrame. The result is a smaller DataFrame with the columns in the order you listed them.
+
+  Writing `products["name", "price"]` (single brackets) makes pandas look for one column called `("name", "price")`,
+  which doesn't exist.
+tests:
+  accept:
+    - "price_list = products.loc[:, ['name', 'price']]"
+    - "price_list = products[['price', 'name']]"
+  reject:
+    - "price_list = products['name', 'price']"
+    - "price_list = products[['name']]"
+    - "price_list = products[['name', 'price', 'stock']]"

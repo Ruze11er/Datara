@@ -1,0 +1,51 @@
+id: py-select-column
+title: Pick One Column
+concepts: [selecting a column, Series]
+lesson: py-pandas-intro
+task: |
+  Create `names`: just the `name` column of `products`.
+
+  One column on its own is a **Series**.
+setup: |
+  import pandas as pd
+
+  products = pd.DataFrame({
+      "product_id": [1, 2, 3, 4, 5, 6, 7, 8],
+      "name": ["Wireless Mouse", "USB-C Cable", "Desk Lamp", "Notebook",
+               "Water Bottle", "Headphones", "Yoga Mat", "Coffee Mug"],
+      "category": ["Electronics", "Electronics", "Home", "Office",
+                   "Sports", "Electronics", "Sports", "Home"],
+      "price": [24.99, 9.5, 32.0, 4.75, 15.0, 79.95, 28.5, 12.0],
+      "stock": [35, 120, 8, 200, 0, 12, 5, 40],
+  })
+starter: |
+  names =
+solution: |
+  names = products["name"]
+expect: [names]
+variants:
+  - |
+    import pandas as pd
+
+    products = pd.DataFrame({
+        "product_id": [11, 12, 13],
+        "name": ["Backpack", "Pen Set", "Monitor"],
+        "price": [45.0, 6.25, 189.0],
+    })
+hints:
+  - "You pick a column the same way you look up a key in a dictionary."
+  - "Put the column name, in quotes, inside square brackets after the DataFrame's name."
+  - "names = products[\"name\"]"
+explanation: |
+  `products["name"]` works like a dictionary lookup: the column name is the key. The result is a **Series**: one column
+  of values, with the same row labels (index) as the table.
+
+  With **double** brackets, `products[["name"]]`, you'd get a DataFrame with one column instead. That's the next level.
+tests:
+  accept:
+    - "names = products.name"
+    - "names = products.loc[:, 'name']"
+  reject:
+    - "names = products[['name']]"
+    - "names = products['Name']"
+    - "names = list(products['name'])"

@@ -1,0 +1,77 @@
+id: py-boss-city-report
+title: "Milestone: Revenue by City"
+concepts: [filtering, merge, groupby, agg, sorting]
+lesson: py-pandas-groupby
+task: |
+  **Milestone level.** This one combines everything from Chapter 7.
+
+  Create `city_report`, using **Delivered** orders only:
+
+  - one row per customer `city`
+  - `orders`: the number of delivered orders from that city
+  - `revenue`: the sum of their `total`, **rounded to 2 decimals**
+  - sorted by `revenue`, **highest first**
+setup: |
+  import pandas as pd
+
+  orders = pd.DataFrame({
+      "order_id": [101, 102, 103, 104, 105, 106, 107, 108, 109, 110],
+      "customer_id": [1, 2, 1, 3, 5, 2, 4, 1, 3, 5],
+      "status": ["Delivered", "Delivered", "Cancelled", "Delivered", "Shipped",
+                 "Delivered", "Delivered", "Delivered", "Cancelled", "Delivered"],
+      "total": [45.5, 120.0, 30.25, 89.99, 15.75, 64.0, 310.4, 52.3, 18.0, 99.95],
+  })
+  customers = pd.DataFrame({
+      "customer_id": [1, 2, 3, 4, 5],
+      "name": ["Ana Reyes", "Ben Cruz", "Carla Diaz", "Dan Lee", "Eva Santos"],
+      "city": ["Manila", "Cebu", "Manila", "Davao", "Cebu"],
+  })
+starter: |
+  # 1. Keep delivered orders  2. Add the city  3. Group and summarize  4. Sort
+  delivered =
+  merged =
+
+  city_report =
+solution: |
+  delivered = orders[orders["status"] == "Delivered"]
+  merged = delivered.merge(customers, on="customer_id")
+  city_report = (
+      merged.groupby("city")
+      .agg(orders=("order_id", "count"), revenue=("total", "sum"))
+      .round(2)
+      .sort_values("revenue", ascending=False)
+  )
+expect: [city_report]
+variants:
+  - |
+    import pandas as pd
+
+    orders = pd.DataFrame({
+        "order_id": [201, 202, 203, 204, 205, 206],
+        "customer_id": [7, 8, 7, 9, 9, 8],
+        "status": ["Delivered", "Delivered", "Cancelled", "Delivered", "Delivered", "Shipped"],
+        "total": [12.0, 40.0, 500.0, 25.5, 90.0, 300.0],
+    })
+    customers = pd.DataFrame({
+        "customer_id": [7, 8, 9],
+        "name": ["Gia Tan", "Hal Uy", "Ivo Ramos"],
+        "city": ["Cebu", "Iloilo", "Manila"],
+    })
+hints:
+  - "Do it in steps: filter to Delivered, merge in the customers to get each order's city, then group by city."
+  - "After merging, use .agg(orders=(\"order_id\", \"count\"), revenue=(\"total\", \"sum\")), then .round(2) and sort_values."
+  - "merged.groupby(\"city\").agg(orders=(\"order_id\", \"count\"), revenue=(\"total\", \"sum\")).round(2).sort_values(\"revenue\", ascending=False)"
+explanation: |
+  This is a typical analyst question answered in four steps: **filter** (delivered only), **join** (add the city from
+  another table), **group and summarize** (count and sum per city), and **sort** (biggest first). In SQL it would be a
+  `JOIN` with `WHERE`, `GROUP BY`, and `ORDER BY`.
+
+  Filtering before or after the merge gives the same answer, but filtering first means the merge has fewer rows to
+  match.
+tests:
+  accept:
+    - "merged = orders.merge(customers, on='customer_id')\ndelivered = merged[merged['status'] == 'Delivered']\ncity_report = delivered.groupby('city', as_index=False).agg(orders=('order_id', 'size'), revenue=('total', 'sum')).round(2).sort_values('revenue', ascending=False)"
+  reject:
+    - "merged = orders.merge(customers, on='customer_id')\ncity_report = merged.groupby('city').agg(orders=('order_id', 'count'), revenue=('total', 'sum')).round(2).sort_values('revenue', ascending=False)"
+    - "delivered = orders[orders['status'] == 'Delivered']\nmerged = delivered.merge(customers, on='customer_id')\ncity_report = merged.groupby('city').agg(orders=('order_id', 'count'), revenue=('total', 'sum')).round(2)"
+    - "delivered = orders[orders['status'] == 'Delivered']\nmerged = delivered.merge(customers, on='customer_id')\ncity_report = merged.groupby('city').agg(orders=('order_id', 'count'), revenue=('total', 'sum')).round(2).sort_values('orders', ascending=False)"

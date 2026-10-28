@@ -149,7 +149,12 @@ try {
   for (const id of pyLevels.keys()) if (!listed.has(id)) warn(`Python level "${id}" is not in any chapter`)
 
   // The same checker the app uses, running in Pyodide under Node.
-  const pyodide = await loadPyodide()
+  // Packages (pandas) load from the same bundled wheels the app uses, never the internet.
+  const pyodide = await loadPyodide({ packageBaseUrl: join(root, 'src', 'renderer', 'public', 'pyodide') + '/' })
+  const allPythonCode = [...pyLevels.values()]
+    .flatMap((l) => [l.setup, l.solution, ...l.variants, ...l.tests.accept, ...l.tests.reject])
+    .join('\n')
+  await pyodide.loadPackagesFromImports(allPythonCode, { messageCallback: () => undefined })
   const checkerNs = pyodide.globals.get('dict')()
   pyodide.runPython(await readFile(join(root, 'src', 'shared', 'python', 'datara_check.py'), 'utf8'), {
     globals: checkerNs
@@ -170,10 +175,12 @@ try {
         expect: level.expect,
         checkOutput: level.checkOutput,
         variants: level.variants,
-        calls: level.calls
+        calls: level.calls,
+        files: level.files,
+        ignoreRowOrder: level.ignoreRowOrder
       }
       try {
-        const solved = call('run', { setup: level.setup, code: level.solution })
+        const solved = call('run', { setup: level.setup, code: level.solution, files: level.files })
         if (solved.error) {
           error(`${where}: the solution fails: ${solved.error.type}: ${solved.error.message}`)
           continue

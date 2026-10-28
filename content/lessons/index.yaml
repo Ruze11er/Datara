@@ -91,3 +91,10 @@
       lessons:
         - py-functions
         - py-cleaning-data
+    - id: python-pandas
+      title: Data Analysis with pandas
+      lessons:
+        - py-pandas-intro
+        - py-pandas-filter-sort
+        - py-pandas-groupby
+        - py-pandas-clean-combine

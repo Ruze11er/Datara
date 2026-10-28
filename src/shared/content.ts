@@ -64,6 +64,13 @@ export interface PythonLevel {
    * answers as the solution on these, so typing in the answer directly won't pass.
    */
   variants: string[]
+  /**
+   * Data files (name -> text) placed in Python's in-memory folder before the code runs,
+   * e.g. products.csv for pd.read_csv("products.csv"). Shown to the learner under "Files".
+   */
+  files: Record<string, string>
+  /** Compare DataFrame/Series rows in any order (e.g. when merge or groupby methods may order rows differently). */
+  ignoreRowOrder: boolean
   hints: string[]
   explanation: string
   tests: { accept: string[]; reject: string[] }
@@ -87,6 +94,8 @@ export function parsePythonLevel(text: string, where: string): PythonLevel {
     checkOutput: raw.checkOutput === true,
     calls: stringList(raw, 'calls'),
     variants: stringList(raw, 'variants'),
+    files: fileMap(raw.files, where),
+    ignoreRowOrder: raw.ignoreRowOrder === true,
     hints: stringList(raw, 'hints'),
     explanation: requireString(raw, 'explanation', where),
     tests: { accept: stringList(tests, 'accept'), reject: stringList(tests, 'reject') }
@@ -95,6 +104,20 @@ export function parsePythonLevel(text: string, where: string): PythonLevel {
     throw new Error(`${where}: a Python level needs "expect" variables, "calls", or checkOutput: true`)
   }
   return level
+}
+
+function fileMap(value: unknown, where: string): Record<string, string> {
+  if (value === undefined) return {}
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new Error(`${where}: "files" must map file names to their text`)
+  }
+  const files: Record<string, string> = {}
+  for (const [name, text] of Object.entries(value)) {
+    if (!/^[\w-]+\.[\w]+$/.test(name)) throw new Error(`${where}: file name "${name}" must be a plain name like data.csv`)
+    if (typeof text !== 'string') throw new Error(`${where}: file "${name}" must contain text`)
+    files[name] = text
+  }
+  return files
 }
 
 const DEFAULT_STARTER = '-- Write your query below, then press Check.\n'

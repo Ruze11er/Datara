@@ -19,6 +19,9 @@ expect: [clean_categories, unique_categories]
 variants:
   - |
     categories = ["toys & games", "Toys & Games ", "Home & Kitchen"]
+  # Five distinct values, so an unsorted set only matches the sorted order by rare luck.
+  - |
+    categories = ["sports", "Garden ", "toys", "Audio", "Pets", "audio", "Sports"]
 hints:
   - "Clean each value first with .strip().title(). Then remove duplicates."
   - "set(...) keeps only distinct values, and sorted(...) turns it into an alphabetical list."
@@ -30,4 +33,4 @@ explanation: |
 tests:
   reject:
     - "clean_categories = [c.strip().title() for c in categories]\nunique_categories = sorted(set(categories))"
-    - "clean_categories = [c.strip().title() for c in categories]\nunique_categories = list(set(clean_categories))"
+    - "clean_categories = [c.strip().title() for c in categories]\nunique_categories = list(dict.fromkeys(clean_categories))"

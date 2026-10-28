@@ -1,0 +1,66 @@
+id: py-boss-restock-report
+title: "Milestone: The Restock Report"
+concepts: [filtering, new columns, selecting columns, sorting]
+lesson: py-pandas-filter-sort
+task: |
+  **Milestone level.** This one combines everything from Chapter 6.
+
+  The warehouse wants to bring every low-stock product back up to **50** items. Create `restock`:
+
+  1. Only the products with **stock under 15**.
+  2. A new column `reorder_cost`: how much it costs to buy the missing items, `(50 - stock) * price`, **rounded to 2
+     decimals**.
+  3. Only the columns `name`, `stock`, and `reorder_cost`.
+  4. Sorted by `reorder_cost`, **largest first**.
+setup: |
+  import pandas as pd
+
+  products = pd.DataFrame({
+      "product_id": [1, 2, 3, 4, 5, 6, 7, 8],
+      "name": ["Wireless Mouse", "USB-C Cable", "Desk Lamp", "Notebook",
+               "Water Bottle", "Headphones", "Yoga Mat", "Coffee Mug"],
+      "category": ["Electronics", "Electronics", "Home", "Office",
+                   "Sports", "Electronics", "Sports", "Home"],
+      "price": [24.99, 9.5, 32.0, 4.75, 15.0, 79.95, 28.5, 12.0],
+      "stock": [35, 120, 8, 200, 0, 12, 5, 40],
+  })
+starter: |
+  # 1. Filter, 2. add reorder_cost, 3. pick columns, 4. sort
+  low =
+
+  restock =
+solution: |
+  low = products[products["stock"] < 15]
+  low["reorder_cost"] = ((50 - low["stock"]) * low["price"]).round(2)
+  restock = low[["name", "stock", "reorder_cost"]].sort_values("reorder_cost", ascending=False)
+expect: [restock]
+variants:
+  - |
+    import pandas as pd
+
+    products = pd.DataFrame({
+        "product_id": [11, 12, 13, 14, 15],
+        "name": ["Backpack", "Pen Set", "Monitor", "Tea Kettle", "Jump Rope"],
+        "category": ["Sports", "Office", "Electronics", "Home", "Sports"],
+        "price": [45.0, 6.25, 189.0, 22.4, 11.8],
+        "stock": [9, 300, 4, 18, 14],
+    })
+hints:
+  - "Work in steps, storing each result in a variable: filter first, then add the column to the filtered table, then select and sort."
+  - "low = products[products[\"stock\"] < 15]. Then low[\"reorder_cost\"] = ((50 - low[\"stock\"]) * low[\"price\"]).round(2)."
+  - "restock = low[[\"name\", \"stock\", \"reorder_cost\"]].sort_values(\"reorder_cost\", ascending=False)"
+explanation: |
+  Breaking the job into steps keeps it readable: **filter** the rows, **calculate** a new column, **select** the columns
+  you need, then **sort**. Each step is one line you can check with Run before moving on.
+
+  `.round(2)` on a Series rounds every value at once. `50 - low["stock"]` works element-wise too: 50 minus each stock
+  value.
+tests:
+  accept:
+    - "restock = (\n    products[products['stock'] < 15]\n    .assign(reorder_cost=lambda d: ((50 - d['stock']) * d['price']).round(2))\n    [['name', 'stock', 'reorder_cost']]\n    .sort_values('reorder_cost', ascending=False)\n)"
+    - "products['reorder_cost'] = ((50 - products['stock']) * products['price']).round(2)\nrestock = products[products['stock'] < 15][['name', 'stock', 'reorder_cost']].sort_values('reorder_cost', ascending=False).reset_index(drop=True)"
+  reject:
+    - "low = products[products['stock'] < 15]\nlow['reorder_cost'] = ((50 - low['stock']) * low['price']).round(2)\nrestock = low[['name', 'stock', 'reorder_cost']]"
+    - "low = products[products['stock'] < 15]\nlow['reorder_cost'] = ((50 - low['stock']) * low['price']).round(2)\nrestock = low.sort_values('reorder_cost', ascending=False)"
+    - "low = products.copy()\nlow['reorder_cost'] = ((50 - low['stock']) * low['price']).round(2)\nrestock = low[['name', 'stock', 'reorder_cost']].sort_values('reorder_cost', ascending=False)"
+    - "low = products[products['stock'] < 15]\nlow['reorder_cost'] = (50 - low['stock'] * low['price']).round(2)\nrestock = low[['name', 'stock', 'reorder_cost']].sort_values('reorder_cost', ascending=False)"

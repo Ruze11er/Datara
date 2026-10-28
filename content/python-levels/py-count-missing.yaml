@@ -1,0 +1,49 @@
+id: py-count-missing
+title: Find the Missing Values
+concepts: [missing values, isna, sum]
+lesson: py-pandas-clean-combine
+task: |
+  Some customers are missing an email or a city. In pandas a missing value shows as `None` or `NaN`.
+
+  Create `missing_per_column`: **how many missing values each column has** (a Series with one count per column).
+setup: |
+  import pandas as pd
+
+  customers = pd.DataFrame({
+      "customer_id": [1, 2, 3, 4, 5, 6],
+      "name": ["Ana Reyes", "Ben Cruz", "Carla Diaz", "Dan Lee", "Eva Santos", "Finn Ocampo"],
+      "email": ["ana@mail.com", None, "carla@mail.com", None, "eva@mail.com", "finn@mail.com"],
+      "city": ["Manila", "Cebu", None, "Davao", None, None],
+  })
+starter: |
+  missing_per_column =
+solution: |
+  missing_per_column = customers.isna().sum()
+expect: [missing_per_column]
+variants:
+  - |
+    import pandas as pd
+
+    customers = pd.DataFrame({
+        "customer_id": [7, 8, 9],
+        "name": ["Gia Tan", None, "Ivo Ramos"],
+        "email": ["gia@mail.com", "hal@mail.com", None],
+        "city": ["Cebu", "Iloilo", "Manila"],
+    })
+hints:
+  - "There's a method that marks every cell as missing (True) or not (False). Try printing it."
+  - "customers.isna() gives a table of True/False. Adding up True values counts them, because True counts as 1."
+  - "missing_per_column = customers.isna().sum()"
+explanation: |
+  `customers.isna()` returns a table of the same shape with `True` wherever a value is missing. Calling `.sum()` on it
+  adds up each column, and since `True` counts as 1, you get the number of missing values per column.
+
+  Checking for missing values is one of the first things to do with any new dataset, before calculating anything.
+tests:
+  accept:
+    - "missing_per_column = customers.isnull().sum()"
+    - "missing_per_column = len(customers) - customers.count()"
+  reject:
+    - "missing_per_column = customers.isna().sum().sum()"
+    - "missing_per_column = customers.notna().sum()"
+    - "missing_per_column = customers.isna()"

@@ -76,3 +76,33 @@
     - py-orders-per-month
     - py-find-invalid-orders
     - py-boss-clean-signups
+
+- id: py-ch6
+  title: Tables with pandas
+  description: Load a CSV into a DataFrame, pick columns, filter and sort rows, and add calculated columns.
+  levels:
+    - py-read-csv
+    - py-dataframe-shape
+    - py-select-column
+    - py-select-columns
+    - py-column-stats
+    - py-filter-rows
+    - py-filter-two-conditions
+    - py-sort-values
+    - py-new-column
+    - py-boss-restock-report
+
+- id: py-ch7
+  title: Analyzing with pandas
+  description: Count and group data, handle missing values, join tables, work with dates, and build pivot tables.
+  levels:
+    - py-value-counts
+    - py-groupby-mean
+    - py-groupby-sum-sorted
+    - py-groupby-agg
+    - py-count-missing
+    - py-handle-missing
+    - py-merge-tables
+    - py-monthly-revenue
+    - py-pivot-table
+    - py-boss-city-report

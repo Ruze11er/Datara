@@ -1,0 +1,48 @@
+id: py-read-csv
+title: Your First DataFrame
+concepts: [pandas, read_csv, DataFrame]
+lesson: py-pandas-intro
+task: |
+  Real data usually arrives as a file. The file `products.csv` (shown above) is in the same folder as your code.
+
+  Import pandas with its usual short name `pd`, then read the file into a DataFrame called `products`.
+
+  Press **Run** to see your table in the Variables panel.
+files:
+  products.csv: |
+    product_id,name,category,price,stock
+    1,Wireless Mouse,Electronics,24.99,35
+    2,USB-C Cable,Electronics,9.5,120
+    3,Desk Lamp,Home,32.0,8
+    4,Notebook,Office,4.75,200
+    5,Water Bottle,Sports,15.0,0
+    6,Headphones,Electronics,79.95,12
+    7,Yoga Mat,Sports,28.5,5
+    8,Coffee Mug,Home,12.0,40
+starter: |
+  import pandas as pd
+
+  # Read products.csv into a DataFrame called products
+solution: |
+  import pandas as pd
+
+  products = pd.read_csv("products.csv")
+expect: [products]
+hints:
+  - "pandas has a function for reading CSV files. Its name starts with read_."
+  - "pd.read_csv(\"file name\") reads the file and gives back a DataFrame. Store it in a variable."
+  - "products = pd.read_csv(\"products.csv\")"
+explanation: |
+  `pd.read_csv` reads a comma-separated file into a **DataFrame**, pandas' table. By default it uses the first line of
+  the file as the column names, and it works out the type of each column for you: `price` becomes decimal numbers, `name`
+  becomes text.
+
+  The Variables panel shows the row labels (0 to 7) on the left. pandas adds them automatically. They're called the
+  **index**.
+tests:
+  accept:
+    - "import pandas\nproducts = pandas.read_csv('products.csv')"
+  reject:
+    - "import pandas as pd\nproducts = pd.read_csv('products.csv', header=None)"
+    - "import pandas as pd\nproducts = pd.read_csv('products.csv', usecols=['name', 'price'])"
+    - "import pandas as pd\nproducts = pd.read_csv('Products.csv')"

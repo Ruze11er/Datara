@@ -1,0 +1,59 @@
+id: py-merge-tables
+title: Combine Tables with merge
+concepts: [merge, joining tables]
+lesson: py-pandas-clean-combine
+task: |
+  `orders` only has a `customer_id`. Create `order_details`: every order together with its customer's `name` and
+  `city`, by joining the two tables on `customer_id`.
+setup: |
+  import pandas as pd
+
+  orders = pd.DataFrame({
+      "order_id": [101, 102, 103, 104, 105, 106],
+      "customer_id": [1, 2, 1, 3, 5, 4],
+      "total": [45.5, 120.0, 30.25, 89.99, 15.75, 64.0],
+  })
+  customers = pd.DataFrame({
+      "customer_id": [1, 2, 3, 4, 5],
+      "name": ["Ana Reyes", "Ben Cruz", "Carla Diaz", "Dan Lee", "Eva Santos"],
+      "city": ["Manila", "Cebu", "Manila", "Davao", "Cebu"],
+  })
+starter: |
+  order_details =
+solution: |
+  order_details = orders.merge(customers, on="customer_id")
+expect: [order_details]
+ignoreRowOrder: true
+variants:
+  - |
+    import pandas as pd
+
+    orders = pd.DataFrame({
+        "order_id": [201, 202, 203],
+        "customer_id": [8, 7, 8],
+        "total": [12.0, 40.0, 25.5],
+    })
+    customers = pd.DataFrame({
+        "customer_id": [7, 8, 9],
+        "name": ["Gia Tan", "Hal Uy", "Ivo Ramos"],
+        "city": ["Cebu", "Iloilo", "Manila"],
+    })
+hints:
+  - "pandas joins tables with a method called merge. You tell it which column the two tables share."
+  - "orders.merge(other_table, on=\"shared column\")"
+  - "order_details = orders.merge(customers, on=\"customer_id\")"
+explanation: |
+  `merge` is pandas' version of SQL's `JOIN`. `orders.merge(customers, on="customer_id")` matches each order with the
+  customer row that has the same `customer_id`, and puts their columns side by side.
+
+  By default it's an **inner** join (`how="inner"`): only rows with a match in both tables are kept. `how="left"`
+  keeps every order even without a matching customer, like a `LEFT JOIN`.
+tests:
+  accept:
+    - "order_details = pd.merge(orders, customers, on='customer_id')"
+    - "order_details = customers.merge(orders, on='customer_id')"
+    - "order_details = orders.merge(customers, how='left', on='customer_id')"
+  reject:
+    - "order_details = pd.concat([orders, customers], axis=1)"
+    - "order_details = orders.merge(customers, left_on='order_id', right_on='customer_id')"
+    - "order_details = orders.merge(customers[['customer_id', 'name']], on='customer_id')"

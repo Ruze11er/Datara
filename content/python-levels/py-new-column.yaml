@@ -1,0 +1,52 @@
+id: py-new-column
+title: Add a Calculated Column
+concepts: [new columns, element-wise maths]
+lesson: py-pandas-filter-sort
+task: |
+  Add a new column called `stock_value` to `products`: each product's `price` multiplied by its `stock`.
+
+  (The check looks at the whole `products` table, so add the column to `products` itself.)
+setup: |
+  import pandas as pd
+
+  products = pd.DataFrame({
+      "product_id": [1, 2, 3, 4, 5, 6, 7, 8],
+      "name": ["Wireless Mouse", "USB-C Cable", "Desk Lamp", "Notebook",
+               "Water Bottle", "Headphones", "Yoga Mat", "Coffee Mug"],
+      "category": ["Electronics", "Electronics", "Home", "Office",
+                   "Sports", "Electronics", "Sports", "Home"],
+      "price": [24.99, 9.5, 32.0, 4.75, 15.0, 79.95, 28.5, 12.0],
+      "stock": [35, 120, 8, 200, 0, 12, 5, 40],
+  })
+starter: |
+  # Add the stock_value column to products
+solution: |
+  products["stock_value"] = products["price"] * products["stock"]
+expect: [products]
+variants:
+  - |
+    import pandas as pd
+
+    products = pd.DataFrame({
+        "product_id": [11, 12, 13],
+        "name": ["Backpack", "Pen Set", "Monitor"],
+        "category": ["Sports", "Office", "Electronics"],
+        "price": [45.0, 6.25, 189.0],
+        "stock": [9, 300, 4],
+    })
+hints:
+  - "You create a new column the way you add a new key to a dictionary: assign to it."
+  - "products[\"new column\"] = some calculation. Columns can be multiplied directly, without a loop."
+  - "products[\"stock_value\"] = products[\"price\"] * products[\"stock\"]"
+explanation: |
+  `products["price"] * products["stock"]` multiplies the two columns **row by row** (element-wise): the first price
+  times the first stock, the second times the second, and so on. There's no loop to write. Assigning the result to
+  `products["stock_value"]` adds it as a new column at the end of the table.
+tests:
+  accept:
+    - "products = products.assign(stock_value=products.price * products.stock)"
+    - "products['stock_value'] = products['stock'] * products['price']"
+  reject:
+    - "products['stock_value'] = products['price'] + products['stock']"
+    - "stock_value = products['price'] * products['stock']"
+    - "products['value'] = products['price'] * products['stock']"

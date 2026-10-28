@@ -1,0 +1,52 @@
+id: py-filter-two-conditions
+title: Two Conditions at Once
+concepts: [boolean filtering, "&", parentheses]
+lesson: py-pandas-filter-sort
+task: |
+  Create `pricey_electronics`: the products in the **Electronics** category **that also** cost more than 20.
+setup: |
+  import pandas as pd
+
+  products = pd.DataFrame({
+      "product_id": [1, 2, 3, 4, 5, 6, 7, 8],
+      "name": ["Wireless Mouse", "USB-C Cable", "Desk Lamp", "Notebook",
+               "Water Bottle", "Headphones", "Yoga Mat", "Coffee Mug"],
+      "category": ["Electronics", "Electronics", "Home", "Office",
+                   "Sports", "Electronics", "Sports", "Home"],
+      "price": [24.99, 9.5, 32.0, 4.75, 15.0, 79.95, 28.5, 12.0],
+      "stock": [35, 120, 8, 200, 0, 12, 5, 40],
+  })
+starter: |
+  pricey_electronics =
+solution: |
+  pricey_electronics = products[(products["category"] == "Electronics") & (products["price"] > 20)]
+expect: [pricey_electronics]
+variants:
+  - |
+    import pandas as pd
+
+    products = pd.DataFrame({
+        "product_id": [11, 12, 13, 14, 15],
+        "name": ["Backpack", "Phone Case", "Monitor", "Tea Kettle", "Earbuds"],
+        "category": ["Sports", "Electronics", "Electronics", "Home", "Electronics"],
+        "price": [45.0, 14.5, 189.0, 22.4, 35.0],
+        "stock": [9, 300, 4, 18, 60],
+    })
+hints:
+  - "Write each condition on its own first. Then combine them. pandas doesn't use the word and here."
+  - "Use & for \"and\", and put each condition in its own parentheses: (condition 1) & (condition 2)."
+  - "products[(products[\"category\"] == \"Electronics\") & (products[\"price\"] > 20)]"
+explanation: |
+  pandas uses `&` for **and**, `|` for **or**, and `~` for **not** when combining conditions on columns. Python's
+  words `and`/`or` only work with single True/False values, not whole columns, which is why they cause an error here.
+
+  The parentheses matter. Without them, Python works out `20 & products["category"]` first, which isn't what you
+  meant.
+tests:
+  accept:
+    - "pricey_electronics = products.query('category == \"Electronics\" and price > 20')"
+    - "electronics = products[products['category'] == 'Electronics']\npricey_electronics = electronics[electronics['price'] > 20]"
+  reject:
+    - "pricey_electronics = products[(products['category'] == 'Electronics') | (products['price'] > 20)]"
+    - "pricey_electronics = products[(products['category'] == 'Electronics') and (products['price'] > 20)]"
+    - "pricey_electronics = products[products['category'] == 'Electronics']"

@@ -51,4 +51,6 @@ export interface PyCheckSpec {
   checkOutput: boolean
   variants: string[]
   calls: string[]
+  files: Record<string, string>
+  ignoreRowOrder: boolean
 }

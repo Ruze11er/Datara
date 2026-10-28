@@ -30,9 +30,9 @@ export async function runPython(code: string): Promise<PythonRunResult> {
 }
 
 /** Python Lab "Run". */
-export async function runPythonLab(setup: string, code: string): Promise<PyLabRun> {
+export async function runPythonLab(setup: string, code: string, files: Record<string, string> = {}): Promise<PyLabRun> {
   await prepare(`${setup}\n${code}`)
-  return client.request<PyLabRun>('run', { setup, code }, RUN_TIMEOUT_MS, TOO_LONG)
+  return client.request<PyLabRun>('run', { setup, code, files }, RUN_TIMEOUT_MS, TOO_LONG)
 }
 
 /** Python Lab "Check". */

@@ -1,0 +1,51 @@
+id: py-value-counts
+title: Count Each Category
+concepts: [value_counts, counting]
+lesson: py-pandas-groupby
+task: |
+  Create `status_counts`: how many orders have each `status` (a Series with one count per status).
+setup: |
+  import pandas as pd
+
+  orders = pd.DataFrame({
+      "order_id": [101, 102, 103, 104, 105, 106, 107, 108, 109, 110],
+      "customer_id": [1, 2, 1, 3, 5, 2, 4, 1, 3, 5],
+      "status": ["Delivered", "Delivered", "Cancelled", "Delivered", "Shipped",
+                 "Delivered", "Delivered", "Delivered", "Cancelled", "Delivered"],
+      "total": [45.5, 120.0, 30.25, 89.99, 15.75, 64.0, 310.4, 52.3, 18.0, 99.95],
+  })
+starter: |
+  status_counts =
+solution: |
+  status_counts = orders["status"].value_counts()
+expect: [status_counts]
+ignoreRowOrder: true
+variants:
+  - |
+    import pandas as pd
+
+    orders = pd.DataFrame({
+        "order_id": [201, 202, 203, 204, 205],
+        "customer_id": [1, 2, 3, 4, 5],
+        "status": ["Shipped", "Returned", "Shipped", "Delivered", "Shipped"],
+        "total": [10.0, 20.0, 30.0, 40.0, 50.0],
+    })
+hints:
+  - "Select the status column first. A Series has a method that counts how often each value appears."
+  - "The method is .value_counts(). It gives one row per different value, with its count."
+  - "status_counts = orders[\"status\"].value_counts()"
+explanation: |
+  `.value_counts()` counts how many times each different value appears, and sorts the counts from most to least common.
+  The statuses become the row labels (the index) and the counts become the values.
+
+  It's the quick version of SQL's `SELECT status, COUNT(*) ... GROUP BY status`. `orders.groupby("status").size()` gives
+  the same counts, sorted by status name instead.
+tests:
+  accept:
+    - "status_counts = orders.groupby('status').size()"
+    - "status_counts = orders.groupby('status')['order_id'].count()"
+  reject:
+    - "status_counts = orders['status'].count()"
+    - "status_counts = orders['status'].unique()"
+    - "status_counts = orders['status'].value_counts(normalize=True)"
+    - "status_counts = orders['customer_id'].value_counts()"

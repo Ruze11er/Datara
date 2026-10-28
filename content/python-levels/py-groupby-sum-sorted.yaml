@@ -1,0 +1,48 @@
+id: py-groupby-sum-sorted
+title: Revenue per Customer, Ranked
+concepts: [groupby, sum, sort_values]
+lesson: py-pandas-groupby
+task: |
+  Create `revenue_by_customer`: the **sum of `total`** for each `customer_id`, sorted from the **largest** total to the
+  smallest.
+setup: |
+  import pandas as pd
+
+  orders = pd.DataFrame({
+      "order_id": [101, 102, 103, 104, 105, 106, 107, 108, 109, 110],
+      "customer_id": [1, 2, 1, 3, 5, 2, 4, 1, 3, 5],
+      "status": ["Delivered", "Delivered", "Cancelled", "Delivered", "Shipped",
+                 "Delivered", "Delivered", "Delivered", "Cancelled", "Delivered"],
+      "total": [45.5, 120.0, 30.25, 89.99, 15.75, 64.0, 310.4, 52.3, 18.0, 99.95],
+  })
+starter: |
+  revenue_by_customer =
+solution: |
+  revenue_by_customer = orders.groupby("customer_id")["total"].sum().sort_values(ascending=False)
+expect: [revenue_by_customer]
+variants:
+  - |
+    import pandas as pd
+
+    orders = pd.DataFrame({
+        "order_id": [201, 202, 203, 204, 205, 206],
+        "customer_id": [7, 8, 7, 9, 10, 8],
+        "status": ["Delivered", "Delivered", "Shipped", "Delivered", "Delivered", "Cancelled"],
+        "total": [12.0, 40.0, 25.5, 90.0, 5.25, 33.0],
+    })
+hints:
+  - "First get one total per customer with groupby. Then sort that result."
+  - "orders.groupby(\"customer_id\")[\"total\"].sum() gives the totals. .sort_values(ascending=False) puts the biggest first."
+  - "revenue_by_customer = orders.groupby(\"customer_id\")[\"total\"].sum().sort_values(ascending=False)"
+explanation: |
+  `groupby("customer_id")["total"].sum()` adds up each customer's orders. By default the result is sorted by the group
+  labels (customer 1, 2, 3…). `.sort_values(ascending=False)` re-sorts it by the totals instead, so the biggest
+  customer comes first: SQL's `GROUP BY customer_id ORDER BY SUM(total) DESC`.
+tests:
+  accept:
+    - "revenue_by_customer = orders.groupby('customer_id').total.agg('sum').sort_values(ascending=False)"
+  reject:
+    - "revenue_by_customer = orders.groupby('customer_id')['total'].sum()"
+    - "revenue_by_customer = orders.groupby('customer_id')['total'].sum().sort_values()"
+    - "revenue_by_customer = orders.groupby('customer_id')['total'].count().sort_values(ascending=False)"
+    - "revenue_by_customer = orders.sort_values('total', ascending=False)"

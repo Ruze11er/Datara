@@ -1,0 +1,56 @@
+id: py-handle-missing
+title: Drop or Fill Missing Values
+concepts: [dropna, fillna, missing values]
+lesson: py-pandas-clean-combine
+task: |
+  Create `clean` from `customers`:
+
+  1. **Drop** the customers who have **no email** (you can't contact them).
+  2. In the rows you keep, **fill** a missing `city` with the text `"Unknown"`.
+
+  Don't drop a customer just because their city is missing.
+setup: |
+  import pandas as pd
+
+  customers = pd.DataFrame({
+      "customer_id": [1, 2, 3, 4, 5, 6],
+      "name": ["Ana Reyes", "Ben Cruz", "Carla Diaz", "Dan Lee", "Eva Santos", "Finn Ocampo"],
+      "email": ["ana@mail.com", None, "carla@mail.com", None, "eva@mail.com", "finn@mail.com"],
+      "city": ["Manila", "Cebu", None, "Davao", None, None],
+  })
+starter: |
+  clean =
+solution: |
+  clean = customers.dropna(subset=["email"])
+  clean["city"] = clean["city"].fillna("Unknown")
+expect: [clean]
+variants:
+  - |
+    import pandas as pd
+
+    customers = pd.DataFrame({
+        "customer_id": [7, 8, 9, 10],
+        "name": ["Gia Tan", "Hal Uy", "Ivo Ramos", "Jo Lim"],
+        "email": [None, "hal@mail.com", "ivo@mail.com", "jo@mail.com"],
+        "city": ["Cebu", None, "Manila", None],
+    })
+hints:
+  - "Two steps: first remove the rows with a missing email, then fill the missing cities in what's left."
+  - "dropna(subset=[\"email\"]) only looks at the email column. fillna(\"Unknown\") on the city column fills its gaps."
+  - "clean = customers.dropna(subset=[\"email\"]), then clean[\"city\"] = clean[\"city\"].fillna(\"Unknown\")"
+explanation: |
+  `dropna()` removes rows with missing values. On its own it looks at **every** column, which would also throw away
+  customers who only lack a city. `subset=["email"]` limits it to the email column.
+
+  `fillna("Unknown")` replaces missing values with something you choose. Calling it on the `city` column only keeps
+  other columns untouched. Whether to drop or fill is a judgement call: you can't email someone without an address, but
+  an unknown city still leaves a useful customer.
+tests:
+  accept:
+    - "clean = customers.dropna(subset=['email']).fillna({'city': 'Unknown'})"
+    - "clean = customers[customers['email'].notna()].copy()\nclean['city'] = clean['city'].fillna('Unknown')"
+  reject:
+    - "clean = customers.dropna()"
+    - "clean = customers.fillna('Unknown')"
+    - "clean = customers.dropna(subset=['email'])"
+    - "clean = customers.copy()\nclean['city'] = clean['city'].fillna('Unknown')"

@@ -1,0 +1,57 @@
+id: py-dataframe-shape
+title: How Big Is the Table?
+concepts: [len, columns, shape]
+lesson: py-pandas-intro
+task: |
+  Before analyzing a table, analysts check its size and columns.
+
+  Create two variables:
+
+  - `row_count`: the number of rows in `products` (a whole number)
+  - `column_names`: the column names of `products`, as a **list**
+setup: |
+  import pandas as pd
+
+  products = pd.DataFrame({
+      "product_id": [1, 2, 3, 4, 5, 6, 7, 8],
+      "name": ["Wireless Mouse", "USB-C Cable", "Desk Lamp", "Notebook",
+               "Water Bottle", "Headphones", "Yoga Mat", "Coffee Mug"],
+      "category": ["Electronics", "Electronics", "Home", "Office",
+                   "Sports", "Electronics", "Sports", "Home"],
+      "price": [24.99, 9.5, 32.0, 4.75, 15.0, 79.95, 28.5, 12.0],
+      "stock": [35, 120, 8, 200, 0, 12, 5, 40],
+  })
+starter: |
+  row_count =
+  column_names =
+solution: |
+  row_count = len(products)
+  column_names = list(products.columns)
+expect: [row_count, column_names]
+variants:
+  - |
+    import pandas as pd
+
+    products = pd.DataFrame({
+        "sku": ["A1", "B2", "C3"],
+        "title": ["Backpack", "Pen Set", "Monitor"],
+        "price": [45.0, 6.25, 189.0],
+    })
+hints:
+  - "len() works on a DataFrame too. A DataFrame also has an attribute that holds its column names."
+  - "len(products) counts the rows. products.columns holds the column names, but it isn't a list yet."
+  - "row_count = len(products) and column_names = list(products.columns)"
+explanation: |
+  `len(products)` counts rows, just like `len()` counts the items in a list. `products.columns` holds the column names in
+  a pandas **Index**. `list(...)` turns it into an ordinary list.
+
+  `products.shape` gives both sizes at once as `(rows, columns)`, so `products.shape[0]` is also the row count. Note
+  that `shape` and `columns` are **attributes**, so they have no `()` after them.
+tests:
+  accept:
+    - "row_count = products.shape[0]\ncolumn_names = products.columns.tolist()"
+  reject:
+    - "row_count = products.shape\ncolumn_names = list(products.columns)"
+    - "row_count = products.size\ncolumn_names = list(products.columns)"
+    - "row_count = len(products)\ncolumn_names = products.columns"
+    - "row_count = 8\ncolumn_names = ['product_id', 'name', 'category', 'price', 'stock']"

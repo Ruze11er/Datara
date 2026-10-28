@@ -1,0 +1,58 @@
+id: py-groupby-agg
+title: Several Summaries at Once
+concepts: [groupby, agg, named aggregation]
+lesson: py-pandas-groupby
+task: |
+  Create `status_summary`: one row per `status`, with two columns:
+
+  - `orders`: how many orders have that status
+  - `revenue`: the sum of their `total`
+setup: |
+  import pandas as pd
+
+  orders = pd.DataFrame({
+      "order_id": [101, 102, 103, 104, 105, 106, 107, 108, 109, 110],
+      "customer_id": [1, 2, 1, 3, 5, 2, 4, 1, 3, 5],
+      "status": ["Delivered", "Delivered", "Cancelled", "Delivered", "Shipped",
+                 "Delivered", "Delivered", "Delivered", "Cancelled", "Delivered"],
+      "total": [45.5, 120.0, 30.25, 89.99, 15.75, 64.0, 310.4, 52.3, 18.0, 99.95],
+  })
+starter: |
+  status_summary = orders.groupby("status").agg(
+      # new_column_name=("column", "calculation"),
+  )
+solution: |
+  status_summary = orders.groupby("status").agg(
+      orders=("order_id", "count"),
+      revenue=("total", "sum"),
+  )
+expect: [status_summary]
+variants:
+  - |
+    import pandas as pd
+
+    orders = pd.DataFrame({
+        "order_id": [201, 202, 203, 204, 205],
+        "customer_id": [7, 8, 7, 9, 10],
+        "status": ["Shipped", "Returned", "Shipped", "Delivered", "Shipped"],
+        "total": [12.0, 40.0, 25.5, 90.0, 5.25],
+    })
+hints:
+  - ".agg() can calculate several things per group. Each new column is written as name=(column, calculation)."
+  - "Count the order_id column with \"count\", and add up the total column with \"sum\"."
+  - "orders.groupby(\"status\").agg(orders=(\"order_id\", \"count\"), revenue=(\"total\", \"sum\"))"
+explanation: |
+  This is called **named aggregation**. Inside `.agg()`, each keyword becomes an output column, and its value says
+  which column to use and what to calculate: `revenue=("total", "sum")`. It's like writing
+  `COUNT(order_id) AS orders, SUM(total) AS revenue` in SQL.
+
+  The statuses become the row labels. Adding `.reset_index()` would turn them into a normal column. The check accepts
+  either.
+tests:
+  accept:
+    - "status_summary = orders.groupby('status', as_index=False).agg(orders=('order_id', 'size'), revenue=('total', 'sum'))"
+    - "groups = orders.groupby('status')\nstatus_summary = pd.DataFrame({'orders': groups.size(), 'revenue': groups['total'].sum()})"
+  reject:
+    - "status_summary = orders.groupby('status').agg({'order_id': 'count', 'total': 'sum'})"
+    - "status_summary = orders.groupby('status').agg(orders=('order_id', 'count'), revenue=('total', 'mean'))"
+    - "status_summary = orders.groupby('customer_id').agg(orders=('order_id', 'count'), revenue=('total', 'sum'))"

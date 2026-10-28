@@ -69,7 +69,7 @@ serve({
   },
 
   /** Python Lab "Run": given data + learner code, returns output, error, and variables. */
-  async run(spec: { setup: string; code: string }): Promise<unknown> {
+  async run(spec: { setup: string; code: string; files: Record<string, string> }): Promise<unknown> {
     const handle = await getChecker()
     return JSON.parse(handle('run', JSON.stringify(spec)))
   },
