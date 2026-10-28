@@ -5,6 +5,7 @@ import {
   CodeXml,
   Database,
   LayoutDashboard,
+  NotebookPen,
   RotateCcw,
   Settings,
   SquareTerminal,
@@ -58,6 +59,7 @@ export default function Sidebar() {
     { to: '/python', label: 'Python Lab', icon: CodeXml },
     { to: '/review', label: 'Review', icon: RotateCcw, badge: due },
     { to: '/playground', label: 'Playground', icon: SquareTerminal },
+    { to: '/notes', label: 'Notes', icon: NotebookPen },
     { to: '/progress', label: 'Progress', icon: ChartColumn }
   ]
 

@@ -22,6 +22,8 @@ import {
   type NextLink,
   Toolbar
 } from '../labs/LevelParts'
+import { NotesBox } from '../notes/NotesBox'
+import { levelNoteKey } from '../../lib/notes'
 import { useLevelSession, type AttemptResult } from '../labs/useLevelSession'
 import { ErrorBox, OutputBlock, Variables } from './PythonResultParts'
 
@@ -137,6 +139,7 @@ function PythonLevelPage({ level, reviewing }: { reviewing: boolean; level: Numb
           <HelpSection level={level} lp={lp} onHint={session.revealHint} onSolution={session.revealSolution} />
           {!reviewing && <ExplanationSection level={level} lp={lp} />}
           <LessonLink lessonId={level.lesson} />
+          <NotesBox noteKey={levelNoteKey('python', level.id)} />
         </aside>
 
         <section className="flex min-h-0 min-w-0 flex-col">

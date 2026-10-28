@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router'
 import { CircleX, CodeXml, Database, FileText, LoaderCircle, Play, RotateCcw } from 'lucide-react'
 import { friendlySqlError } from '@shared/sqlCheck'
 import { CodeEditor, type CodeEditorHandle } from '../../components/CodeEditor'
-import { ResultTable } from '../../components/ResultTable'
+import { TableOrChart } from '../../components/TableOrChart'
 import { STORE_DATASET } from '../../content'
 import { isPythonStarted, runPythonLab } from '../../engines/python/pythonEngine'
 import type { PyLabRun } from '../../engines/python/types'
@@ -189,11 +189,13 @@ function SqlPlayground() {
           </div>
         )}
         {output.kind === 'result' && (
-          <div className="flex min-h-0 flex-1 flex-col">
-            <div className="px-4 py-2 text-xs font-medium text-slate-500">{output.label}</div>
-            <div className="min-h-0 flex-1">
-              <ResultTable columns={output.result.columns} rows={output.result.rows} truncated={output.result.truncated} />
-            </div>
+          <div className="min-h-0 flex-1">
+            <TableOrChart
+              label={output.label}
+              columns={output.result.columns}
+              rows={output.result.rows}
+              truncated={output.result.truncated}
+            />
           </div>
         )}
       </section>

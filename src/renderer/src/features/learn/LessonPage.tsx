@@ -8,6 +8,8 @@ import { useProgress } from '../../lib/ProgressContext'
 import { withActivity } from '../../lib/activity'
 import { isLevelUnlocked, levelProgress } from '../../lib/labProgress'
 import { Quiz } from './Quiz'
+import { NotesBox } from '../notes/NotesBox'
+import { lessonNoteKey } from '../../lib/notes'
 
 export default function LessonRoute() {
   const { lessonId = '' } = useParams()
@@ -82,6 +84,10 @@ function LessonPage({ lessonId }: { lessonId: string }) {
       </header>
 
       <Markdown text={lesson.body} className="prose-lesson" />
+
+      <div className="mt-8">
+        <NotesBox noteKey={lessonNoteKey(lesson.id)} />
+      </div>
 
       {lesson.practice.length > 0 && (
         <Card className="mt-8">

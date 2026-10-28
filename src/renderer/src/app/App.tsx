@@ -11,6 +11,7 @@ import PythonLevelRoute from '../features/python-lab/PythonLevelPage'
 import ProgressPage from '../features/progress/ProgressPage'
 import ReviewPage from '../features/review/ReviewPage'
 import PlaygroundPage from '../features/playground/PlaygroundPage'
+import NotesPage from '../features/notes/NotesPage'
 import SettingsPage from '../features/settings/SettingsPage'
 import { useProgress } from '../lib/ProgressContext'
 import { useTheme } from '../lib/theme'
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="/python/:levelId" element={<PythonLevelRoute />} />
             <Route path="/review" element={<ReviewPage />} />
             <Route path="/playground" element={<PlaygroundPage />} />
+            <Route path="/notes" element={<NotesPage />} />
             <Route path="/progress" element={<ProgressPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -89,6 +89,7 @@ export function normalizeProgress(raw: unknown): ProgressData {
     bookmarks: Array.isArray(data.bookmarks) ? data.bookmarks.filter((b) => typeof b === 'string') : [],
     playground: obj(data.playground) as ProgressData['playground'],
     activity: obj(data.activity) as ProgressData['activity'],
+    notes: obj(data.notes) as ProgressData['notes'],
     settings: { ...base.settings, ...obj(data.settings) }
   }
 }

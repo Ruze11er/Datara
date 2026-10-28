@@ -1,7 +1,7 @@
 // Displays for Python results, shared by the Python Lab levels and the Playground.
 
 import { CircleX } from 'lucide-react'
-import { ResultTable } from '../../components/ResultTable'
+import { TableOrChart } from '../../components/TableOrChart'
 import type { PyError, PyVariable } from '../../engines/python/types'
 import { SectionTitle } from '../labs/LevelParts'
 
@@ -61,8 +61,8 @@ export function Variables({ variables: all }: { variables: PyVariable[] }) {
                 <td className="px-3 py-1.5 font-mono whitespace-nowrap">{v.type}</td>
                 <td className="px-3 py-1.5 font-mono break-all">
                   {v.table ? (
-                    <div className="flex max-h-64 max-w-full flex-col rounded border border-slate-200">
-                      <ResultTable
+                    <div className="flex max-h-80 max-w-full flex-col overflow-hidden rounded border border-slate-200 font-sans">
+                      <TableOrChart
                         columns={v.table.columns}
                         rows={v.table.rows}
                         totalRows={v.table.totalRows}

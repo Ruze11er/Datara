@@ -4,7 +4,7 @@ import { CircleX, LoaderCircle } from 'lucide-react'
 import { checkHiddenResult, checkResult, friendlySqlError, type CheckOutcome } from '@shared/sqlCheck'
 import { CodeEditor, type CodeEditorHandle } from '../../components/CodeEditor'
 import { Markdown } from '../../components/Markdown'
-import { ResultTable } from '../../components/ResultTable'
+import { TableOrChart } from '../../components/TableOrChart'
 import { sqlLab, STORE_DATASET, STORE_HIDDEN_DATASET, type NumberedLevel } from '../../content'
 import { runSql } from '../../engines/sql/sqlEngine'
 import type { SqlResult } from '../../engines/sql/types'
@@ -24,6 +24,8 @@ import {
   type NextLink,
   Toolbar
 } from '../labs/LevelParts'
+import { NotesBox } from '../notes/NotesBox'
+import { levelNoteKey } from '../../lib/notes'
 import { useLevelSession, type AttemptResult } from '../labs/useLevelSession'
 import { SchemaPanel } from './SchemaPanel'
 
@@ -149,6 +151,7 @@ function SqlLevelPage({ level, reviewing }: { reviewing: boolean; level: Numbere
           <HelpSection level={level} lp={lp} onHint={session.revealHint} onSolution={session.revealSolution} />
           {!reviewing && <ExplanationSection level={level} lp={lp} />}
           <LessonLink lessonId={level.lesson} />
+          <NotesBox noteKey={levelNoteKey('sql', level.id)} />
           <section>
             <SectionTitle>Tables</SectionTitle>
             <SchemaPanel schema={schema} focus={level.tables} onPreview={preview} />
@@ -223,11 +226,14 @@ function SqlOutput({ output, next }: { output: Output; next: NextLink | null }) 
           nextLabel={next?.label}
           nextReview={output.attempt.nextReview}
         />
-      ) : (
-        <div className="px-4 py-2 text-xs font-medium text-slate-500">{output.label}</div>
-      )}
+      ) : null}
       <div className="min-h-0 flex-1">
-        <ResultTable columns={output.result.columns} rows={output.result.rows} truncated={output.result.truncated} />
+        <TableOrChart
+          label={output.kind === 'check' ? 'Your query result' : output.label}
+          columns={output.result.columns}
+          rows={output.result.rows}
+          truncated={output.result.truncated}
+        />
       </div>
     </div>
   )

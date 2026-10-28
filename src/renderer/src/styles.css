@@ -28,6 +28,8 @@
   --heat-2: #2fa58d;
   --heat-3: #13806c;
   --heat-4: #0b5a4c;
+  /* Single-series result charts (components/ResultChart.tsx): 4.5:1 against the light surface. */
+  --chart-mark: #0e8573;
   --syn-keyword: #7c3aed;
   --syn-string: #b45309;
   --syn-number: #0e7490;
@@ -50,6 +52,7 @@
   --heat-2: #26927f;
   --heat-3: #3cbfa6;
   --heat-4: #86e5d1;
+  --chart-mark: #2bb59b; /* 6.8:1 against the dark surface */
   --color-code: #070b14;
   --color-code-fg: #e2e8f0;
 

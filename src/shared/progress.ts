@@ -34,6 +34,12 @@ export interface ReviewState {
   done?: boolean
 }
 
+export interface Note {
+  text: string
+  /** ISO timestamp of the last edit. */
+  updatedAt: string
+}
+
 /** Free-practice code from the Playground (autosaved). */
 export interface PlaygroundState {
   sql?: string
@@ -64,6 +70,8 @@ export interface ProgressData {
   playground: PlaygroundState
   /** Learning actions per local day (YYYY-MM-DD → count): Checks pressed and quizzes finished. */
   activity: Record<string, number>
+  /** The learner's own notes, keyed "lesson:<id>", "sql:<id>" or "python:<id>". Empty notes are removed. */
+  notes: Record<string, Note>
   settings: Settings
 }
 
@@ -76,6 +84,7 @@ export function emptyProgress(): ProgressData {
     bookmarks: [],
     playground: {},
     activity: {},
+    notes: {},
     settings: { editorFontSize: 14, theme: 'system' }
   }
 }
