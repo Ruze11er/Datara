@@ -91,3 +91,33 @@
     - sql-never-cancelled
     - sql-well-rated-products
     - sql-boss-category-scorecard
+
+- id: ch7
+  title: Transforming Data
+  description: Create categories with CASE, fill in missing values, build text, and analyze dates and monthly trends.
+  levels:
+    - sql-price-bands
+    - sql-band-counts
+    - sql-status-by-payment
+    - sql-email-or-placeholder
+    - sql-full-names
+    - sql-sku-codes
+    - sql-orders-per-month
+    - sql-monthly-revenue
+    - sql-orders-by-weekday
+    - sql-boss-monthly-report
+
+- id: ch8
+  title: Subqueries and CTEs
+  description: Use the result of one query inside another, and break big questions into clear, named steps with WITH.
+  levels:
+    - sql-above-average-price
+    - sql-priciest-product
+    - sql-returning-customers
+    - sql-non-reviewers
+    - sql-avg-orders-per-customer
+    - sql-busier-than-average
+    - sql-cte-top-spenders
+    - sql-five-star-products
+    - sql-above-category-average
+    - sql-boss-customer-segments

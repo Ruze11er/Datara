@@ -1,0 +1,37 @@
+id: sql-boss-monthly-report
+title: "Milestone: The Monthly Report"
+concepts: [strftime, CASE, conditional aggregation, ROUND, integer division]
+lesson: sql-dates
+tables: [orders]
+orderMatters: true
+checkColumnNames: true
+task: |
+  **Milestone level.** This one combines everything from Chapter 7.
+
+  Build the management report with one row per month (as `YYYY-MM`), from January to December:
+
+  - `month`
+  - `orders`: all orders placed that month
+  - `delivered_revenue`: total `total_amount` of **Delivered** orders, **rounded to 2 decimals**
+  - `cancel_rate_pct`: the **percentage** of that month's orders that were **Cancelled**, **rounded to 1 decimal**
+    (for example `14.3`)
+solution: |
+  SELECT strftime('%Y-%m', order_date) AS month,
+         COUNT(*) AS orders,
+         ROUND(SUM(CASE WHEN status = 'Delivered' THEN total_amount ELSE 0 END), 2) AS delivered_revenue,
+         ROUND(100.0 * SUM(CASE WHEN status = 'Cancelled' THEN 1 ELSE 0 END) / COUNT(*), 1) AS cancel_rate_pct
+  FROM orders
+  GROUP BY month
+  ORDER BY month;
+hints:
+  - "You can't use WHERE here, because `orders` counts every status. Use conditional aggregation (CASE inside SUM) for the delivered and cancelled parts."
+  - "Percentage = 100 × cancelled ÷ all orders. Careful: whole number ÷ whole number gives a whole number in SQLite, so write 100.0."
+  - "ROUND(100.0 * SUM(CASE WHEN status = 'Cancelled' THEN 1 ELSE 0 END) / COUNT(*), 1) AS cancel_rate_pct"
+explanation: |
+  One query, four different measures, all grouped by month. Conditional aggregation lets each column count only the rows
+  it cares about. The `100.0` matters: with `100 *`, SQLite would do whole-number division and turn 14.3% into 14.
+  Silent mistakes like that are why analysts double-check their numbers.
+tests:
+  reject:
+    - "SELECT strftime('%Y-%m', order_date) AS month, COUNT(*) AS orders, ROUND(SUM(CASE WHEN status = 'Delivered' THEN total_amount ELSE 0 END), 2) AS delivered_revenue, ROUND(100 * SUM(CASE WHEN status = 'Cancelled' THEN 1 ELSE 0 END) / COUNT(*), 1) AS cancel_rate_pct FROM orders GROUP BY month ORDER BY month"
+    - "SELECT strftime('%Y-%m', order_date) AS month, COUNT(*) AS orders, ROUND(SUM(total_amount), 2) AS delivered_revenue, ROUND(100.0 * SUM(CASE WHEN status = 'Cancelled' THEN 1 ELSE 0 END) / COUNT(*), 1) AS cancel_rate_pct FROM orders GROUP BY month ORDER BY month"

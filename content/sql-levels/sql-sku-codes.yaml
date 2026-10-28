@@ -1,0 +1,26 @@
+id: sql-sku-codes
+title: Making Product Codes
+concepts: [SUBSTR, UPPER, "||"]
+lesson: sql-text-functions
+tables: [products]
+checkColumnNames: true
+task: |
+  The warehouse wants short product codes (SKUs). A code is the **first 3 letters of the category in capitals**, a dash,
+  and the `product_id`. For example, product 1 in Electronics becomes `ELE-1`.
+
+  Show `product_name` and the code as `sku`.
+solution: |
+  SELECT product_name, UPPER(SUBSTR(category, 1, 3)) || '-' || product_id AS sku
+  FROM products;
+hints:
+  - "SUBSTR(text, start, length) takes part of a text. In SQL, the first character is position 1."
+  - "UPPER() turns text into capitals. Then join the parts with ||."
+  - "UPPER(SUBSTR(category, 1, 3)) || '-' || product_id AS sku"
+explanation: |
+  Functions can be nested: `SUBSTR` takes the first 3 characters, `UPPER` capitalizes them, and `||` joins on the dash and
+  the ID (SQLite turns the number into text automatically). Note that SQL counts text positions from **1**,
+  unlike Python, which starts at 0.
+tests:
+  reject:
+    - "SELECT product_name, SUBSTR(category, 1, 3) || '-' || product_id AS sku FROM products"
+    - "SELECT product_name, UPPER(SUBSTR(category, 0, 3)) || '-' || product_id AS sku FROM products"

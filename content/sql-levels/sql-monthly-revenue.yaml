@@ -1,0 +1,26 @@
+id: sql-monthly-revenue
+title: Monthly Revenue
+concepts: [strftime, GROUP BY, SUM]
+lesson: sql-dates
+tables: [orders]
+orderMatters: true
+task: |
+  Show the **delivered revenue** (sum of `total_amount` for **Delivered** orders, **rounded to 2 decimals**) for each month,
+  as `YYYY-MM`, from January to December.
+solution: |
+  SELECT strftime('%Y-%m', order_date) AS month, ROUND(SUM(total_amount), 2) AS revenue
+  FROM orders
+  WHERE status = 'Delivered'
+  GROUP BY month
+  ORDER BY month;
+hints:
+  - "Start from the previous level, then add a filter and change what you aggregate."
+  - "WHERE status = 'Delivered', and ROUND(SUM(total_amount), 2) instead of COUNT(*)."
+  - "SELECT strftime('%Y-%m', order_date) AS month, ROUND(SUM(total_amount), 2) AS revenue FROM orders WHERE status = 'Delivered' GROUP BY month ORDER BY month;"
+explanation: |
+  Revenue by month is the classic trend line every manager asks for. Plotted as a chart, it would show which months were
+  strong or weak. Charts are coming later in the course.
+tests:
+  reject:
+    - "SELECT strftime('%Y-%m', order_date) AS month, ROUND(SUM(total_amount), 2) AS revenue FROM orders GROUP BY month ORDER BY month"
+    - "SELECT strftime('%Y-%m', order_date) AS month, ROUND(SUM(total_amount), 2) AS revenue FROM orders WHERE status = 'Delivered' GROUP BY month ORDER BY revenue DESC"

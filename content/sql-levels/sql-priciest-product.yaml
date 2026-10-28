@@ -1,0 +1,24 @@
+id: sql-priciest-product
+title: The Priciest Product
+concepts: [subquery, MAX]
+lesson: sql-subqueries
+tables: [products]
+task: |
+  Show the `product_name` and `price` of the **most expensive** product, using a subquery to find the highest price.
+solution: |
+  SELECT product_name, price
+  FROM products
+  WHERE price = (SELECT MAX(price) FROM products);
+hints:
+  - "First find the highest price, then find the product(s) with that price."
+  - "Use a subquery with MAX(price) in the WHERE clause."
+  - "SELECT product_name, price FROM products WHERE price = (SELECT MAX(price) FROM products);"
+explanation: |
+  The subquery finds the maximum, and the outer query finds every product with that price. If two products shared the top
+  price, this query would correctly return **both**, while `ORDER BY price DESC LIMIT 1` would silently pick one.
+  (SQLite also accepts `SELECT product_name, MAX(price) FROM products`, a quirk most other databases reject.)
+tests:
+  accept:
+    - "SELECT product_name, price FROM products ORDER BY price DESC LIMIT 1"
+  reject:
+    - "SELECT product_name, price FROM products WHERE price = (SELECT MIN(price) FROM products)"

@@ -1,0 +1,27 @@
+id: sql-returning-customers
+title: Customers Who Returned Something
+concepts: [subquery, IN]
+lesson: sql-subqueries
+tables: [customers, orders]
+task: |
+  The quality team wants to survey customers who returned an order.
+
+  Show the `first_name` and `last_name` of every customer who has **at least one order with status `Returned`**.
+  Each customer should appear only once.
+solution: |
+  SELECT first_name, last_name
+  FROM customers
+  WHERE customer_id IN (SELECT customer_id FROM orders WHERE status = 'Returned');
+hints:
+  - "First, which customer_ids have a Returned order? That's a query on its own."
+  - "Use that list with IN: WHERE customer_id IN (SELECT …)."
+  - "SELECT first_name, last_name FROM customers WHERE customer_id IN (SELECT customer_id FROM orders WHERE status = 'Returned');"
+explanation: |
+  The subquery returns a **list** of customer IDs, and `IN` keeps customers whose ID is in that list. Each customer appears
+  once, even if they returned several orders. A `JOIN` would repeat them unless you add `DISTINCT`.
+tests:
+  accept:
+    - "SELECT DISTINCT c.first_name, c.last_name FROM customers c JOIN orders o ON o.customer_id = c.customer_id WHERE o.status = 'Returned'"
+  reject:
+    - "SELECT c.first_name, c.last_name FROM customers c JOIN orders o ON o.customer_id = c.customer_id WHERE o.status = 'Returned'"
+    - "SELECT first_name, last_name FROM customers WHERE customer_id IN (SELECT customer_id FROM orders WHERE status = 'Cancelled')"

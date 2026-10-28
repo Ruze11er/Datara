@@ -1,0 +1,51 @@
+id: sql-boss-customer-segments
+title: "Milestone: Customer Segments"
+concepts: [CTE, LEFT JOIN, CASE, GROUP BY]
+lesson: sql-ctes
+tables: [customers, orders]
+orderMatters: true
+checkColumnNames: true
+task: |
+  **Milestone level.** This one combines Chapters 6, 7, and 8.
+
+  Marketing wants to split **all 60 customers** into segments by their **Delivered** spending:
+
+  | Delivered spending | `segment` |
+  |---|---|
+  | 700 or more | `VIP` |
+  | 300 to under 700 | `Regular` |
+  | more than 0 but under 300 | `Occasional` |
+  | no delivered orders at all | `New` |
+
+  Show each `segment` and the number of customers in it as `customers`, **largest segment first**.
+solution: |
+  WITH spend AS (
+    SELECT customer_id, SUM(total_amount) AS total
+    FROM orders
+    WHERE status = 'Delivered'
+    GROUP BY customer_id
+  )
+  SELECT CASE
+           WHEN s.total IS NULL THEN 'New'
+           WHEN s.total >= 700 THEN 'VIP'
+           WHEN s.total >= 300 THEN 'Regular'
+           ELSE 'Occasional'
+         END AS segment,
+         COUNT(*) AS customers
+  FROM customers AS c
+  LEFT JOIN spend AS s ON s.customer_id = c.customer_id
+  GROUP BY segment
+  ORDER BY customers DESC;
+hints:
+  - "Step 1: a CTE with each customer's delivered spend. Step 2: keep ALL customers, including those not in the CTE."
+  - "LEFT JOIN customers to the CTE. Customers with no delivered orders get NULL spend, so check IS NULL first in your CASE."
+  - "WITH spend AS (…) SELECT CASE WHEN s.total IS NULL THEN 'New' WHEN s.total >= 700 THEN 'VIP' WHEN s.total >= 300 THEN 'Regular' ELSE 'Occasional' END AS segment, COUNT(*) AS customers FROM customers AS c LEFT JOIN spend AS s ON s.customer_id = c.customer_id GROUP BY segment ORDER BY customers DESC;"
+explanation: |
+  Segmentation like this is real analyst work, and it needs everything you've learned: a CTE for the per-customer totals,
+  a LEFT JOIN so nobody is lost, a CASE that handles NULL **first** (otherwise NULL would fall through to `ELSE`), and
+  grouping. The segment counts should add up to 60, which is a quick sanity check that no customer went missing.
+tests:
+  reject:
+    - "WITH spend AS (SELECT customer_id, SUM(total_amount) AS total FROM orders WHERE status = 'Delivered' GROUP BY customer_id) SELECT CASE WHEN s.total >= 700 THEN 'VIP' WHEN s.total >= 300 THEN 'Regular' ELSE 'Occasional' END AS segment, COUNT(*) AS customers FROM customers AS c LEFT JOIN spend AS s ON s.customer_id = c.customer_id GROUP BY segment ORDER BY customers DESC"
+    - "WITH spend AS (SELECT customer_id, SUM(total_amount) AS total FROM orders WHERE status = 'Delivered' GROUP BY customer_id) SELECT CASE WHEN s.total IS NULL THEN 'New' WHEN s.total >= 700 THEN 'VIP' WHEN s.total >= 300 THEN 'Regular' ELSE 'Occasional' END AS segment, COUNT(*) AS customers FROM customers AS c JOIN spend AS s ON s.customer_id = c.customer_id GROUP BY segment ORDER BY customers DESC"
+    - "WITH spend AS (SELECT customer_id, SUM(total_amount) AS total FROM orders GROUP BY customer_id) SELECT CASE WHEN s.total IS NULL THEN 'New' WHEN s.total >= 700 THEN 'VIP' WHEN s.total >= 300 THEN 'Regular' ELSE 'Occasional' END AS segment, COUNT(*) AS customers FROM customers AS c LEFT JOIN spend AS s ON s.customer_id = c.customer_id GROUP BY segment ORDER BY customers DESC"

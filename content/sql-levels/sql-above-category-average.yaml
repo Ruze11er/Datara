@@ -1,0 +1,31 @@
+id: sql-above-category-average
+title: Pricey for Its Category
+concepts: [correlated subquery, CTE]
+lesson: sql-subqueries
+tables: [products]
+task: |
+  A 40-dollar book is expensive; a 40-dollar gadget isn't. Show the `product_name`, `category`, and `price` of products
+  priced **above the average price of their own category**.
+solution: |
+  SELECT p.product_name, p.category, p.price
+  FROM products AS p
+  WHERE p.price > (
+    SELECT AVG(p2.price)
+    FROM products AS p2
+    WHERE p2.category = p.category
+  );
+hints:
+  - "Each product must be compared with a different average, the one for its own category."
+  - "Use a correlated subquery: the inner query calculates AVG(price) only for rows with the same category as the outer product. Give the inner table a different alias."
+  - "… WHERE p.price > (SELECT AVG(p2.price) FROM products AS p2 WHERE p2.category = p.category);"
+explanation: |
+  The same table appears twice with different aliases (`p` outside, `p2` inside). For each outer product, the inner query
+  averages only its category. A CTE with category averages joined back to `products` gives the same result and is often
+  easier to read:
+  `WITH avg_price AS (SELECT category, AVG(price) AS a FROM products GROUP BY category) SELECT … JOIN avg_price …`.
+tests:
+  accept:
+    - "WITH avg_price AS (SELECT category, AVG(price) AS a FROM products GROUP BY category) SELECT p.product_name, p.category, p.price FROM products p JOIN avg_price ap ON ap.category = p.category WHERE p.price > ap.a"
+  reject:
+    - "SELECT product_name, category, price FROM products WHERE price > (SELECT AVG(price) FROM products)"
+    - "SELECT p.product_name, p.category, p.price FROM products AS p WHERE p.price > (SELECT AVG(p2.price) FROM products AS p2 WHERE p2.category = p2.category)"

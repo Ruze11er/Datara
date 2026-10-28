@@ -24,8 +24,8 @@ Agreed 2026-10-28.
 | 0. Foundation | Project setup, security, sidebar shell, installer, offline engine checks | Done |
 | 1. MVP | SQL Lab (editor, table browser, Run/Check, feedback, hints, stars, autosave), SQL chapters 1–3 (30 levels), 12 lessons, progress, Dashboard, Settings (backup/restore/reset) | Built; content awaiting owner review |
 | 2. Python Lab | Python checker (variables + output, hidden-data variants), Variables panel, DataFrame display, Python chapters 1–3 (30 levels), 8 Python lessons | Built; content awaiting owner review |
-| 3. Content | SQL to 100 levels, pandas chapters, statistics/spreadsheets/storytelling lessons, quizzes | In progress, in review batches: (1) SQL ch. 4–6 + 4 lessons: built; (2) SQL ch. 7–8; (3) SQL ch. 9–10; (4) Python ch. 4–7 with pandas; (5) statistics, spreadsheets, storytelling lessons |
-| 4. Extras | Playground, full Progress page, review queue, dark mode, hidden-test datasets, charts, notes | |
+| 3. Content | SQL to 100 levels, pandas chapters, statistics/spreadsheets/storytelling lessons, quizzes | In progress, in review batches: (1) SQL ch. 4–6 + 4 lessons: built; (2) SQL ch. 7–8 + 5 lessons: built; (3) SQL ch. 9–10; (4) Python ch. 4–7 with pandas; (5) statistics, spreadsheets, storytelling lessons |
+| 4. Extras | Playground, full Progress page, review queue, dark mode, hidden-test datasets for SQL (catch hard-coded answers, as Python variants already do), charts, notes | |
 | 5. Web (optional) | Static website build with browser storage | |
 
 ## SQL roadmap (100 levels, 10 chapters; level 10, 20, … are milestone "boss" levels)

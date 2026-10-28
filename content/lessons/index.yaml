@@ -44,6 +44,17 @@
       lessons:
         - sql-joins
         - sql-left-join
+    - id: transforming
+      title: Transforming Data
+      lessons:
+        - sql-case
+        - sql-text-functions
+        - sql-dates
+    - id: subqueries
+      title: Subqueries and CTEs
+      lessons:
+        - sql-subqueries
+        - sql-ctes
 
 - id: python
   title: Python for Data Analytics

@@ -1,0 +1,35 @@
+id: sql-orders-by-weekday
+title: Busiest Day of the Week
+concepts: [strftime, CASE, GROUP BY]
+lesson: sql-dates
+tables: [orders]
+orderMatters: true
+task: |
+  Which weekday gets the most orders? Show the **weekday name** (`Sunday`, `Monday`, … `Saturday`) and the number of
+  orders on that day, in calendar order starting with **Sunday**.
+solution: |
+  SELECT CASE strftime('%w', order_date)
+           WHEN '0' THEN 'Sunday'
+           WHEN '1' THEN 'Monday'
+           WHEN '2' THEN 'Tuesday'
+           WHEN '3' THEN 'Wednesday'
+           WHEN '4' THEN 'Thursday'
+           WHEN '5' THEN 'Friday'
+           ELSE 'Saturday'
+         END AS weekday,
+         COUNT(*) AS orders
+  FROM orders
+  GROUP BY strftime('%w', order_date)
+  ORDER BY strftime('%w', order_date);
+hints:
+  - "strftime('%w', order_date) gives the day of the week as text: '0' for Sunday up to '6' for Saturday."
+  - "Turn that number into a name with CASE. Group and sort by the number, so the days stay in calendar order."
+  - "SELECT CASE strftime('%w', order_date) WHEN '0' THEN 'Sunday' WHEN '1' THEN 'Monday' … END AS weekday, COUNT(*) FROM orders GROUP BY strftime('%w', order_date) ORDER BY strftime('%w', order_date);"
+explanation: |
+  `CASE value WHEN … THEN …` (the "simple" form of CASE) compares one value against a list. Notice the result of `strftime`
+  is **text**, so compare with `'0'`, not `0`. Sorting by the day **number** keeps calendar order; sorting by the
+  name would put Friday first.
+tests:
+  reject:
+    - "SELECT CASE strftime('%w', order_date) WHEN '0' THEN 'Sunday' WHEN '1' THEN 'Monday' WHEN '2' THEN 'Tuesday' WHEN '3' THEN 'Wednesday' WHEN '4' THEN 'Thursday' WHEN '5' THEN 'Friday' ELSE 'Saturday' END AS weekday, COUNT(*) AS orders FROM orders GROUP BY weekday ORDER BY weekday"
+    - "SELECT CASE strftime('%w', order_date) WHEN 0 THEN 'Sunday' WHEN 1 THEN 'Monday' WHEN 2 THEN 'Tuesday' WHEN 3 THEN 'Wednesday' WHEN 4 THEN 'Thursday' WHEN 5 THEN 'Friday' ELSE 'Saturday' END AS weekday, COUNT(*) AS orders FROM orders GROUP BY strftime('%w', order_date) ORDER BY strftime('%w', order_date)"

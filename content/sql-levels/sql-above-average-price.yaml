@@ -1,0 +1,24 @@
+id: sql-above-average-price
+title: Above-Average Prices
+concepts: [subquery, scalar subquery]
+lesson: sql-subqueries
+tables: [products]
+task: |
+  Show the `product_name` and `price` of every product that costs **more than the average price** of all products.
+
+  Don't type the average in: let the query calculate it, so the answer stays right when prices change.
+solution: |
+  SELECT product_name, price
+  FROM products
+  WHERE price > (SELECT AVG(price) FROM products);
+hints:
+  - "You could find the average first with one query, but then you'd have to copy the number by hand."
+  - "Put a whole query in brackets where the number would go: WHERE price > (SELECT …)."
+  - "SELECT product_name, price FROM products WHERE price > (SELECT AVG(price) FROM products);"
+explanation: |
+  A query inside another query is a **subquery**. This one returns a single value (the average), so it can be used
+  anywhere a number could. The inner query runs first, then the outer query compares every price with its result.
+tests:
+  reject:
+    - "SELECT product_name, price FROM products WHERE price > 100"
+    - "SELECT product_name, price FROM products WHERE price < (SELECT AVG(price) FROM products)"

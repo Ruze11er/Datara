@@ -1,0 +1,37 @@
+id: sql-cte-top-spenders
+title: Top Spenders by Name
+concepts: [CTE, JOIN]
+lesson: sql-ctes
+tables: [orders, customers]
+orderMatters: true
+checkColumnNames: true
+task: |
+  Show the `first_name`, `last_name`, and `total_spent` (Delivered orders only, **rounded to 2 decimals**) of customers
+  who spent **more than 800**, highest first.
+
+  Use a CTE to calculate the spending, then join it to `customers` to get the names.
+solution: |
+  WITH spend AS (
+    SELECT customer_id, SUM(total_amount) AS total
+    FROM orders
+    WHERE status = 'Delivered'
+    GROUP BY customer_id
+  )
+  SELECT c.first_name, c.last_name, ROUND(s.total, 2) AS total_spent
+  FROM spend AS s
+  JOIN customers AS c ON c.customer_id = s.customer_id
+  WHERE s.total > 800
+  ORDER BY total_spent DESC;
+hints:
+  - "Step 1 (the CTE): total delivered spend per customer_id. Step 2: join that result to customers."
+  - "A CTE can be joined like any table: FROM spend JOIN customers ON …"
+  - "WITH spend AS (SELECT customer_id, SUM(total_amount) AS total FROM orders WHERE status = 'Delivered' GROUP BY customer_id) SELECT c.first_name, c.last_name, ROUND(s.total, 2) AS total_spent FROM spend AS s JOIN customers AS c ON c.customer_id = s.customer_id WHERE s.total > 800 ORDER BY total_spent DESC;"
+explanation: |
+  Splitting the work makes each part simple: the CTE answers "how much did each customer spend?", and the main query
+  answers "who are they, and who spent over 800?". You could do it in one query with `JOIN` and `HAVING`, but
+  with bigger questions, named steps are much easier to read and check.
+tests:
+  accept:
+    - "SELECT c.first_name, c.last_name, ROUND(SUM(o.total_amount), 2) AS total_spent FROM orders o JOIN customers c ON c.customer_id = o.customer_id WHERE o.status = 'Delivered' GROUP BY c.customer_id HAVING SUM(o.total_amount) > 800 ORDER BY total_spent DESC"
+  reject:
+    - "WITH spend AS (SELECT customer_id, SUM(total_amount) AS total FROM orders GROUP BY customer_id) SELECT c.first_name, c.last_name, ROUND(s.total, 2) AS total_spent FROM spend AS s JOIN customers AS c ON c.customer_id = s.customer_id WHERE s.total > 800 ORDER BY total_spent DESC"

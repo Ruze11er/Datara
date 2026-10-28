@@ -1,0 +1,31 @@
+id: sql-status-by-payment
+title: Delivered vs Cancelled by Payment Method
+concepts: [CASE, conditional aggregation]
+lesson: sql-case
+tables: [orders]
+checkColumnNames: true
+task: |
+  Finance wants one row per `payment_method` with two counts side by side:
+
+  - `delivered`: how many of its orders were **Delivered**
+  - `cancelled`: how many were **Cancelled**
+solution: |
+  SELECT payment_method,
+         SUM(CASE WHEN status = 'Delivered' THEN 1 ELSE 0 END) AS delivered,
+         SUM(CASE WHEN status = 'Cancelled' THEN 1 ELSE 0 END) AS cancelled
+  FROM orders
+  GROUP BY payment_method;
+hints:
+  - "A WHERE filter can only keep one status at a time. You need both counts in the same row."
+  - "Inside SUM, use CASE to turn each row into 1 (if it matches) or 0 (if not), then add them up."
+  - "SUM(CASE WHEN status = 'Delivered' THEN 1 ELSE 0 END) AS delivered, and the same for 'Cancelled'"
+explanation: |
+  This trick is called **conditional aggregation**: `CASE` turns each row into 1 or 0, and `SUM` counts the 1s.
+  It lets you build side-by-side comparisons (a simple *pivot table*) in a single query. `COUNT(CASE WHEN … THEN 1 END)`
+  also works, because without `ELSE` the non-matching rows become NULL and `COUNT` skips them.
+tests:
+  accept:
+    - "SELECT payment_method, COUNT(CASE WHEN status = 'Delivered' THEN 1 END) AS delivered, COUNT(CASE WHEN status = 'Cancelled' THEN 1 END) AS cancelled FROM orders GROUP BY payment_method"
+  reject:
+    - "SELECT payment_method, COUNT(CASE WHEN status = 'Delivered' THEN 1 ELSE 0 END) AS delivered, COUNT(CASE WHEN status = 'Cancelled' THEN 1 ELSE 0 END) AS cancelled FROM orders GROUP BY payment_method"
+    - "SELECT payment_method, COUNT(*) AS delivered, COUNT(*) AS cancelled FROM orders WHERE status = 'Delivered' GROUP BY payment_method"

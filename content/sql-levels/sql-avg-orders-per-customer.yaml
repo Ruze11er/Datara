@@ -1,0 +1,29 @@
+id: sql-avg-orders-per-customer
+title: Average Orders per Customer
+concepts: [subquery in FROM, derived table]
+lesson: sql-subqueries
+tables: [orders]
+task: |
+  Among customers who have ordered, what's the **average number of orders per customer**? Return one number,
+  **rounded to 2 decimals**.
+solution: |
+  SELECT ROUND(AVG(order_count), 2)
+  FROM (
+    SELECT customer_id, COUNT(*) AS order_count
+    FROM orders
+    GROUP BY customer_id
+  );
+hints:
+  - "This needs two steps: first count orders per customer, then average those counts."
+  - "You can't nest aggregates like AVG(COUNT(*)). Instead, put the first query in brackets after FROM and treat it like a table."
+  - "SELECT ROUND(AVG(order_count), 2) FROM (SELECT customer_id, COUNT(*) AS order_count FROM orders GROUP BY customer_id);"
+explanation: |
+  A subquery in `FROM` (often called a **derived table**) builds a temporary result that the outer query reads like a normal
+  table. It's the standard way to aggregate *twice*: "average of the counts", "maximum of the totals", and so on.
+  `COUNT(*) * 1.0 / COUNT(DISTINCT customer_id)` would also work here.
+tests:
+  accept:
+    - "SELECT ROUND(COUNT(*) * 1.0 / COUNT(DISTINCT customer_id), 2) FROM orders"
+  reject:
+    - "SELECT ROUND(COUNT(*) / COUNT(DISTINCT customer_id), 2) FROM orders"
+    - "SELECT ROUND(COUNT(*) * 1.0 / (SELECT COUNT(*) FROM customers), 2) FROM orders"

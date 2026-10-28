@@ -1,0 +1,26 @@
+id: sql-email-or-placeholder
+title: Filling In Missing Emails
+concepts: [COALESCE, "NULL"]
+lesson: sql-case
+tables: [customers]
+checkColumnNames: true
+task: |
+  A contact list shouldn't show blank cells. Show each customer's `first_name`, `last_name`, and a column `contact`
+  that holds their `email`, or the text `no email` when the email is missing.
+solution: |
+  SELECT first_name, last_name, COALESCE(email, 'no email') AS contact
+  FROM customers;
+hints:
+  - "Missing emails are NULL. You want to replace NULL with a default value."
+  - "COALESCE(a, b) returns a if it isn't NULL, otherwise b."
+  - "SELECT first_name, last_name, COALESCE(email, 'no email') AS contact FROM customers;"
+explanation: |
+  `COALESCE` returns its first non-NULL argument, a short and readable way to give missing values a default.
+  `CASE WHEN email IS NULL THEN 'no email' ELSE email END` does the same thing, and SQLite's `IFNULL(email, 'no email')` too.
+tests:
+  accept:
+    - "SELECT first_name, last_name, CASE WHEN email IS NULL THEN 'no email' ELSE email END AS contact FROM customers"
+    - "SELECT first_name, last_name, IFNULL(email, 'no email') AS contact FROM customers"
+  reject:
+    - "SELECT first_name, last_name, email AS contact FROM customers"
+    - "SELECT first_name, last_name, COALESCE(email, 'no email') AS contact FROM customers WHERE email IS NOT NULL"

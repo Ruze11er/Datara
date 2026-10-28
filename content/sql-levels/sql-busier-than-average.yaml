@@ -1,0 +1,31 @@
+id: sql-busier-than-average
+title: Busier Than Average (Your First CTE)
+concepts: [CTE, WITH]
+lesson: sql-ctes
+tables: [orders]
+task: |
+  Show the `customer_id` and order count of customers who placed **more orders than the average customer**
+  (counting only customers who ordered). Try writing it with `WITH`, so the per-customer counts are written only once.
+solution: |
+  WITH counts AS (
+    SELECT customer_id, COUNT(*) AS order_count
+    FROM orders
+    GROUP BY customer_id
+  )
+  SELECT customer_id, order_count
+  FROM counts
+  WHERE order_count > (SELECT AVG(order_count) FROM counts);
+hints:
+  - "You need the per-customer counts twice: once to list customers, once to calculate the average."
+  - "WITH name AS (query) gives a query a name. Afterwards you can use that name like a table, as often as you like."
+  - "WITH counts AS (SELECT customer_id, COUNT(*) AS order_count FROM orders GROUP BY customer_id) SELECT customer_id, order_count FROM counts WHERE order_count > (SELECT AVG(order_count) FROM counts);"
+explanation: |
+  A **CTE** (common table expression, written with `WITH`) is a named, temporary result that exists only for this one query.
+  Here it saves repeating the grouping query, and it makes the logic read top to bottom: *first* build the counts,
+  *then* compare them with their average.
+tests:
+  accept:
+    - "SELECT customer_id, COUNT(*) FROM orders GROUP BY customer_id HAVING COUNT(*) > (SELECT AVG(n) FROM (SELECT COUNT(*) AS n FROM orders GROUP BY customer_id))"
+  reject:
+    - "WITH counts AS (SELECT customer_id, COUNT(*) AS order_count FROM orders GROUP BY customer_id) SELECT customer_id, order_count FROM counts WHERE order_count > 7"
+    - "WITH counts AS (SELECT customer_id, COUNT(*) AS order_count FROM orders GROUP BY customer_id) SELECT customer_id, order_count FROM counts WHERE order_count >= (SELECT AVG(order_count) FROM counts) - 1"

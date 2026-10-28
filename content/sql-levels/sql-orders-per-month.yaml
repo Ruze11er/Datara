@@ -1,0 +1,28 @@
+id: sql-orders-per-month
+title: Orders per Month
+concepts: [strftime, GROUP BY, dates]
+lesson: sql-dates
+tables: [orders]
+orderMatters: true
+task: |
+  Show the **number of orders in each month** of 2025. Show the month as `YYYY-MM` text (like `2025-03`) and sort
+  from January to December.
+solution: |
+  SELECT strftime('%Y-%m', order_date) AS month, COUNT(*) AS orders
+  FROM orders
+  GROUP BY month
+  ORDER BY month;
+hints:
+  - "You need to turn each date like 2025-03-15 into its month, 2025-03, then group by it."
+  - "strftime('%Y-%m', order_date) formats a date as year-month. SUBSTR(order_date, 1, 7) also works here."
+  - "SELECT strftime('%Y-%m', order_date) AS month, COUNT(*) AS orders FROM orders GROUP BY month ORDER BY month;"
+explanation: |
+  `strftime` formats a date using codes: `%Y` is the 4-digit year and `%m` the 2-digit month. Grouping by the formatted
+  month gives a **monthly trend**, one of the most common views in any business report. Because the format is
+  `YYYY-MM`, sorting the text also sorts the months in calendar order.
+tests:
+  accept:
+    - "SELECT SUBSTR(order_date, 1, 7) AS month, COUNT(*) FROM orders GROUP BY month ORDER BY month"
+  reject:
+    - "SELECT strftime('%m', order_date) AS month, COUNT(*) AS orders FROM orders GROUP BY order_date ORDER BY month"
+    - "SELECT strftime('%Y-%m', order_date) AS month, COUNT(*) AS orders FROM orders GROUP BY month ORDER BY orders DESC"

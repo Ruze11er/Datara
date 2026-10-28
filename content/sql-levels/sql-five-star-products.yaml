@@ -1,0 +1,30 @@
+id: sql-five-star-products
+title: Products with a 5-Star Review
+concepts: [EXISTS, correlated subquery]
+lesson: sql-subqueries
+tables: [products, reviews]
+task: |
+  Show the `product_name` of every product that has **at least one 5-star review** (`rating` = 5).
+  Each product should appear only once.
+solution: |
+  SELECT p.product_name
+  FROM products AS p
+  WHERE EXISTS (
+    SELECT 1
+    FROM reviews AS r
+    WHERE r.product_id = p.product_id AND r.rating = 5
+  );
+hints:
+  - "For each product, you're asking a yes/no question: is there any 5-star review for it?"
+  - "EXISTS (subquery) is true when the subquery returns at least one row. Inside it, link the review to the outer product."
+  - "SELECT p.product_name FROM products AS p WHERE EXISTS (SELECT 1 FROM reviews AS r WHERE r.product_id = p.product_id AND r.rating = 5);"
+explanation: |
+  The subquery mentions `p.product_id` from the **outer** query, so it is re-checked for each product. This is called a
+  **correlated subquery**. `EXISTS` only cares whether any row comes back (so `SELECT 1` is enough), and each product
+  appears once however many 5-star reviews it has.
+tests:
+  accept:
+    - "SELECT product_name FROM products WHERE product_id IN (SELECT product_id FROM reviews WHERE rating = 5)"
+  reject:
+    - "SELECT p.product_name FROM products AS p JOIN reviews AS r ON r.product_id = p.product_id WHERE r.rating = 5"
+    - "SELECT p.product_name FROM products AS p WHERE EXISTS (SELECT 1 FROM reviews AS r WHERE r.rating = 5)"

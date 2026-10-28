@@ -1,0 +1,23 @@
+id: sql-full-names
+title: Full Names
+concepts: [concatenation, "||"]
+lesson: sql-text-functions
+tables: [customers]
+checkColumnNames: true
+task: |
+  Show one column `full_name` with each customer's first and last name joined by a space (for example `Maria Santos`),
+  and their `country`.
+solution: |
+  SELECT first_name || ' ' || last_name AS full_name, country
+  FROM customers;
+hints:
+  - "In SQLite, || joins (concatenates) two pieces of text."
+  - "Join the first name, a space ' ', and the last name."
+  - "SELECT first_name || ' ' || last_name AS full_name, country FROM customers;"
+explanation: |
+  `||` is SQL's text-joining operator. Don't forget the space in the middle, or you'll get `MariaSantos`.
+  (Some databases, like MySQL, use a `CONCAT()` function instead.)
+tests:
+  reject:
+    - "SELECT first_name || last_name AS full_name, country FROM customers"
+    - "SELECT first_name + ' ' + last_name AS full_name, country FROM customers"

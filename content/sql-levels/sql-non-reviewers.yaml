@@ -1,0 +1,25 @@
+id: sql-non-reviewers
+title: Customers Who Never Reviewed
+concepts: [subquery, NOT IN]
+lesson: sql-subqueries
+tables: [customers, reviews]
+task: |
+  Show the `customer_id` and `first_name` of customers who have **never written a review**.
+solution: |
+  SELECT customer_id, first_name
+  FROM customers
+  WHERE customer_id NOT IN (SELECT customer_id FROM reviews);
+hints:
+  - "Which customer_ids appear in reviews? You want everyone else."
+  - "NOT IN keeps values that are not in the subquery's list."
+  - "SELECT customer_id, first_name FROM customers WHERE customer_id NOT IN (SELECT customer_id FROM reviews);"
+explanation: |
+  `NOT IN (subquery)` is the subquery version of the LEFT JOIN anti-join from Chapter 6. One warning: if the subquery's
+  list contains a **NULL**, `NOT IN` returns no rows at all, because SQL can't be sure the value isn't the unknown one.
+  `reviews.customer_id` is never NULL here, but in real data add `WHERE customer_id IS NOT NULL` inside the subquery to be safe.
+tests:
+  accept:
+    - "SELECT c.customer_id, c.first_name FROM customers c LEFT JOIN reviews r ON r.customer_id = c.customer_id WHERE r.review_id IS NULL"
+  reject:
+    - "SELECT customer_id, first_name FROM customers WHERE customer_id IN (SELECT customer_id FROM reviews)"
+    - "SELECT customer_id, first_name FROM customers WHERE customer_id NOT IN (SELECT customer_id FROM orders)"
