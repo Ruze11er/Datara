@@ -35,6 +35,15 @@ export async function runPythonLab(setup: string, code: string, files: Record<st
   return client.request<PyLabRun>('run', { setup, code, files }, RUN_TIMEOUT_MS, TOO_LONG)
 }
 
+/**
+ * Academy Investigation Lab "Run": like runPythonLab, but every DataFrame or Series the learner makes comes back
+ * as a full table (up to 5,000 rows), so it can be compared with the case's leads.
+ */
+export async function runCasePython(setup: string, code: string, files: Record<string, string>): Promise<PyLabRun> {
+  await prepare(`${setup}\n${code}`)
+  return client.request<PyLabRun>('run', { setup, code, files, caseTables: true }, RUN_TIMEOUT_MS, TOO_LONG)
+}
+
 /** Python Lab "Check". */
 export async function checkPythonLab(spec: PyCheckSpec): Promise<PyLabCheck> {
   await prepare([spec.setup, spec.code, spec.solution, ...spec.variants].join('\n'))

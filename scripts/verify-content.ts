@@ -223,6 +223,9 @@ for (const chapter of chapters) {
 const pyDir = join(contentDir, 'python-levels')
 const pyLevels = new Map<string, ReturnType<typeof parsePythonLevel>>()
 let pyChapterCount = 0
+/** The Python checker, kept for the Academy case checks below (their pandas solutions). */
+let pythonCall: ((kind: 'run' | 'check', spec: object) => any) | null = null
+let pythonCleanup = (): void => undefined
 
 try {
   const pyChapters = parseSqlChapters(await readFile(join(pyDir, 'chapters.yaml'), 'utf8'))
@@ -260,6 +263,7 @@ try {
   })
   const handle = checkerNs.get('handle') as (kind: string, spec: string) => string
   const call = (kind: 'run' | 'check', spec: object) => JSON.parse(handle(kind, JSON.stringify(spec)))
+  pythonCall = call
 
   let n = 0
   for (const chapter of pyChapters) {
@@ -307,7 +311,7 @@ try {
       }
     }
   }
-  checkerNs.destroy()
+  pythonCleanup = () => checkerNs.destroy()
 } catch (e) {
   if ((e as NodeJS.ErrnoException).code === 'ENOENT') warn('No Python levels yet (content/python-levels/chapters.yaml not found)')
   else error(`Python levels: ${(e as Error).message}`)
@@ -366,7 +370,8 @@ for (const level of [...levels.values(), ...pyLevels.values()]) {
 
 // ---------- Academy cases (see verify-cases.ts) ----------
 
-const caseCount = await verifyCases({ SQL, contentDir, verbose, lessonIds, error, warn })
+const caseCount = await verifyCases({ SQL, contentDir, verbose, lessonIds, error, warn, python: pythonCall })
+pythonCleanup()
 
 // ---------- Report ----------
 

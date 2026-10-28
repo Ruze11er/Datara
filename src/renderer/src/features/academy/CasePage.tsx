@@ -30,7 +30,6 @@ import type { SqlResult } from '../../engines/sql/types'
 import { useProgress } from '../../lib/ProgressContext'
 import { useSchema } from '../../lib/storeSchema'
 import {
-  abandonCase,
   caseProgress,
   caseStats,
   heldEvidence,
@@ -40,7 +39,9 @@ import {
   withCase
 } from '../../lib/caseProgress'
 import { DocumentCard, EvidenceCard, FileLabel, ProgressBar, Stamp } from './CaseParts'
+import { DetectiveBoard } from './DetectiveBoard'
 import { InvestigationLab } from './InvestigationLab'
+import { VerdictTab } from './VerdictTab'
 
 export type CaseTab = 'briefing' | 'manual' | 'evidence' | 'lab' | 'board' | 'verdict'
 
@@ -120,6 +121,7 @@ function CasePage({ c, tab }: { c: CaseDef; tab: CaseTab | null }) {
         </div>
         <nav className="mt-2 -mb-px flex gap-1 overflow-x-auto" aria-label="Case file">
           {TABS.map((t) => {
+            const label = t.id === 'verdict' && cp?.stage === 'closed' ? 'Case Closed' : t.label
             const locked = !cp && t.id !== 'briefing' && t.id !== 'manual'
             const cls = `flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium ${
               t.id === active
@@ -130,11 +132,11 @@ function CasePage({ c, tab }: { c: CaseDef; tab: CaseTab | null }) {
             }`
             return locked ? (
               <span key={t.id} className={cls} aria-disabled title="Take the case first">
-                <LockKeyhole size={13} aria-hidden /> {t.label}
+                <LockKeyhole size={13} aria-hidden /> {label}
               </span>
             ) : (
               <Link key={t.id} to={`/academy/${c.id}/${t.id}`} className={cls} aria-current={t.id === active ? 'page' : undefined}>
-                {t.label}
+                {label}
               </Link>
             )
           })}
@@ -149,11 +151,12 @@ function CasePage({ c, tab }: { c: CaseDef; tab: CaseTab | null }) {
         </div>
       ) : (
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-4xl px-8 py-6">
+          <div className={`mx-auto px-8 py-6 ${active === 'board' ? 'max-w-6xl' : 'max-w-4xl'}`}>
             {active === 'briefing' && <Briefing c={c} cp={cp} />}
             {active === 'manual' && <FieldManual c={c} />}
             {active === 'evidence' && cp && <EvidenceRoom c={c} cp={cp} datasets={datasets} error={error} />}
-            {(active === 'board' || active === 'verdict') && cp && <NotYet c={c} cp={cp} what={active} />}
+            {active === 'board' && cp && <DetectiveBoard c={c} cp={cp} />}
+            {active === 'verdict' && cp && <VerdictTab c={c} cp={cp} />}
           </div>
         </div>
       )}
@@ -320,9 +323,9 @@ function RunControls({ c, cp }: { c: CaseDef; cp: CaseProgress }) {
         <button
           type="button"
           onClick={() => {
-            if (window.confirm('Start this case over? Everything you found in this case will be cleared.')) {
-              update((p) => abandonCase(p, c.id))
-              navigate(`/academy/${c.id}/briefing`)
+            if (window.confirm('Start this case over? Everything you found in this run is cleared. Your best rating is kept.')) {
+              update((p) => startCase(p, c, cp.mode))
+              navigate(`/academy/${c.id}/lab`)
             }
           }}
           className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-slate-500 hover:bg-slate-100"
@@ -564,34 +567,5 @@ function DataDictionary({ c, datasets }: { c: CaseDef; datasets: CaseDatasets | 
         )
       })}
     </div>
-  )
-}
-
-// ---------- Board and verdict (Milestone 3) ----------
-
-function NotYet({ c, cp, what }: { c: CaseDef; cp: CaseProgress; what: 'board' | 'verdict' }) {
-  const stats = caseStats(c, cp)
-  return (
-    <Card className="mx-auto max-w-xl text-center">
-      <LockKeyhole size={28} className="mx-auto text-slate-400" aria-hidden />
-      <h2 className="mt-3 text-lg font-semibold text-slate-900">
-        {what === 'board' ? 'The Detective Board' : 'The Verdict'} is not open yet
-      </h2>
-      <p className="mt-2 text-slate-600">
-        {what === 'board'
-          ? 'Here you will connect your evidence to the theories and rule suspects in or out.'
-          : 'Here you will name the cause, back it with evidence, and face the CEO.'}{' '}
-        It's still being built. Everything you find in the meantime is saved.
-      </p>
-      <p className="mt-3 text-sm text-slate-500">
-        Core leads cracked: {stats.coreCracked} of {stats.coreTotal}
-      </p>
-      <Link
-        to={`/academy/${c.id}/lab`}
-        className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
-      >
-        <SearchCheck size={15} aria-hidden /> Back to the investigation
-      </Link>
-    </Card>
   )
 }

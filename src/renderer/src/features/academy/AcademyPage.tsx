@@ -6,7 +6,8 @@ import { Card, Page } from '../../components/Page'
 import { Markdown } from '../../components/Markdown'
 import { cases } from '../../content'
 import { useProgress } from '../../lib/ProgressContext'
-import { caseProgress, caseStats } from '../../lib/caseProgress'
+import { GRADES } from '@shared/cases/scoring'
+import { caseProgress, caseStats, isCaseUnlocked } from '../../lib/caseProgress'
 import { FileLabel, ProgressBar, Stamp } from './CaseParts'
 
 export default function AcademyPage() {
@@ -33,8 +34,9 @@ export default function AcademyPage() {
       <div className="space-y-4">
         {cases.map((c, i) => {
           const cp = caseProgress(progress, c.id)
-          // Case 1 is open from the start; each later case opens when the one before it is closed (Milestone 3).
-          const unlocked = i === 0
+          const unlocked = isCaseUnlocked(progress, cases, i)
+          const best = cp?.best
+          const closed = cp?.stage === 'closed'
           const stats = caseStats(c, cp)
           return (
             <Card key={c.id} className={unlocked ? '' : 'bg-slate-50'}>
@@ -44,6 +46,8 @@ export default function AcademyPage() {
                     <Stamp>Case #{c.number}</Stamp>
                     {!unlocked ? (
                       <Stamp>Classified</Stamp>
+                    ) : closed ? (
+                      <Stamp tone="solved">Closed</Stamp>
                     ) : cp ? (
                       <Stamp tone="open">Open</Stamp>
                     ) : (
@@ -58,7 +62,12 @@ export default function AcademyPage() {
                   </p>
                 </div>
                 <div className="flex w-56 shrink-0 flex-col gap-3">
-                  {cp && (
+                  {best && (
+                    <p className="text-sm text-slate-600">
+                      Best rating: <b className="text-slate-900">{GRADES.find((g) => g.grade === best.grade)?.label}</b> ({best.total}/100)
+                    </p>
+                  )}
+                  {cp && !closed && (
                     <div>
                       <div className="mb-1 flex justify-between text-xs text-slate-500">
                         <span>Core leads cracked</span>
@@ -71,11 +80,11 @@ export default function AcademyPage() {
                   )}
                   {unlocked ? (
                     <Link
-                      to={`/academy/${c.id}/${cp ? 'lab' : 'briefing'}`}
+                      to={`/academy/${c.id}/${closed ? 'verdict' : cp ? 'lab' : 'briefing'}`}
                       className="flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2 font-medium text-white hover:bg-brand-700"
                     >
-                      {cp ? <SearchCheck size={17} aria-hidden /> : <FolderOpen size={17} aria-hidden />}
-                      {cp ? 'Continue the investigation' : 'Open the case file'}
+                      {cp && !closed ? <SearchCheck size={17} aria-hidden /> : <FolderOpen size={17} aria-hidden />}
+                      {closed ? 'Read the debrief' : cp ? 'Continue the investigation' : 'Open the case file'}
                     </Link>
                   ) : (
                     <span className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-slate-400">

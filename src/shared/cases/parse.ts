@@ -122,6 +122,7 @@ function parseLead(v: unknown, i: number): Lead {
     return { query: text(so, 'query', `${where} solution ${j + 1}`), note: optText(so, 'note', `${where} solution ${j + 1}`) }
   })
   if (solutions.length === 0) throw new Error(`${where}: needs at least one solution`)
+  const python = o.python === undefined ? undefined : obj(o.python, `${where}.python`)
   return {
     id: text(o, 'id', where),
     title: text(o, 'title', where),
@@ -145,7 +146,10 @@ function parseLead(v: unknown, i: number): Lead {
       hints: texts(sql, 'hints', `${where}.sql`),
       explanation: text(sql, 'explanation', `${where}.sql`),
       tests: { accept: texts(tests, 'accept', `${where}.sql.tests`), reject: texts(tests, 'reject', `${where}.sql.tests`) }
-    }
+    },
+    python: python
+      ? { solution: text(python, 'solution', `${where}.python`), starter: optText(python, 'starter', `${where}.python`) }
+      : undefined
   }
 }
 
@@ -276,7 +280,8 @@ export function parseCase(caseText: string, leadsText: string, where: string): C
     scoring: {
       dataQualityLeads: texts(scoring, 'dataQualityLeads', at('scoring')),
       linksTarget: num(scoring, 'linksTarget', at('scoring')),
-      citationsTarget: num(scoring, 'citationsTarget', at('scoring'))
+      citationsTarget: num(scoring, 'citationsTarget', at('scoring')),
+      verdictMinLeads: num(scoring, 'verdictMinLeads', at('scoring'))
     },
     debrief: { story: text(debrief, 'story', at('debrief')), career: text(debrief, 'career', at('debrief')) },
     assertions: list(raw.assertions, at('assertions')).map((a, i): Assertion => {
@@ -294,7 +299,8 @@ export function parseCase(caseText: string, leadsText: string, where: string): C
           cracked: o.cracked === 'all' ? 'all' : texts(o, 'cracked', w),
           board: board(o.board, `${w} board`),
           verdict: verdictAnswers(o.verdict, `${w} verdict`),
-          expect: { min: expect.min === undefined ? undefined : num(expect, 'min', w), max: expect.max === undefined ? undefined : num(expect, 'max', w) }
+          expect: { min: expect.min === undefined ? undefined : num(expect, 'min', w), max: expect.max === undefined ? undefined : num(expect, 'max', w) },
+          missedIncludes: texts(o, 'missedIncludes', w)
         }
       })
     }
@@ -376,6 +382,10 @@ export function caseProblems(c: CaseDef): string[] {
   if (!c.hypotheses.some((h) => h.truth === 'cause')) problems.push('no hypothesis has truth: cause')
   if (c.verdict.recommendations.options.length < c.verdict.recommendations.pick) problems.push('fewer recommendation options than "pick"')
   if (c.verdict.citations.min > c.verdict.citations.max) problems.push('verdict.citations: min is above max')
+  const coreCount = c.leads.filter((l) => l.core).length
+  if (c.scoring.verdictMinLeads < 1 || c.scoring.verdictMinLeads > coreCount) {
+    problems.push(`scoring.verdictMinLeads must be between 1 and the number of core leads (${coreCount})`)
+  }
 
   for (const play of c.tests.plays) {
     const w = `play "${play.name}"`

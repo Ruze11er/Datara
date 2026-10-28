@@ -108,6 +108,11 @@ export interface Lead {
   concepts: string[]
   lesson?: string
   sql: SqlLeadTool
+  /**
+   * Optional pandas solution, shown in the debrief as another way to crack the lead and checked by verify.
+   * Any lead can be cracked in Python: the learner's DataFrames are compared with the SQL answers.
+   */
+  python?: { solution: string; starter?: string }
 }
 
 export interface VerdictOption {
@@ -172,6 +177,8 @@ export interface ScoringRules {
   linksTarget: number
   /** Relevant evidence citations needed for full marks on citations. */
   citationsTarget: number
+  /** Core leads that must be cracked before the verdict opens. The learner decides when they have enough. */
+  verdictMinLeads: number
 }
 
 /** A scripted play used by verify to check that the scoring rewards good reasoning (see tests.plays). */
@@ -183,6 +190,8 @@ export interface PlayTest {
   verdict: VerdictAnswers
   /** Expected total score range. */
   expect: { min?: number; max?: number }
+  /** Text that must appear among the debrief's "missed" notes (checks the feedback, not just the score). */
+  missedIncludes: string[]
 }
 
 export interface CaseDef {

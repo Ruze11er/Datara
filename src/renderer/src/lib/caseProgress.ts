@@ -1,11 +1,16 @@
 // Progress rules for Data Detective Academy cases: starting a case, which leads and documents are open,
-// cracking a lead, and cleaning up saved data on load. Pure functions over ProgressData, like labProgress.ts.
+// cracking a lead, the board, the verdict, closing the case, and cleaning up saved data on load.
+// Pure functions over ProgressData, like labProgress.ts.
 
-import type { CaseDef, CaseDocument, Evidence, Lead } from '@shared/cases/types'
+import { scoreCase, type CaseScore } from '@shared/cases/scoring'
+import type { BoardState, CaseDef, CaseDocument, CaseRun, Evidence, HypothesisStatus, Lead, Relation } from '@shared/cases/types'
 import type {
+  CaseGrade,
   CaseLeadProgress,
   CaseMode,
   CaseProgress,
+  CaseTool,
+  CaseVerdict,
   EvidenceSnapshot,
   ProgressData
 } from '@shared/progress'
@@ -46,24 +51,42 @@ export function withLead(
   })
 }
 
-/** Starts (or restarts) a case: a fresh run in the chosen mode. */
+/** Starts (or replays) a case: a fresh run in the chosen mode. The best result from earlier runs is kept. */
 export function startCase(p: ProgressData, c: CaseDef, mode: CaseMode): ProgressData {
+  const previous = p.cases[c.id]
   const run: CaseProgress = {
     caseVersion: c.version,
     mode,
     startedAt: new Date().toISOString(),
     leads: {},
     evidence: {},
-    seen: []
+    seen: [],
+    board: {},
+    notes: [],
+    stage: 'investigating',
+    summaryChecks: [],
+    best: previous?.best,
+    runs: (previous?.runs ?? 0) + 1,
+    tool: previous?.tool
   }
   return { ...p, cases: { ...p.cases, [c.id]: run } }
 }
 
+/** Forgets the case completely, including its best result. */
 export function abandonCase(p: ProgressData, caseId: string): ProgressData {
   const cases = { ...p.cases }
   delete cases[caseId]
   return { ...p, cases }
 }
+
+/** A case is closed once any run of it was closed. */
+export const isCaseClosed = (p: ProgressData | null, caseId: string): boolean => !!p?.cases[caseId]?.best
+
+/** Case 1 is open from the start; each later case opens when the one before it has been closed. */
+export const isCaseUnlocked = (p: ProgressData | null, cases: CaseDef[], index: number): boolean =>
+  index === 0 || (!!cases[index - 1] && isCaseClosed(p, cases[index - 1]!.id))
+
+// ---------- Leads, documents, evidence ----------
 
 /** A lead appears once everything it requires is cracked. Secret leads appear only once found. */
 export function isLeadVisible(cp: CaseProgress | undefined, lead: Lead): boolean {
@@ -101,6 +124,11 @@ export function caseStats(c: CaseDef, cp: CaseProgress | undefined) {
   }
 }
 
+/** The verdict opens once enough core leads are cracked (the case's verdictMinLeads). The rest is up to the learner. */
+export function isVerdictOpen(c: CaseDef, cp: CaseProgress | undefined): boolean {
+  return caseStats(c, cp).coreCracked >= c.scoring.verdictMinLeads
+}
+
 export function snapshotOf(result: { columns: string[]; rows: SqlValue[][] }): EvidenceSnapshot {
   return { columns: result.columns, rows: result.rows.slice(0, SNAPSHOT_ROWS), totalRows: result.rows.length }
 }
@@ -121,11 +149,12 @@ export function crackLead(
   c: CaseDef,
   lead: Lead,
   solution: number,
-  result: { columns: string[]; rows: SqlValue[][] }
+  result: { columns: string[]; rows: SqlValue[][] },
+  tool: CaseTool = 'sql'
 ): { progress: ProgressData; reveal: CrackReveal } {
   const before = caseProgress(p, c.id)
   const now = new Date().toISOString()
-  let next = withLead(p, c.id, lead.id, () => ({ cracked: now, solution }))
+  let next = withLead(p, c.id, lead.id, () => ({ cracked: now, solution, tool }))
   next = withCase(next, c.id, (cp) => ({
     evidence: { ...cp.evidence, [lead.evidence]: { at: now, lead: lead.id, snapshot: snapshotOf(result) } }
   }))
@@ -149,12 +178,97 @@ export function markSeen(p: ProgressData, caseId: string, ids: string[]): Progre
   return fresh.length ? withCase(p, caseId, (current) => ({ seen: [...current.seen, ...fresh] })) : p
 }
 
+// ---------- Board ----------
+
+const boardEntry = (board: BoardState, hypothesisId: string) => board[hypothesisId] ?? { status: 'open' as const, links: {} }
+
+export function withHypothesisStatus(p: ProgressData, caseId: string, hypothesisId: string, status: HypothesisStatus): ProgressData {
+  return withCase(p, caseId, (cp) => ({
+    board: { ...cp.board, [hypothesisId]: { ...boardEntry(cp.board, hypothesisId), status } }
+  }))
+}
+
+/** Links evidence to a hypothesis (or removes the link with `relation` null). */
+export function withLink(
+  p: ProgressData,
+  caseId: string,
+  hypothesisId: string,
+  evidenceId: string,
+  relation: Relation | null
+): ProgressData {
+  return withCase(p, caseId, (cp) => {
+    const entry = boardEntry(cp.board, hypothesisId)
+    const links = { ...entry.links }
+    if (relation) links[evidenceId] = relation
+    else delete links[evidenceId]
+    return { board: { ...cp.board, [hypothesisId]: { ...entry, links } } }
+  })
+}
+
+// ---------- Verdict and closing ----------
+
+export function emptyVerdict(): CaseVerdict {
+  return { contributors: [], citations: [], recommendations: [], limitations: [], pushback: {}, summary: '' }
+}
+
+export const verdictOf = (cp: CaseProgress | undefined): CaseVerdict => ({ ...emptyVerdict(), ...cp?.verdict })
+
+export function withVerdict(p: ProgressData, caseId: string, change: (v: CaseVerdict) => Partial<CaseVerdict>): ProgressData {
+  return withCase(p, caseId, (cp) => {
+    const v = verdictOf(cp)
+    return { verdict: { ...v, ...change(v) } }
+  })
+}
+
+/** What's still missing before the verdict can be presented (empty when it's complete). */
+export function verdictGaps(c: CaseDef, v: CaseVerdict): string[] {
+  const gaps: string[] = []
+  if (!v.cause) gaps.push('Name the main cause.')
+  if (!v.theory) gaps.push(`Answer: ${c.verdict.theory.question}`)
+  if (v.citations.length < c.verdict.citations.min) gaps.push(`Cite at least ${c.verdict.citations.min} pieces of evidence.`)
+  if (v.recommendations.length !== c.verdict.recommendations.pick) gaps.push(`Choose ${c.verdict.recommendations.pick} recommendations.`)
+  if (v.summary.trim().length < 40) gaps.push('Write your summary for the CEO (a few sentences).')
+  return gaps
+}
+
+/** The run as the scoring sees it. */
+export function caseRunOf(c: CaseDef, cp: CaseProgress): CaseRun {
+  return {
+    cracked: c.leads.filter((l) => isCracked(cp, l.id)).map((l) => l.id),
+    board: cp.board,
+    verdict: verdictOf(cp)
+  }
+}
+
+export const scoreOf = (c: CaseDef, cp: CaseProgress): CaseScore => scoreCase(c, caseRunOf(c, cp))
+
+const GRADE_ORDER: CaseGrade[] = ['reopened', 'provisional', 'solid', 'distinguished']
+
+/** Closes the case: scores the run and keeps it as the best result if it beats the earlier ones. */
+export function closeCase(p: ProgressData, c: CaseDef): { progress: ProgressData; score: CaseScore } {
+  const cp = p.cases[c.id]
+  if (!cp) throw new Error('The case has not been started')
+  const score = scoreOf(c, cp)
+  const now = new Date().toISOString()
+  const better = !cp.best || score.total > cp.best.total
+  return {
+    score,
+    progress: withCase(p, c.id, () => ({
+      stage: 'closed',
+      closedAt: now,
+      best: better ? { total: score.total, grade: score.grade, closedAt: now } : cp.best
+    }))
+  }
+}
+
 // ---------- Loading saved data ----------
 
 type Obj = Record<string, unknown>
 const isObj = (v: unknown): v is Obj => typeof v === 'object' && v !== null && !Array.isArray(v)
 const str = (v: unknown): string | undefined => (typeof v === 'string' ? v : undefined)
 const count = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? Math.floor(v) : 0)
+const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((s): s is string => typeof s === 'string') : [])
+const tool = (v: unknown): CaseTool | undefined => (v === 'sql' || v === 'python' ? v : undefined)
 
 function cleanSnapshot(v: unknown): EvidenceSnapshot | undefined {
   if (!isObj(v) || !Array.isArray(v.columns) || !Array.isArray(v.rows)) return undefined
@@ -165,6 +279,38 @@ function cleanSnapshot(v: unknown): EvidenceSnapshot | undefined {
     totalRows: count(v.totalRows)
   }
 }
+
+function cleanBoard(v: unknown): BoardState {
+  const board: BoardState = {}
+  for (const [id, entry] of Object.entries(isObj(v) ? v : {})) {
+    if (!isObj(entry)) continue
+    const status: HypothesisStatus = entry.status === 'supported' || entry.status === 'ruled-out' ? entry.status : 'open'
+    const links: Record<string, Relation> = {}
+    for (const [ev, rel] of Object.entries(isObj(entry.links) ? entry.links : {})) {
+      if (rel === 'supports' || rel === 'contradicts') links[ev] = rel
+    }
+    board[id] = { status, links }
+  }
+  return board
+}
+
+function cleanVerdict(v: unknown): CaseVerdict | undefined {
+  if (!isObj(v)) return undefined
+  const pushback: Record<string, string> = {}
+  for (const [id, choice] of Object.entries(isObj(v.pushback) ? v.pushback : {})) if (typeof choice === 'string') pushback[id] = choice
+  return {
+    cause: str(v.cause),
+    contributors: strings(v.contributors),
+    theory: str(v.theory),
+    citations: strings(v.citations),
+    recommendations: strings(v.recommendations),
+    limitations: strings(v.limitations),
+    pushback,
+    summary: str(v.summary) ?? ''
+  }
+}
+
+const GRADES = new Set<string>(GRADE_ORDER)
 
 /**
  * Keeps only well-formed case records from a saved (or imported) progress file. Unknown ids are kept: content may
@@ -183,7 +329,8 @@ export function normalizeCases(raw: unknown): Record<string, CaseProgress> {
         solution: typeof l.solution === 'number' ? count(l.solution) : undefined,
         attempts: count(l.attempts),
         hintsUsed: count(l.hintsUsed),
-        solutionViewed: l.solutionViewed === true
+        solutionViewed: l.solutionViewed === true,
+        tool: tool(l.tool)
       }
     }
     const evidence: CaseProgress['evidence'] = {}
@@ -191,6 +338,9 @@ export function normalizeCases(raw: unknown): Record<string, CaseProgress> {
       if (!isObj(e) || !str(e.lead)) continue
       evidence[evId] = { at: str(e.at) ?? '', lead: str(e.lead)!, snapshot: cleanSnapshot(e.snapshot) }
     }
+    const best = isObj(value.best) && GRADES.has(String(value.best.grade))
+      ? { total: count(value.best.total), grade: value.best.grade as CaseGrade, closedAt: str(value.best.closedAt) ?? '' }
+      : undefined
     out[id] = {
       caseVersion: count(value.caseVersion),
       mode: value.mode === 'challenge' ? 'challenge' : 'guided',
@@ -198,8 +348,21 @@ export function normalizeCases(raw: unknown): Record<string, CaseProgress> {
       leads,
       evidence,
       draft: str(value.draft),
+      pythonDraft: str(value.pythonDraft),
+      tool: tool(value.tool),
       focusLead: str(value.focusLead),
-      seen: Array.isArray(value.seen) ? value.seen.filter((s): s is string => typeof s === 'string') : []
+      seen: strings(value.seen),
+      board: cleanBoard(value.board),
+      notes: (Array.isArray(value.notes) ? value.notes : [])
+        .filter(isObj)
+        .filter((n) => typeof n.text === 'string')
+        .map((n) => ({ id: str(n.id) ?? String(Math.random()), text: String(n.text), at: str(n.at) ?? '' })),
+      verdict: cleanVerdict(value.verdict),
+      stage: value.stage === 'pushback' || value.stage === 'closed' ? value.stage : 'investigating',
+      closedAt: str(value.closedAt),
+      summaryChecks: Array.isArray(value.summaryChecks) ? value.summaryChecks.filter((n): n is number => typeof n === 'number') : [],
+      best,
+      runs: Math.max(1, count(value.runs))
     }
   }
   return out

@@ -496,15 +496,22 @@ def _first_problem(expect, check_output, expected_ns, expected_out, ns, out, cal
 # ---------------------------------------------------------------- results
 
 
-def _table(value):
-    """A small table for DataFrames, so the app can show them nicely."""
+def _table(value, max_rows=MAX_TABLE_ROWS, split_index=False):
+    """A small table for DataFrames, so the app can show them nicely.
+
+    split_index (Academy cases): a multi-level index (from a groupby on two columns) becomes one column per level,
+    so the table can be compared with a SQL result.
+    """
     if _is_series(value):
         frame = value.to_frame(name=value.name if value.name is not None else "value")
     else:
         frame = value
-    head = frame.head(MAX_TABLE_ROWS)
+    head = frame.head(max_rows)
+    levels = frame.index.nlevels if split_index else 1
     rows = []
     for row in head.itertuples(index=True, name=None):
+        if levels > 1:
+            row = tuple(row[0]) + tuple(row[1:])
         cells = []
         for cell in row:
             if hasattr(cell, "item") and not isinstance(cell, (str, bytes)):
@@ -520,17 +527,28 @@ def _table(value):
                 cells.append(str(cell))
         rows.append(cells)
     # The first column shows the row labels (the index), headed by its name if it has one (e.g. after a groupby).
-    index_name = ", ".join(str(n) for n in frame.index.names if n is not None)
-    return {"columns": [index_name] + [str(c) for c in frame.columns], "rows": rows, "totalRows": int(len(frame))}
+    if levels > 1:
+        index_columns = [str(n) if n is not None else "" for n in frame.index.names]
+    else:
+        index_columns = [", ".join(str(n) for n in frame.index.names if n is not None)]
+    return {"columns": index_columns + [str(c) for c in frame.columns], "rows": rows, "totalRows": int(len(frame))}
 
 
-def _variables(ns, given):
+# Academy cases compare learner tables with SQL answers, so they need whole tables (up to the SQL limit).
+CASE_TABLE_ROWS = 5000
+
+
+def _variables(ns, given, case_tables=False):
     result = []
     for name, value in ns.items():
         if name.startswith("_") or isinstance(value, types.ModuleType):
             continue
         item = {"name": name, "type": type(value).__name__, "value": _short_repr(value), "given": name in given}
-        if _is_dataframe(value):
+        if case_tables:
+            # Only the learner's own tables: the given ones (orders, ...) are large and already known.
+            if (_is_dataframe(value) or _is_series(value)) and name not in given:
+                item["table"] = _table(value, CASE_TABLE_ROWS, True)
+        elif _is_dataframe(value):
             item["table"] = _table(value)
         result.append(item)
     return result
@@ -538,7 +556,7 @@ def _variables(ns, given):
 
 def run(spec):
     ns, out, error, given = _execute(spec.get("setup", ""), spec["code"], spec.get("files"))
-    return {"output": out, "error": error, "variables": _variables(ns, given)}
+    return {"output": out, "error": error, "variables": _variables(ns, given, bool(spec.get("caseTables")))}
 
 
 def check(spec):

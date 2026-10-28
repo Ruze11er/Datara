@@ -489,6 +489,7 @@ scoring:
   dataQualityLeads: [lead-duplicate-payments, lead-corrected-revenue]
   linksTarget: 6
   citationsTarget: 3
+  verdictMinLeads: 4
 
 debrief:
   story: |
@@ -752,7 +753,7 @@ tests:
         pushback: { pb-paid-search: pb1-shift, pb-orders: pb2-left }
       expect: { min: 98 }
     - name: Blames the campaign without checking
-      cracked: [lead-reported-drop, lead-channels]
+      cracked: [lead-reported-drop, lead-last-year, lead-orders-basket, lead-channels]
       board:
         h-campaign: { status: supported, links: { cl-ceo: supports, ev-channels: supports } }
       verdict:
@@ -764,6 +765,7 @@ tests:
         limitations: [lim-timing]
         pushback: { pb-paid-search: pb1-agree, pb-orders: pb2-campaign }
       expect: { max: 25 }
+      missedIncludes: ["The main cause was", "is a claim, not proof", "Data check skipped"]
     - name: Finds the stock-out but skips the data checks
       cracked: [lead-reported-drop, lead-last-year, lead-orders-basket, lead-categories, lead-stockouts, lead-channels]
       board:
@@ -780,6 +782,7 @@ tests:
         limitations: [lim-one-month]
         pushback: { pb-paid-search: pb1-shift, pb-orders: pb2-left }
       expect: { min: 60, max: 85 }
+      missedIncludes: ["Data check skipped: \"Charged Twice?\"", "Also part of the story: \"The report overstates the drop\""]
     - name: Thorough data work, wrong conclusion
       cracked: all
       board:
@@ -795,3 +798,4 @@ tests:
         limitations: [lim-one-month]
         pushback: { pb-paid-search: pb1-agree, pb-orders: pb2-duplicates }
       expect: { min: 49, max: 49 }
+      missedIncludes: ["The main cause was", "\"The marketing change drove customers away\": you marked it supported"]

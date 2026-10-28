@@ -14,7 +14,9 @@ import type { SqlJsStatic } from 'sql.js'
 import { parse as parseYaml } from 'yaml'
 import { caseProblems, parseCase } from '../src/shared/cases/parse.ts'
 import { compareResult, confirmOnHidden, leadCheckOptions, matchLead, type LeadReference } from '../src/shared/cases/leadMatch.ts'
+import { caseSetup, pyTableResult, type PyTableLike } from '../src/shared/cases/python.ts'
 import { scoreCase } from '../src/shared/cases/scoring.ts'
+import { toCsv } from '../src/shared/csv.ts'
 import type { CaseDef, Lead } from '../src/shared/cases/types.ts'
 import { checkResult, type QueryResult } from '../src/shared/sqlCheck.ts'
 import { runLastStatement } from '../src/shared/sqlRun.ts'
@@ -26,6 +28,8 @@ export interface CaseCheckContext {
   lessonIds: Set<string>
   error: (msg: string) => void
   warn: (msg: string) => void
+  /** The Python checker (datara_check.py in Pyodide), or null if Python couldn't start. */
+  python: ((kind: 'run' | 'check', spec: object) => any) | null
 }
 
 /** Checks all cases and returns how many were checked. */
@@ -78,8 +82,10 @@ export async function verifyCases(ctx: CaseCheckContext): Promise<number> {
     checkTables(c, (sql) => run(practice, sql), where, error)
     checkAssertions(c, run, practice, hidden, where, verbose, error)
     checkLeads(c, run, practice, hidden, where, verbose, error, warn)
+    if (ctx.python) checkPythonSolutions(c, ctx.python, SQL, practice, hidden, run, where, verbose, error)
+    else if (c.leads.some((l) => l.python)) warn(`${where}: Python didn't start, so the pandas solutions were not checked`)
 
-    // Scripted plays: the scoring must reward good reasoning and punish bad.
+    // Scripted plays: the scoring must reward good reasoning and punish bad, and the debrief must say why.
     for (const play of c.tests.plays) {
       const cracked = play.cracked === 'all' ? c.leads.filter((l) => !l.secret).map((l) => l.id) : play.cracked
       const score = scoreCase(c, { cracked, board: play.board, verdict: play.verdict })
@@ -89,9 +95,88 @@ export async function verifyCases(ctx: CaseCheckContext): Promise<number> {
       } else if (verbose) {
         console.log(`${where}: play "${play.name}": ${score.total} (${score.grade}): ${parts}`)
       }
+      // The play must be possible in the app: the verdict opens only after verdictMinLeads core leads.
+      const coreCracked = c.leads.filter((l) => l.core && cracked.includes(l.id)).length
+      if (coreCracked < c.scoring.verdictMinLeads) {
+        error(`${where}: play "${play.name}" cracks ${coreCracked} core leads, but the verdict needs ${c.scoring.verdictMinLeads}`)
+      }
+      const missed = [...score.dimensions.flatMap((d) => d.missed), score.capped ?? '']
+      for (const text of play.missedIncludes) {
+        if (!missed.some((m) => m.includes(text))) error(`${where}: play "${play.name}": the debrief never says "${text}"`)
+      }
     }
   }
   return checked
+}
+
+/** Every table of a dataset as CSV text (file name -> text), as the app gives them to Python. */
+function csvFiles(SQL: SqlJsStatic, bytes: Uint8Array, tables: string[]): Record<string, string> {
+  const db = new SQL.Database(bytes)
+  try {
+    const files: Record<string, string> = {}
+    for (const t of tables) {
+      const r = db.exec(`SELECT * FROM ${t}`)[0]
+      files[`${t}.csv`] = toCsv(r?.columns ?? [], (r?.values ?? []) as (string | number | null)[][])
+    }
+    return files
+  } finally {
+    db.close()
+  }
+}
+
+/** Each lead's pandas solution must crack it, on the practice data and the hidden data, as the app checks it. */
+function checkPythonSolutions(
+  c: CaseDef,
+  python: (kind: 'run' | 'check', spec: object) => any,
+  SQL: SqlJsStatic,
+  practice: Uint8Array,
+  hidden: Uint8Array,
+  run: (bytes: Uint8Array, sql: string) => QueryResult,
+  where: string,
+  verbose: boolean,
+  error: (msg: string) => void
+): void {
+  const leads = c.leads.filter((l) => l.python)
+  if (leads.length === 0) return
+  const tables = c.tables.map((t) => t.name)
+  const files = { practice: csvFiles(SQL, practice, tables), hidden: csvFiles(SQL, hidden, tables) }
+  const reference = (lead: Lead, bytes: Uint8Array): LeadReference => ({
+    solutions: lead.sql.solutions.map((s) => run(bytes, s.query)),
+    misconceptions: lead.sql.misconceptions.map((m) => run(bytes, m.query))
+  })
+  const tablesOf = (code: string, which: 'practice' | 'hidden'): Map<string, QueryResult> | string => {
+    const out = python('run', { setup: caseSetup(tables, code), code, files: files[which], caseTables: true })
+    if (out.error) return `${out.error.type}: ${out.error.message}`
+    const result = new Map<string, QueryResult>()
+    for (const v of out.variables as { name: string; given: boolean; table?: PyTableLike }[]) {
+      const r = !v.given && v.table ? pyTableResult(v.table) : null
+      if (r) result.set(v.name, r)
+    }
+    return result
+  }
+
+  for (const lead of leads) {
+    const w = `${where}: lead ${lead.id} (pandas solution)`
+    const code = lead.python!.solution
+    const mine = tablesOf(code, 'practice')
+    if (typeof mine === 'string') {
+      error(`${w} fails: ${mine}`)
+      continue
+    }
+    const practiceRef = reference(lead, practice)
+    const matched = [...mine].find(([, r]) => matchLead(lead, practiceRef, r).kind === 'match')
+    if (!matched) {
+      const [name, r] = [...mine].at(-1) ?? ['(none)', null]
+      const why = r ? matchLead(lead, practiceRef, r) : null
+      error(`${w} doesn't crack the lead (checked "${name}"): ${why?.kind === 'miss' ? why.outcome.message : why?.kind ?? 'no table made'}`)
+      continue
+    }
+    const onHidden = tablesOf(code, 'hidden')
+    const hiddenTable = typeof onHidden === 'string' ? null : (onHidden.get(matched[0]) ?? null)
+    const outcome = confirmOnHidden(lead, reference(lead, hidden), hiddenTable)
+    if (!outcome.pass) error(`${w} cracks the lead on the practice data but not on the hidden data`)
+    else if (verbose) console.log(`${w}: cracks it with "${matched[0]}"`)
+  }
 }
 
 async function buildDataset(SQL: SqlJsStatic, file: string): Promise<Uint8Array> {

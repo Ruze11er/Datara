@@ -15,6 +15,10 @@
   core: true
   requires: []
   evidence: ev-reported-drop
+  python:
+    solution: |
+      completed = orders[(orders["status"] == "completed") & (orders["ordered_at"] >= "2025-08-01")]
+      answer = completed.groupby(completed["ordered_at"].str[:7])["order_total"].sum()
   concepts: [WHERE, SUM, GROUP BY]
   lesson: sql-group-by
   sql:
@@ -130,6 +134,10 @@
   core: true
   requires: [lead-reported-drop]
   evidence: ev-duplicate-payments
+  python:
+    solution: |
+      uses = orders["payment_ref"].value_counts()
+      answer = uses[uses > 1]
   concepts: [GROUP BY, HAVING, duplicates]
   lesson: sql-having
   sql:
@@ -296,6 +304,12 @@
   core: true
   requires: [lead-reported-drop]
   evidence: ev-categories
+  python:
+    solution: |
+      lines = order_items.merge(orders, on="order_id").merge(products, on="product_id")
+      lines = lines[(lines["status"] == "completed") & (lines["ordered_at"] >= "2025-08-01")]
+      lines["revenue"] = lines["quantity"] * lines["unit_price"]
+      answer = lines.groupby(["category", lines["ordered_at"].str[:7]])["revenue"].sum()
   concepts: [JOIN, GROUP BY, SUM]
   lesson: sql-joins
   sql:
@@ -447,6 +461,10 @@
   core: true
   requires: [lead-reported-drop]
   evidence: ev-channels
+  python:
+    solution: |
+      recent = orders[(orders["status"] == "completed") & (orders["ordered_at"] >= "2025-08-01")]
+      answer = recent.groupby(["channel", recent["ordered_at"].str[:7]])["order_total"].sum()
   concepts: [GROUP BY, SUM, comparison]
   lesson: sql-group-by
   sql:

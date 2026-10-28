@@ -3,6 +3,8 @@
 // Items are keyed by stable string IDs, never by level number, so lessons and
 // levels can be reordered or inserted later without breaking saved progress.
 
+import type { BoardState, VerdictAnswers } from './cases/types'
+
 export const PROGRESS_VERSION = 1
 
 export type LevelStatus = 'unsolved' | 'solved'
@@ -65,7 +67,23 @@ export interface CaseLeadProgress {
   attempts: number
   hintsUsed: number
   solutionViewed: boolean
+  /** Cracked with SQL or with Python. */
+  tool?: CaseTool
 }
+
+export type CaseTool = 'sql' | 'python'
+
+export type CaseGrade = 'distinguished' | 'solid' | 'provisional' | 'reopened'
+
+/** A note the learner pins to the detective board (not graded). */
+export interface CaseNote {
+  id: string
+  text: string
+  at: string
+}
+
+/** The learner's verdict: their answers plus the written summary (self-checked, not graded). */
+export type CaseVerdict = VerdictAnswers & { summary: string }
 
 /** A query result saved with an evidence card (the learner's own finding), capped to keep the file small. */
 export interface EvidenceSnapshot {
@@ -92,12 +110,29 @@ export interface CaseProgress {
   leads: Record<string, CaseLeadProgress>
   /** Facts found so far (claims are always available). */
   evidence: Record<string, CaseEvidenceRecord>
-  /** Investigation Lab editor text (autosaved). */
+  /** Investigation Lab editor text (autosaved): SQL, and Python. */
   draft?: string
+  pythonDraft?: string
+  /** The language the Investigation Lab is set to. */
+  tool?: CaseTool
   /** Lead selected in the Investigation Lab. */
   focusLead?: string
   /** Ids of documents and evidence the learner has looked at (anything else shows as new). */
   seen: string[]
+  /** The detective board: each hypothesis's status and evidence links. */
+  board: BoardState
+  notes: CaseNote[]
+  /** The verdict being written (autosaved), then the one presented. */
+  verdict?: CaseVerdict
+  /** investigating → pushback (verdict presented, answering challenges) → closed. */
+  stage: 'investigating' | 'pushback' | 'closed'
+  closedAt?: string
+  /** Summary checklist items the learner ticked when comparing with the model answer. */
+  summaryChecks: number[]
+  /** Best result over all runs of this case (kept when the case is replayed). */
+  best?: { total: number; grade: CaseGrade; closedAt: string }
+  /** Runs started, including this one. */
+  runs: number
 }
 
 export type ThemeChoice = 'system' | 'light' | 'dark'

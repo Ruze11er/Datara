@@ -1,19 +1,22 @@
-// The Investigation Lab: leads on the left, a SQL editor and results on the right.
+// The Investigation Lab: leads on the left, a SQL or Python editor and results on the right.
 // Every Run is compared with all open leads (and undiscovered hidden ones): a matching result cracks the lead
 // and files the learner's own result as evidence. "Check lead" also explains what's wrong for the selected lead.
+// In Python mode the case tables are DataFrames, and every DataFrame or Series the learner makes is compared.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { Circle, CircleCheck, CircleX, LoaderCircle, SquarePen } from 'lucide-react'
+import { pythonStarter } from '@shared/cases/python'
 import type { CaseDef, Lead } from '@shared/cases/types'
-import type { CaseProgress, ProgressData } from '@shared/progress'
-import { friendlySqlError } from '@shared/sqlCheck'
+import type { CaseProgress, CaseTool, ProgressData } from '@shared/progress'
+import { friendlySqlError, type QueryResult } from '@shared/sqlCheck'
 import { CodeEditor, type CodeEditorHandle } from '../../components/CodeEditor'
 import { Markdown } from '../../components/Markdown'
 import { TableOrChart } from '../../components/TableOrChart'
 import type { CaseDatasets } from '../../content'
+import { isPythonStarted } from '../../engines/python/pythonEngine'
+import type { PyLabRun } from '../../engines/python/types'
 import { runSql } from '../../engines/sql/sqlEngine'
-import type { SqlResult } from '../../engines/sql/types'
 import { withActivity } from '../../lib/activity'
 import { useProgress } from '../../lib/ProgressContext'
 import { useSchema } from '../../lib/storeSchema'
@@ -30,12 +33,15 @@ import {
   type CrackReveal
 } from '../../lib/caseProgress'
 import { HelpSection, LessonLink, SectionTitle, Toolbar } from '../labs/LevelParts'
+import { ErrorBox, OutputBlock, Variables } from '../python-lab/PythonResultParts'
 import { SchemaPanel } from '../sql-lab/SchemaPanel'
-import { compareWithLeads, prefetchLeads, type LeadVerdict } from './caseEngine'
+import { compareWithLeads, prefetchLeads, runPythonAttempt, sqlAttempt, type Attempt, type LeadVerdict } from './caseEngine'
 import { EvidenceCard, Stamp } from './CaseParts'
 
-const BLANK = '-- Write a query to investigate, then press Run.\n'
+const BLANK_SQL = '-- Write a query to investigate, then press Run.\n'
 const AUTOSAVE_MS = 700
+
+type Note = Exclude<LeadVerdict, { kind: 'cracked' }>
 
 type Output =
   | { kind: 'idle' }
@@ -44,11 +50,15 @@ type Output =
   | {
       kind: 'result'
       label: string
-      result: SqlResult
-      /** Leads this result cracked. */
+      /** The table to show: the SQL result, or the latest table the Python code made. */
+      table: (QueryResult & { truncated?: boolean }) | null
+      /** Python runs: printed output, error and variables. */
+      python?: PyLabRun
+      /** Leads this run cracked. */
       reveals: CrackReveal[]
       /** Near misses and feedback (typed-in values, known mistakes, the checked lead's problem). */
-      notes: Exclude<LeadVerdict, { kind: 'cracked' }>[]
+      notes: Note[]
+      closed?: boolean
     }
 
 /** The lead to show: the saved choice if it's visible, else the first open one. */
@@ -63,7 +73,16 @@ export function InvestigationLab({ c, cp, datasets }: { c: CaseDef; cp: CaseProg
   const editor = useRef<CodeEditorHandle>(null)
   const focus = focusedLead(c, cp)
   const guided = cp.mode === 'guided'
-  const code = useRef(cp.draft ?? (guided && focus ? focus.sql.starter : BLANK))
+  const tool: CaseTool = cp.tool ?? 'sql'
+  const tables = c.tables.map((t) => t.name)
+  const starterFor = (t: CaseTool, lead: Lead | undefined): string =>
+    t === 'sql'
+      ? guided && lead ? lead.sql.starter : BLANK_SQL
+      : pythonStarter(tables) + (guided && lead?.python?.starter ? `${lead.python.starter.trimEnd()}\n` : '')
+  const code = useRef<Record<CaseTool, string>>({
+    sql: cp.draft ?? starterFor('sql', focus),
+    python: cp.pythonDraft ?? starterFor('python', focus)
+  })
   const [output, setOutput] = useState<Output>({ kind: 'idle' })
   const busy = output.kind === 'running'
 
@@ -71,17 +90,22 @@ export function InvestigationLab({ c, cp, datasets }: { c: CaseDef; cp: CaseProg
   const initialLeads = useRef(leadsToMatch(c, cp))
   useEffect(() => prefetchLeads(c, datasets, initialLeads.current), [c, datasets])
 
-  // ---- Autosave the editor text.
+  // ---- Autosave the editor text (one draft per language).
   const saveTimer = useRef<number | null>(null)
+  const toolRef = useRef(tool)
+  toolRef.current = tool
   const saveDraft = useCallback(() => {
     if (saveTimer.current !== null) window.clearTimeout(saveTimer.current)
     saveTimer.current = null
-    const text = code.current
-    update((p) => (p.cases[c.id]?.draft === text ? p : withCase(p, c.id, () => ({ draft: text }))))
+    const { sql, python } = code.current
+    update((p) => {
+      const cur = p.cases[c.id]
+      return cur && (cur.draft !== sql || cur.pythonDraft !== python) ? withCase(p, c.id, () => ({ draft: sql, pythonDraft: python })) : p
+    })
   }, [update, c.id])
   const onChange = useCallback(
     (text: string) => {
-      code.current = text
+      code.current[toolRef.current] = text
       if (saveTimer.current !== null) window.clearTimeout(saveTimer.current)
       saveTimer.current = window.setTimeout(saveDraft, AUTOSAVE_MS)
     },
@@ -95,34 +119,58 @@ export function InvestigationLab({ c, cp, datasets }: { c: CaseDef; cp: CaseProg
   )
 
   const setCode = (text: string) => {
-    code.current = text
+    code.current[tool] = text
     editor.current?.setValue(text)
     editor.current?.focus()
     saveDraft()
   }
 
+  const switchTool = (next: CaseTool) => {
+    if (next === tool) return
+    saveDraft()
+    setOutput({ kind: 'idle' })
+    update((p) => withCase(p, c.id, () => ({ tool: next })))
+  }
+
   const selectLead = (id: string) => update((p) => withCase(p, c.id, () => ({ focusLead: id })))
+  const closed = cp.stage === 'closed'
 
   const investigate = async (check: boolean) => {
-    const sql = code.current
-    if (!sql.trim()) return
+    const text = code.current[tool]
+    if (!text.trim()) return
     saveDraft()
-    const checked = check && focus && !isCracked(cp, focus.id) ? focus : undefined
-    setOutput({ kind: 'running', label: checked ? 'Checking the lead…' : 'Running…' })
+    const checked = check && !closed && focus && !isCracked(cp, focus.id) ? focus : undefined
+    const label = checked ? 'Checking the lead…' : tool === 'python' && !isPythonStarted() ? 'Starting Python (the first time takes a few seconds)…' : 'Running…'
+    setOutput({ kind: 'running', label })
     if (checked) update((p) => withActivity(withLead(p, c.id, checked.id, (cur) => ({ attempts: cur.attempts + 1 }))))
 
-    let result: SqlResult
+    let attempt: Attempt
+    let table: (QueryResult & { truncated?: boolean }) | null = null
+    let python: PyLabRun | undefined
     try {
-      result = await runSql({ sql, dataset: datasets.practice })
+      if (tool === 'sql') {
+        const result = await runSql({ sql: text, dataset: datasets.practice })
+        table = result
+        attempt = sqlAttempt(datasets, text, result)
+      } else {
+        const r = await runPythonAttempt(c, datasets, text)
+        python = r.run
+        attempt = r.attempt
+        table = r.attempt.results.at(-1)?.result ?? null
+      }
     } catch (err) {
       const raw = err instanceof Error ? err.message : String(err)
-      setOutput({ kind: 'error', message: friendlySqlError(raw), raw })
+      setOutput({ kind: 'error', message: tool === 'sql' ? friendlySqlError(raw) : raw, raw })
       return
     }
 
+    if (closed) {
+      setOutput({ kind: 'result', label: 'Your result', table, python, reveals: [], notes: [], closed: true })
+      return
+    }
     let verdicts: LeadVerdict[] = []
     try {
-      verdicts = await compareWithLeads(c, datasets, sql, result, leadsToMatch(c, cp), checked)
+      verdicts = await compareWithLeads(c, datasets, attempt, leadsToMatch(c, cp), checked)
     } catch {
       // If the comparison fails, the learner still sees their result.
     }
@@ -133,7 +181,7 @@ export function InvestigationLab({ c, cp, datasets }: { c: CaseDef; cp: CaseProg
         let next: ProgressData = checked ? p : withActivity(p)
         for (const v of cracked) {
           if (isCracked(caseProgress(next, c.id), v.lead.id)) continue
-          const step = crackLead(next, c, v.lead, v.solution, result)
+          const step = crackLead(next, c, v.lead, v.solution, v.result, tool)
           next = step.progress
           reveals.push(step.reveal)
         }
@@ -148,10 +196,11 @@ export function InvestigationLab({ c, cp, datasets }: { c: CaseDef; cp: CaseProg
     }
     setOutput({
       kind: 'result',
-      label: 'Your query result',
-      result,
+      label: tool === 'sql' ? 'Your query result' : `Your table: ${attempt.results.at(-1)?.name ?? ''}`,
+      table,
+      python,
       reveals,
-      notes: verdicts.filter((v): v is Exclude<LeadVerdict, { kind: 'cracked' }> => v.kind !== 'cracked')
+      notes: verdicts.filter((v): v is Note => v.kind !== 'cracked')
     })
   }
 
@@ -159,7 +208,7 @@ export function InvestigationLab({ c, cp, datasets }: { c: CaseDef; cp: CaseProg
     setOutput({ kind: 'running', label: 'Loading preview…' })
     try {
       const result = await runSql({ sql: `SELECT * FROM ${table} LIMIT 10`, dataset: datasets.practice })
-      setOutput({ kind: 'result', label: `Preview: first 10 rows of ${table}`, result, reveals: [], notes: [] })
+      setOutput({ kind: 'result', label: `Preview: first 10 rows of ${table}`, table: result, reveals: [], notes: [] })
     } catch (err) {
       setOutput({ kind: 'error', message: String(err), raw: String(err) })
     }
@@ -179,7 +228,8 @@ export function InvestigationLab({ c, cp, datasets }: { c: CaseDef; cp: CaseProg
             cp={cp}
             lead={focus}
             guided={guided}
-            onStarter={() => setCode(focus.sql.starter)}
+            tool={tool}
+            onStarter={() => setCode(starterFor(tool, focus))}
             onHint={() =>
               update((p) => withLead(p, c.id, focus.id, (cur) => ({ hintsUsed: Math.min(cur.hintsUsed + 1, focus.sql.hints.length) })))
             }
@@ -201,16 +251,40 @@ export function InvestigationLab({ c, cp, datasets }: { c: CaseDef; cp: CaseProg
       </aside>
 
       <section className="flex min-h-0 min-w-0 flex-col">
+        <div className="flex items-center gap-3 border-b border-slate-200 bg-surface px-4 py-1.5">
+          <div className="flex rounded-md bg-slate-100 p-0.5" role="tablist" aria-label="Language">
+            {(['sql', 'python'] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                role="tab"
+                aria-selected={tool === t}
+                onClick={() => switchTool(t)}
+                className={`rounded px-2.5 py-0.5 text-xs font-medium ${
+                  tool === t ? 'bg-surface text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                {t === 'sql' ? 'SQL' : 'Python'}
+              </button>
+            ))}
+          </div>
+          <span className="text-xs text-slate-500">
+            {tool === 'sql'
+              ? 'Query the case tables with SQL.'
+              : 'The tables are pandas DataFrames. Every table you make is compared with your leads.'}
+          </span>
+        </div>
         <div className="h-[38%] min-h-[150px] border-b border-slate-200">
           {schema ? (
             <CodeEditor
+              key={tool}
               ref={editor}
-              language="sql"
-              initialValue={code.current}
+              language={tool}
+              initialValue={code.current[tool]}
               onChange={onChange}
               onRun={() => void investigate(false)}
               onCheck={() => void investigate(true)}
-              schema={autocomplete}
+              schema={tool === 'sql' ? autocomplete : undefined}
               fontSize={progress.settings.editorFontSize}
             />
           ) : (
@@ -223,11 +297,11 @@ export function InvestigationLab({ c, cp, datasets }: { c: CaseDef; cp: CaseProg
           busy={busy || !schema}
           onRun={() => void investigate(false)}
           onCheck={() => void investigate(true)}
-          onReset={() => setCode(guided && focus && !focusCracked ? focus.sql.starter : BLANK)}
+          onReset={() => setCode(starterFor(tool, focusCracked ? undefined : focus))}
           checkLabel="Check lead"
-          checkDisabled={!focus || focusCracked}
+          checkDisabled={closed || !focus || focusCracked}
           resetLabel="Clear"
-          resetTitle={guided ? "Put the selected lead's starter query in the editor" : 'Empty the editor'}
+          resetTitle={guided ? "Put the selected lead's starter code in the editor" : 'Empty the editor'}
         />
         <LabOutput output={output} c={c} onSelectLead={selectLead} />
       </section>
@@ -295,6 +369,7 @@ function LeadDetail({
   cp,
   lead,
   guided,
+  tool,
   onStarter,
   onHint,
   onSolution
@@ -303,6 +378,7 @@ function LeadDetail({
   cp: CaseProgress
   lead: Lead
   guided: boolean
+  tool: CaseTool
   onStarter: () => void
   onHint: () => void
   onSolution: () => void
@@ -310,7 +386,7 @@ function LeadDetail({
   const lp = leadProgress(cp, lead.id)
   const cracked = !!lp.cracked
   const evidence = c.evidence.find((e) => e.id === lead.evidence)
-  const note = lp.solution !== undefined ? lead.sql.solutions[lp.solution]?.note : undefined
+  const note = lp.solution !== undefined && lp.tool !== 'python' ? lead.sql.solutions[lp.solution]?.note : undefined
   return (
     <>
       <section className="rounded-lg border border-slate-200 p-4">
@@ -320,13 +396,19 @@ function LeadDetail({
         {guided && !cracked && (
           <div className="mt-3 border-t border-slate-100 pt-3">
             <Markdown text={lead.guidedTask} className="prose-compact text-slate-700" />
-            <button
-              type="button"
-              onClick={onStarter}
-              className="mt-2 flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
-            >
-              <SquarePen size={14} aria-hidden /> Put the starter query in the editor
-            </button>
+            {tool === 'sql' ? (
+              <button
+                type="button"
+                onClick={onStarter}
+                className="mt-2 flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+              >
+                <SquarePen size={14} aria-hidden /> Put the starter query in the editor
+              </button>
+            ) : (
+              <p className="mt-2 text-xs text-slate-500">
+                The instructions use SQL words, but any pandas table with the same result cracks the lead.
+              </p>
+            )}
           </div>
         )}
         {cracked && (
@@ -346,7 +428,7 @@ function LeadDetail({
           lp={{ status: 'unsolved', hintsUsed: lp.hintsUsed, solutionViewed: lp.solutionViewed }}
           onHint={onHint}
           onSolution={onSolution}
-          unaidedNote="Hints never lower your case rating."
+          unaidedNote={tool === 'python' ? 'Hints and the solution are written in SQL. They never lower your case rating.' : 'Hints never lower your case rating.'}
         />
       )}
       <LessonLink lessonId={lead.lesson} />
@@ -359,8 +441,8 @@ function LabOutput({ output, c, onSelectLead }: { output: Output; c: CaseDef; on
     return (
       <div className="flex flex-1 items-center justify-center p-6 text-center text-sm text-slate-400">
         <p className="max-w-md">
-          Write a query above and press <b className="text-slate-500">Run</b>. Every result is compared with your open leads:
-          when it answers one, the lead is cracked and your finding is filed as evidence. Press{' '}
+          Write your code above and press <b className="text-slate-500">Run</b>. Every result is compared with your open
+          leads: when it answers one, the lead is cracked and your finding is filed as evidence. Press{' '}
           <b className="text-slate-500">Check lead</b> for feedback on the selected lead.
         </p>
       </div>
@@ -378,7 +460,7 @@ function LabOutput({ output, c, onSelectLead }: { output: Output; c: CaseDef; on
       <div className="flex-1 overflow-auto p-4">
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
           <div className="flex items-center gap-2 font-semibold text-red-800">
-            <CircleX size={16} aria-hidden /> Your query has an error
+            <CircleX size={16} aria-hidden /> Your code has an error
           </div>
           <p className="mt-1 text-sm text-red-900">{output.message}</p>
           {output.raw !== output.message && <p className="mt-2 font-mono text-xs text-red-700/80">{output.raw}</p>}
@@ -386,9 +468,16 @@ function LabOutput({ output, c, onSelectLead }: { output: Output; c: CaseDef; on
       </div>
     )
   }
+  const py = output.python
+  const extras = py && (py.error || py.output.trim() || py.variables.some((v) => !v.given))
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div aria-live="polite" className="max-h-[45%] shrink-0 overflow-y-auto">
+        {output.closed && (
+          <div className="border-b border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-600">
+            This case is closed, so results no longer crack leads. Replay the case from the Verdict tab to investigate again.
+          </div>
+        )}
         {output.reveals.map((r) => (
           <CrackedBanner key={r.lead.id} c={c} reveal={r} onSelectLead={onSelectLead} />
         ))}
@@ -396,8 +485,24 @@ function LabOutput({ output, c, onSelectLead }: { output: Output; c: CaseDef; on
           <NoteBanner key={`${n.kind}-${n.lead.id}`} note={n} />
         ))}
       </div>
+      {extras && (
+        <div className="max-h-[40%] shrink-0 space-y-3 overflow-y-auto border-b border-slate-200 p-4">
+          {py.error && <ErrorBox error={py.error} />}
+          {py.output.trim() && <OutputBlock title="Printed output" text={py.output} />}
+          <Variables variables={py.variables.filter((v) => !v.given)} />
+        </div>
+      )}
       <div className="min-h-0 flex-1">
-        <TableOrChart label={output.label} columns={output.result.columns} rows={output.result.rows} truncated={output.result.truncated} />
+        {output.table ? (
+          <TableOrChart label={output.label} columns={output.table.columns} rows={output.table.rows} truncated={output.table.truncated} />
+        ) : (
+          py && !py.error && (
+            <p className="p-4 text-sm text-slate-500">
+              No table yet. Make a DataFrame or Series (for example <code>answer = orders.groupby(…)…</code>) and it is
+              compared with your leads.
+            </p>
+          )
+        )}
       </div>
     </div>
   )
@@ -445,7 +550,7 @@ function CrackedBanner({ c, reveal, onSelectLead }: { c: CaseDef; reveal: CrackR
   )
 }
 
-function NoteBanner({ note }: { note: Exclude<LeadVerdict, { kind: 'cracked' }> }) {
+function NoteBanner({ note }: { note: Note }) {
   const title =
     note.kind === 'almost' ? `Almost: ${note.lead.title}` : note.kind === 'miss' ? `${note.outcome.title}: ${note.lead.title}` : `Not quite: ${note.lead.title}`
   const message = note.kind === 'almost' ? note.message : note.kind === 'misconception' ? note.feedback : note.outcome.message
