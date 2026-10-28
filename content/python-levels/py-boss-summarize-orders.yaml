@@ -1,0 +1,55 @@
+id: py-boss-summarize-orders
+title: "Milestone: An Order Summary Function"
+concepts: [functions, lists of dictionaries, loops, edge cases]
+lesson: py-functions
+task: |
+  **Milestone level.** This one combines everything from Chapter 4.
+
+  Write `summarize(orders)` that takes a list of order dictionaries (like the given `orders`) and returns a **dictionary**
+  describing the **Delivered** orders only:
+
+  - `"count"`: how many delivered orders there are
+  - `"total"`: their total, **rounded to 2 decimals**
+  - `"average"`: their average total, **rounded to 2 decimals**, or `0` if there are none
+
+  For example, `summarize([])` returns `{"count": 0, "total": 0, "average": 0}`.
+setup: |
+  orders = [
+      {"id": 1001, "status": "Delivered", "total": 45.0},
+      {"id": 1002, "status": "Cancelled", "total": 120.5},
+      {"id": 1003, "status": "Delivered", "total": 89.99},
+      {"id": 1004, "status": "Delivered", "total": 15.25},
+  ]
+starter: |
+  # Define summarize(orders) below
+
+
+  # Try it (optional):
+  # print(summarize(orders))
+  # print(summarize([]))
+solution: |
+  def summarize(orders):
+      totals = [o["total"] for o in orders if o["status"] == "Delivered"]
+      count = len(totals)
+      total = round(sum(totals), 2)
+      average = round(total / count, 2) if count > 0 else 0
+      return {"count": count, "total": total, "average": average}
+calls:
+  - "summarize(orders)"
+  - "summarize([])"
+  - "summarize([{'id': 1, 'status': 'Shipped', 'total': 10.0}])"
+  - "summarize([{'id': 1, 'status': 'Delivered', 'total': 10.1}, {'id': 2, 'status': 'Delivered', 'total': 20.2}])"
+hints:
+  - "Inside the function, collect the totals of delivered orders first. Use the parameter, not the global orders variable."
+  - "count = len(…), total = round(sum(…), 2). The average needs care when count is 0."
+  - "Build and return a dictionary: return {\"count\": count, \"total\": total, \"average\": average}"
+explanation: |
+  The function works on **any** list you give it: today's orders, an empty list, or next month's. That's why the check called it
+  with several different inputs. Using the parameter `orders` inside the function (not some outside variable) and handling the
+  empty case are what make it reusable.
+tests:
+  accept:
+    - "def summarize(orders):\n    count = 0\n    total = 0\n    for o in orders:\n        if o['status'] == 'Delivered':\n            count += 1\n            total += o['total']\n    total = round(total, 2)\n    return {'count': count, 'total': total, 'average': round(total / count, 2) if count else 0}"
+  reject:
+    - "def summarize(orders):\n    totals = [o['total'] for o in orders]\n    count = len(totals)\n    total = round(sum(totals), 2)\n    return {'count': count, 'total': total, 'average': round(total / count, 2) if count else 0}"
+    - "def summarize(orders):\n    totals = [o['total'] for o in orders if o['status'] == 'Delivered']\n    return {'count': len(totals), 'total': round(sum(totals), 2), 'average': round(sum(totals) / len(totals), 2)}"

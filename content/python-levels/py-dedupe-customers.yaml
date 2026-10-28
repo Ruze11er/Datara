@@ -1,0 +1,45 @@
+id: py-dedupe-customers
+title: Duplicate Customer Records
+concepts: [duplicates, lists of dictionaries]
+lesson: py-cleaning-data
+task: |
+  The customer list contains repeated records for the same `id` (sometimes with slightly different details).
+
+  Create `unique_customers`: the records with each `id` appearing **once**, keeping the **first** record for each `id`, in the
+  original order.
+setup: |
+  customers = [
+      {"id": 1, "name": "Maria Santos", "country": "Philippines"},
+      {"id": 2, "name": "James Smith", "country": "USA"},
+      {"id": 1, "name": "Maria Santos", "country": "PH"},
+      {"id": 3, "name": "Ana Cruz", "country": "Philippines"},
+      {"id": 2, "name": "James Smith", "country": "USA"},
+  ]
+starter: |
+  # Keep the first record for each id
+solution: |
+  unique_customers = []
+  seen_ids = set()
+  for customer in customers:
+      if customer["id"] not in seen_ids:
+          seen_ids.add(customer["id"])
+          unique_customers.append(customer)
+expect: [unique_customers]
+variants:
+  - |
+    customers = [
+        {"id": 9, "name": "Zoe King", "country": "UK"},
+        {"id": 9, "name": "Zoe King", "country": "United Kingdom"},
+    ]
+hints:
+  - "Records 1 and 3 have the same id but different country text, so comparing whole records won't find them."
+  - "Use the seen-set pattern from the last level, but check customer[\"id\"] instead of the whole record."
+  - "for customer in customers: if customer['id'] not in seen_ids: seen_ids.add(customer['id']); unique_customers.append(customer)"
+explanation: |
+  Deciding **what makes two records the same** is the hard part of de-duplication. Here it's the `id`, not the exact text,
+  because the details differ ("Philippines" vs "PH"). Keeping the first record is one rule; others keep the newest or most
+  complete one. Whatever the rule, write it down.
+tests:
+  reject:
+    - "unique_customers = []\nfor c in customers:\n    if c not in unique_customers:\n        unique_customers.append(c)"
+    - "unique_customers = list({c['id']: c for c in customers}.values())"

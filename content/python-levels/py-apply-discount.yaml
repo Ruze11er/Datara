@@ -1,0 +1,35 @@
+id: py-apply-discount
+title: A Discount Calculator
+concepts: [functions, parameters, round]
+lesson: py-functions
+task: |
+  Write a function `apply_discount(price, rate)` that returns the price **after** the discount, **rounded to 2 decimals**.
+  The rate is a decimal: `0.2` means 20% off.
+
+  For example, `apply_discount(100, 0.2)` returns `80.0`.
+starter: |
+  # Define apply_discount(price, rate) below
+
+
+  # Try it (optional):
+  # print(apply_discount(100, 0.2))
+solution: |
+  def apply_discount(price, rate):
+      return round(price * (1 - rate), 2)
+calls:
+  - "apply_discount(100, 0.2)"
+  - "apply_discount(59.99, 0.15)"
+  - "apply_discount(19.99, 0)"
+hints:
+  - "This function needs two parameters, separated by a comma."
+  - "The price after a discount is price × (1 − rate). Round the result before returning it."
+  - "def apply_discount(price, rate):  then  return round(price * (1 - rate), 2)"
+explanation: |
+  Functions can take several inputs. The order matters: `apply_discount(100, 0.2)` puts 100 in `price` and 0.2 in `rate`.
+  Wrapping a formula in a well-named function means nobody has to remember or retype it, and you only fix it in one place.
+tests:
+  accept:
+    - "def apply_discount(price, rate):\n    discount = price * rate\n    return round(price - discount, 2)"
+  reject:
+    - "def apply_discount(price, rate):\n    return round(price * rate, 2)"
+    - "def apply_discount(price, rate):\n    return price * (1 - rate)"

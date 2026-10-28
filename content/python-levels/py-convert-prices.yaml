@@ -1,0 +1,31 @@
+id: py-convert-prices
+title: Text Prices to Numbers
+concepts: [cleaning, type conversion, float]
+lesson: py-cleaning-data
+task: |
+  A price column was imported as text, with extra spaces, dollar signs, and thousands separators.
+
+  Create `prices`: every value from `price_texts` converted to a **float**, in the same order.
+  Then create `total`: the sum of `prices`, **rounded to 2 decimals**.
+setup: |
+  price_texts = ["19.99", " 5", "12.50 ", "$7.25", "1,049.00"]
+starter: |
+  # Convert price_texts to numbers, then total them
+solution: |
+  prices = [float(p.strip().replace("$", "").replace(",", "")) for p in price_texts]
+  total = round(sum(prices), 2)
+expect: [prices, total]
+variants:
+  - |
+    price_texts = ["$2,500.50", "0.99"]
+hints:
+  - "float() fails on '$7.25' and '1,049.00'. Remove the $ and , first."
+  - "Clean each text with .strip().replace('$', '').replace(',', ''), then convert with float()."
+  - "prices = [float(p.strip().replace('$', '').replace(',', '')) for p in price_texts] and total = round(sum(prices), 2)"
+explanation: |
+  Until it's converted, `"19.99"` is just text: `sum()` can't add it, and sorting would put `"5"` after `"12.50"` because text
+  sorts character by character. Converting types early, right after loading data, prevents a whole family of bugs.
+tests:
+  reject:
+    - "prices = [float(p.strip().replace('$', '')) for p in price_texts if ',' not in p]\ntotal = round(sum(prices), 2)"
+    - "prices = [p.strip().replace('$', '').replace(',', '') for p in price_texts]\ntotal = 0"

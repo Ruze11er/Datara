@@ -1,0 +1,32 @@
+id: py-clean-emails
+title: Clean Email Addresses
+concepts: [cleaning, string methods, list comprehension]
+lesson: py-cleaning-data
+task: |
+  Email addresses were typed with stray spaces and random capitals, so the same address can look different.
+
+  Create `clean_emails`: every address from `emails` with surrounding spaces removed and converted to **lowercase**,
+  in the same order.
+setup: |
+  emails = ["  Maria.Santos@Example.com", "paolo.green@example.com ", " ANA.CRUZ@EXAMPLE.COM "]
+starter: |
+  # Build clean_emails from emails
+solution: |
+  clean_emails = [email.strip().lower() for email in emails]
+expect: [clean_emails]
+variants:
+  - |
+    emails = ["Zoe.King@Example.com  "]
+hints:
+  - "Each address needs two fixes: remove the spaces at both ends, and make it lowercase."
+  - ".strip() and .lower() can be chained. Apply them to every item with a loop or a list comprehension."
+  - "clean_emails = [email.strip().lower() for email in emails]"
+explanation: |
+  Email addresses aren't case-sensitive in practice, so `Maria.Santos@Example.com` and `maria.santos@example.com` are the same
+  person. Normalizing them is what lets you spot duplicates and join tables reliably.
+tests:
+  accept:
+    - "clean_emails = []\nfor e in emails:\n    clean_emails.append(e.lower().strip())"
+  reject:
+    - "clean_emails = [email.lower() for email in emails]"
+    - "clean_emails = [email.strip() for email in emails]"

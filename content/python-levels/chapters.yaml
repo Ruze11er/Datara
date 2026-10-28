@@ -46,3 +46,33 @@
     - py-out-of-stock-list
     - py-delivered-revenue
     - py-boss-category-totals
+
+- id: py-ch4
+  title: Functions
+  description: Package your logic into reusable functions with inputs, return values, and sensible defaults.
+  levels:
+    - py-greet-customer
+    - py-apply-discount
+    - py-add-tax
+    - py-shipping-fee
+    - py-average-function
+    - py-clean-name
+    - py-parse-price
+    - py-order-size
+    - py-clean-all-names
+    - py-boss-summarize-orders
+
+- id: py-ch5
+  title: Cleaning Messy Data
+  description: Fix inconsistent text, convert types, handle missing values and duplicates, and validate records.
+  levels:
+    - py-clean-emails
+    - py-standardize-categories
+    - py-convert-prices
+    - py-remove-missing
+    - py-fill-missing
+    - py-unique-order-ids
+    - py-dedupe-customers
+    - py-orders-per-month
+    - py-find-invalid-orders
+    - py-boss-clean-signups

@@ -1,0 +1,38 @@
+id: py-average-function
+title: A Safe Average
+concepts: [functions, lists, edge cases]
+lesson: py-functions
+task: |
+  Write `average(values)` that returns the average of a list of numbers, **rounded to 2 decimals**.
+
+  If the list is **empty**, return `0` instead of crashing.
+starter: |
+  # Define average(values) below
+
+
+  # Try it (optional):
+  # print(average([10, 20, 30]), average([]))
+solution: |
+  def average(values):
+      if len(values) == 0:
+          return 0
+      return round(sum(values) / len(values), 2)
+calls:
+  - "average([10, 20, 30])"
+  - "average([4.5])"
+  - "average([1, 2])"
+  - "average([1, 2, 2])"
+  - "average([])"
+hints:
+  - "sum(values) / len(values) is the average, but what happens when len(values) is 0?"
+  - "Check for an empty list first and return 0 early. An empty list has length 0 (and is also 'falsy': if not values:)."
+  - "def average(values):  if len(values) == 0: return 0   then   return round(sum(values) / len(values), 2)"
+explanation: |
+  Dividing by `len([])` raises `ZeroDivisionError`. Real data contains empty groups, so good functions handle **edge cases**
+  on purpose. A `return` inside an `if` ends the function early; the rest only runs when the list isn't empty.
+tests:
+  accept:
+    - "def average(values):\n    if not values:\n        return 0\n    return round(sum(values) / len(values), 2)"
+  reject:
+    - "def average(values):\n    return round(sum(values) / len(values), 2)"
+    - "def average(values):\n    if len(values) == 0:\n        return 0\n    return sum(values) / len(values)"

@@ -1,0 +1,36 @@
+id: py-fill-missing
+title: Filling Missing Values
+concepts: [missing values, imputation]
+lesson: py-cleaning-data
+task: |
+  Instead of dropping missing ratings, the team wants to **fill** them with the average of the known ratings.
+
+  1. `fill_value`: the average of the ratings that are not `None`, **rounded to 1 decimal**
+  2. `filled_ratings`: the ratings in the same order, with every `None` replaced by `fill_value`
+setup: |
+  ratings = [5, None, 4, 3, None, 4]
+starter: |
+  # 1. fill_value
+  # 2. filled_ratings
+solution: |
+  known = [r for r in ratings if r is not None]
+  fill_value = round(sum(known) / len(known), 1)
+  filled_ratings = [fill_value if r is None else r for r in ratings]
+expect: [fill_value, filled_ratings]
+variants:
+  - |
+    ratings = [None, 2, 3]
+hints:
+  - "First collect the known ratings, average them, and round to 1 decimal."
+  - "Then build a new list: for each rating, use fill_value if it is None, otherwise keep the rating."
+  - "filled_ratings = [fill_value if r is None else r for r in ratings]"
+explanation: |
+  Filling in missing values is called **imputation**. Filling with the average keeps the overall average unchanged, but it
+  makes the data look more certain than it is, and it hides the fact that values were missing. Analysts usually note how many
+  values were imputed when they report results.
+tests:
+  accept:
+    - "known = [r for r in ratings if r is not None]\nfill_value = round(sum(known) / len(known), 1)\nfilled_ratings = []\nfor r in ratings:\n    filled_ratings.append(fill_value if r is None else r)"
+  reject:
+    - "fill_value = 0\nfilled_ratings = [0 if r is None else r for r in ratings]"
+    - "known = [r for r in ratings if r is not None]\nfill_value = round(sum(known) / len(ratings), 1)\nfilled_ratings = [fill_value if r is None else r for r in ratings]"

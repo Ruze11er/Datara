@@ -1,0 +1,32 @@
+id: py-remove-missing
+title: Dropping Missing Values
+concepts: [missing values, None, filtering]
+lesson: py-cleaning-data
+task: |
+  Some customers skipped the rating question. Missing ratings appear as `None` **or** as an empty text `""`.
+
+  Create `valid_ratings`: only the real ratings from `ratings`, in the same order. Then create `average_rating` from them,
+  **rounded to 2 decimals**.
+setup: |
+  ratings = [5, None, 4, "", 3, None, 5, 2]
+starter: |
+  # Keep only real ratings, then average them
+solution: |
+  valid_ratings = [r for r in ratings if r is not None and r != ""]
+  average_rating = round(sum(valid_ratings) / len(valid_ratings), 2)
+expect: [valid_ratings, average_rating]
+variants:
+  - |
+    ratings = ["", 1, None, 2]
+hints:
+  - "Keep a rating only if it is not None and not an empty text."
+  - "Check for None with `is not None` (not with !=), and for empty text with != \"\"."
+  - "valid_ratings = [r for r in ratings if r is not None and r != \"\"]"
+explanation: |
+  Missing data hides in many forms: `None`, empty text, `"N/A"`, even `0`. You must know which ones your data uses. Averaging
+  only the real ratings gives an honest number; counting missing ones as 0 would drag the average down.
+  `is not None` is the correct way to test for `None` in Python.
+tests:
+  reject:
+    - "valid_ratings = [r for r in ratings if r is not None]\naverage_rating = 0"
+    - "valid_ratings = [r for r in ratings if r]\naverage_rating = round(sum(valid_ratings) / len(ratings), 2)"

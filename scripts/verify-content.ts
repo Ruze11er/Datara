@@ -169,7 +169,8 @@ try {
         solution: level.solution,
         expect: level.expect,
         checkOutput: level.checkOutput,
-        variants: level.variants
+        variants: level.variants,
+        calls: level.calls
       }
       try {
         const solved = call('run', { setup: level.setup, code: level.solution })

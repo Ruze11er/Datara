@@ -1,0 +1,35 @@
+id: py-clean-name
+title: Cleaning Names
+concepts: [functions, string methods]
+lesson: py-functions
+task: |
+  Names typed into the sign-up form are messy: extra spaces and random capitals.
+  Write `clean_name(text)` that removes spaces from both ends and capitalizes each word.
+
+  For example, `clean_name("  maria SANTOS ")` returns `Maria Santos`.
+starter: |
+  # Define clean_name(text) below
+
+
+  # Try it (optional):
+  # print(clean_name("  maria SANTOS "))
+solution: |
+  def clean_name(text):
+      return text.strip().title()
+calls:
+  - "clean_name('  maria SANTOS ')"
+  - "clean_name('PAOLO GREEN')"
+  - "clean_name('ana cruz')"
+  - "clean_name('Liam White')"
+hints:
+  - "Two string methods do the work: one removes spaces at the ends, one capitalizes each word."
+  - ".strip() removes surrounding spaces; .title() makes 'mARIA sANTOS' into 'Maria Santos'. You can chain them."
+  - "def clean_name(text):  return text.strip().title()"
+explanation: |
+  Chaining methods (`text.strip().title()`) applies them left to right. Turning a cleaning rule into a function means
+  every name is cleaned **the same way**, which is the whole point of data cleaning. You'll use this function on a whole
+  list soon.
+tests:
+  reject:
+    - "def clean_name(text):\n    return text.title()"
+    - "def clean_name(text):\n    return text.strip().capitalize()"

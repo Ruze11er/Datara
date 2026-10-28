@@ -1,0 +1,38 @@
+id: py-clean-all-names
+title: Clean a Whole List
+concepts: [functions, loops, list comprehension]
+lesson: py-functions
+task: |
+  1. Define `clean_name(text)` again (strip spaces, capitalize each word).
+  2. Use it to create `clean_names`: a new list with **every** name from `raw_names` cleaned, in the same order.
+setup: |
+  raw_names = ["  maria SANTOS ", "PAOLO GREEN", "ana cruz  ", " liam   white"]
+starter: |
+  # 1. Define clean_name(text)
+
+  # 2. Build clean_names from raw_names
+solution: |
+  def clean_name(text):
+      return text.strip().title()
+
+  clean_names = [clean_name(name) for name in raw_names]
+expect: [clean_names]
+calls:
+  - "clean_name('  zoe KING ')"
+variants:
+  - |
+    raw_names = ["GRACE tan", "  noah  "]
+hints:
+  - "Write the function first, then call it once for each name."
+  - "A for loop with .append(), or a list comprehension: [clean_name(n) for n in raw_names]."
+  - "clean_names = [clean_name(name) for name in raw_names]"
+explanation: |
+  Functions and loops work together: the function knows **how** to clean one value, and the loop applies it to **every** value.
+  Notice `" liam   white"`: `.strip()` only removes spaces at the ends, so the double space in the middle stays. Cleaning rules
+  always have limits, and it's worth checking the results.
+tests:
+  accept:
+    - "def clean_name(text):\n    return text.strip().title()\n\nclean_names = []\nfor n in raw_names:\n    clean_names.append(clean_name(n))"
+  reject:
+    - "def clean_name(text):\n    return text.strip().title()\n\nclean_names = ['Maria Santos', 'Paolo Green', 'Ana Cruz', 'Liam   White']"
+    - "def clean_name(text):\n    return text.strip().title()\n\nclean_names = sorted(clean_name(n) for n in raw_names)"

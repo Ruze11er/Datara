@@ -68,7 +68,8 @@ function PythonLevelPage({ level }: { level: Numbered<PythonLevel> }) {
         solution: level.solution,
         expect: level.expect,
         checkOutput: level.checkOutput,
-        variants: level.variants
+        variants: level.variants,
+        calls: level.calls
       })
       const attempt = session.recordAttempt(result.pass)
       setOutput({ kind: 'check', result, attempt })
@@ -207,7 +208,7 @@ function Variables({ variables }: { variables: PyVariable[] }) {
           </tbody>
         </table>
       </div>
-      <p className="mt-1 text-xs text-slate-400">Grey rows come from the given data.</p>
+      {variables.some((v) => v.given) && <p className="mt-1 text-xs text-slate-400">Grey rows come from the given data.</p>}
     </section>
   )
 }

@@ -1,0 +1,36 @@
+id: py-parse-price
+title: Prices from Text
+concepts: [functions, string methods, float]
+lesson: py-functions
+task: |
+  An export from another system writes prices as text like `"$1,299.00"` or `"  $24.50 "`.
+  Write `parse_price(text)` that turns such text into a **number** (a float).
+
+  For example, `parse_price("$1,299.00")` returns `1299.0`.
+starter: |
+  # Define parse_price(text) below
+
+
+  # Try it (optional):
+  # print(parse_price("$1,299.00"))
+solution: |
+  def parse_price(text):
+      cleaned = text.strip().replace("$", "").replace(",", "")
+      return float(cleaned)
+calls:
+  - "parse_price('$1,299.00')"
+  - "parse_price('  $24.50 ')"
+  - "parse_price('9')"
+  - "parse_price('$12,345.67')"
+hints:
+  - "float('1,299.00') fails because of the comma and the $. Remove what isn't part of the number first."
+  - ".strip() removes surrounding spaces, and .replace('$', '') removes every dollar sign. Do the same for commas."
+  - "def parse_price(text):  return float(text.strip().replace('$', '').replace(',', ''))"
+explanation: |
+  Cleaning text into numbers is one of the most common data tasks. The function strips spaces, removes the currency symbol
+  and thousands separators, and only then converts. Each step handles one problem, which makes the function easy to extend
+  (for example, for `€`).
+tests:
+  reject:
+    - "def parse_price(text):\n    return float(text.replace('$', ''))"
+    - "def parse_price(text):\n    return text.strip().replace('$', '').replace(',', '')"

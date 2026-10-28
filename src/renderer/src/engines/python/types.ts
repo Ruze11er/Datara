@@ -50,4 +50,5 @@ export interface PyCheckSpec {
   expect: string[]
   checkOutput: boolean
   variants: string[]
+  calls: string[]
 }

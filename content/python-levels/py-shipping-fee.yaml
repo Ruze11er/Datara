@@ -1,0 +1,41 @@
+id: py-shipping-fee
+title: Shipping Fee with a Default
+concepts: [functions, default parameters, if]
+lesson: py-functions
+task: |
+  Write `shipping_fee(order_total, free_from=50)`. It returns `0` when the order total is **at least** `free_from`,
+  and `4.99` otherwise.
+
+  `free_from` has a **default** of 50, so `shipping_fee(64.5)` works, but a caller can also choose another threshold,
+  as in `shipping_fee(30, free_from=25)`.
+starter: |
+  # Define shipping_fee(order_total, free_from=50) below
+
+
+  # Try it (optional):
+  # print(shipping_fee(64.5), shipping_fee(30), shipping_fee(30, free_from=25))
+solution: |
+  def shipping_fee(order_total, free_from=50):
+      if order_total >= free_from:
+          return 0
+      return 4.99
+calls:
+  - "shipping_fee(64.5)"
+  - "shipping_fee(30)"
+  - "shipping_fee(50)"
+  - "shipping_fee(30, free_from=25)"
+  - "shipping_fee(80, free_from=100)"
+hints:
+  - "Give a parameter a default value with = in the def line: def f(x, y=10):"
+  - "Inside, compare order_total with free_from (not with 50), so the threshold can change."
+  - "def shipping_fee(order_total, free_from=50):  if order_total >= free_from: return 0  otherwise return 4.99"
+explanation: |
+  A **default parameter** is used when the caller leaves it out, which keeps simple calls simple while allowing flexibility.
+  Notice the tests: exactly 50 is free (`>=`), and the custom thresholds only work because the code compares with
+  `free_from` instead of a hard-coded 50.
+tests:
+  accept:
+    - "def shipping_fee(order_total, free_from=50):\n    return 0 if order_total >= free_from else 4.99"
+  reject:
+    - "def shipping_fee(order_total, free_from=50):\n    if order_total >= 50:\n        return 0\n    return 4.99"
+    - "def shipping_fee(order_total, free_from=50):\n    if order_total > free_from:\n        return 0\n    return 4.99"

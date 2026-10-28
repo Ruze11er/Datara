@@ -1,0 +1,48 @@
+id: py-find-invalid-orders
+title: Find the Invalid Orders
+concepts: [validation, conditions, lists of dictionaries]
+lesson: py-cleaning-data
+task: |
+  Before analysis, check the data. An order is **invalid** if:
+
+  - its `quantity` is **0 or less**, **or**
+  - its `email` is missing: `None`, or text that is empty after removing spaces
+
+  Create `invalid_ids`: the `id` of every invalid order, in the original order.
+setup: |
+  orders = [
+      {"id": 1, "quantity": 2, "email": "maria@example.com"},
+      {"id": 2, "quantity": 0, "email": "james@example.com"},
+      {"id": 3, "quantity": 1, "email": None},
+      {"id": 4, "quantity": -1, "email": "ana@example.com"},
+      {"id": 5, "quantity": 3, "email": "   "},
+      {"id": 6, "quantity": 1, "email": "liam@example.com"},
+  ]
+starter: |
+  invalid_ids = []
+  # Check each order against the rules
+solution: |
+  invalid_ids = []
+  for order in orders:
+      email = order["email"]
+      missing_email = email is None or email.strip() == ""
+      if order["quantity"] <= 0 or missing_email:
+          invalid_ids.append(order["id"])
+expect: [invalid_ids]
+variants:
+  - |
+    orders = [
+        {"id": 10, "quantity": 5, "email": ""},
+        {"id": 11, "quantity": 1, "email": "ok@example.com"},
+    ]
+hints:
+  - "An order is invalid if ANY rule fails, so combine the rules with or."
+  - "Check `email is None` first. Calling .strip() on None would crash, and `or` stops as soon as it finds True."
+  - "missing_email = email is None or email.strip() == ''  then  if order['quantity'] <= 0 or missing_email: invalid_ids.append(order['id'])"
+explanation: |
+  **Validation rules** catch bad data before it ruins an analysis. The order of the checks matters: `email is None or email.strip() == ""`
+  is safe because Python stops evaluating `or` as soon as one side is true (*short-circuiting*), so `.strip()` is never called on `None`.
+tests:
+  reject:
+    - "invalid_ids = [o['id'] for o in orders if o['quantity'] <= 0 or o['email'] is None]"
+    - "invalid_ids = [o['id'] for o in orders if o['quantity'] < 0 or o['email'] is None or o['email'].strip() == '']"

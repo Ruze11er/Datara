@@ -86,3 +86,8 @@
       lessons:
         - py-conditions
         - py-loops
+    - id: python-functions-cleaning
+      title: Functions and Data Cleaning
+      lessons:
+        - py-functions
+        - py-cleaning-data

@@ -1,0 +1,33 @@
+id: py-standardize-categories
+title: One Category, One Spelling
+concepts: [cleaning, sets, sorted]
+lesson: py-cleaning-data
+task: |
+  The same categories were typed in different ways. Create:
+
+  1. `clean_categories`: every value from `categories` with spaces trimmed and **each word capitalized**, in the same order
+  2. `unique_categories`: the **distinct** cleaned categories, sorted **alphabetically**
+setup: |
+  categories = ["Books", " books", "BOOKS ", "Beauty", "beauty", "Electronics", "ELECTRONICS"]
+starter: |
+  # 1. clean_categories
+  # 2. unique_categories
+solution: |
+  clean_categories = [c.strip().title() for c in categories]
+  unique_categories = sorted(set(clean_categories))
+expect: [clean_categories, unique_categories]
+variants:
+  - |
+    categories = ["toys & games", "Toys & Games ", "Home & Kitchen"]
+hints:
+  - "Clean each value first with .strip().title(). Then remove duplicates."
+  - "set(...) keeps only distinct values, and sorted(...) turns it into an alphabetical list."
+  - "clean_categories = [c.strip().title() for c in categories] and unique_categories = sorted(set(clean_categories))"
+explanation: |
+  Without cleaning, a count by category would show "Books", "books", and "BOOKS" as three different categories, which is a
+  very common reporting bug. A `set` holds each value only once (but has no order), so `sorted()` gives a tidy list.
+  This is the Python version of SQL's `SELECT DISTINCT … ORDER BY`.
+tests:
+  reject:
+    - "clean_categories = [c.strip().title() for c in categories]\nunique_categories = sorted(set(categories))"
+    - "clean_categories = [c.strip().title() for c in categories]\nunique_categories = list(set(clean_categories))"

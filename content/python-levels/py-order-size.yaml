@@ -1,0 +1,43 @@
+id: py-order-size
+title: Order Size Labels
+concepts: [functions, if, elif, else]
+lesson: py-functions
+task: |
+  Write `order_size(total)` that returns a label:
+
+  | Total | Label |
+  |---|---|
+  | under 50 | `small` |
+  | 50 up to (but not including) 200 | `medium` |
+  | 200 or more | `large` |
+starter: |
+  # Define order_size(total) below
+
+
+  # Try it (optional):
+  # print(order_size(25), order_size(120), order_size(450))
+solution: |
+  def order_size(total):
+      if total < 50:
+          return "small"
+      elif total < 200:
+          return "medium"
+      else:
+          return "large"
+calls:
+  - "order_size(25)"
+  - "order_size(50)"
+  - "order_size(199.99)"
+  - "order_size(200)"
+  - "order_size(999)"
+hints:
+  - "Use if / elif / else inside the function, with a return in each branch."
+  - "Check from the smallest band up: < 50 first, then < 200, and everything else is large."
+  - "if total < 50: return 'small'  elif total < 200: return 'medium'  else: return 'large'"
+explanation: |
+  This is the Python version of SQL's `CASE` from the SQL Lab. The checks include the exact boundaries (50 and 200), which is
+  where off-by-one mistakes hide. Always test the edges of your rules.
+tests:
+  reject:
+    - "def order_size(total):\n    if total <= 50:\n        return 'small'\n    elif total < 200:\n        return 'medium'\n    return 'large'"
+    - "def order_size(total):\n    if total < 50:\n        return 'Small'\n    elif total < 200:\n        return 'Medium'\n    return 'Large'"

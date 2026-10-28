@@ -55,6 +55,11 @@ export interface PythonLevel {
   /** Compare printed output with the reference solution. */
   checkOutput: boolean
   /**
+   * Test calls for function levels, e.g. "apply_discount(100, 0.2)". Each is evaluated against the
+   * learner's code and the solution, and the return values are compared.
+   */
+  calls: string[]
+  /**
    * Other versions of the given data. The learner's code must also give the same
    * answers as the solution on these, so typing in the answer directly won't pass.
    */
@@ -80,13 +85,14 @@ export function parsePythonLevel(text: string, where: string): PythonLevel {
     solution: requireString(raw, 'solution', where),
     expect: stringList(raw, 'expect'),
     checkOutput: raw.checkOutput === true,
+    calls: stringList(raw, 'calls'),
     variants: stringList(raw, 'variants'),
     hints: stringList(raw, 'hints'),
     explanation: requireString(raw, 'explanation', where),
     tests: { accept: stringList(tests, 'accept'), reject: stringList(tests, 'reject') }
   }
-  if (level.expect.length === 0 && !level.checkOutput) {
-    throw new Error(`${where}: a Python level must list variables in "expect" or set checkOutput: true`)
+  if (level.expect.length === 0 && !level.checkOutput && level.calls.length === 0) {
+    throw new Error(`${where}: a Python level needs "expect" variables, "calls", or checkOutput: true`)
   }
   return level
 }

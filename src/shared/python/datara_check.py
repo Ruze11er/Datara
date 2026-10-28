@@ -13,6 +13,7 @@ import contextlib
 import io
 import json
 import math
+import numbers
 import sys
 import traceback
 import types
@@ -134,7 +135,8 @@ def _describe_error(exc):
 
 
 def _is_num(value):
-    return isinstance(value, (int, float)) and not isinstance(value, bool)
+    # numbers.Real also covers numpy/pandas numbers (e.g. the result of df["price"].sum()).
+    return isinstance(value, numbers.Real) and not isinstance(value, bool) and type(value).__name__ != "bool_"
 
 
 def _is_dataframe(value):
@@ -145,7 +147,7 @@ def _is_dataframe(value):
 def _equal(expected, actual, tolerance=None):
     """Deep comparison. Numbers are compared with a small tolerance (int and float may mix)."""
     if _is_num(expected) and _is_num(actual):
-        if isinstance(expected, float) and isinstance(actual, float) and math.isnan(expected) and math.isnan(actual):
+        if math.isnan(expected) and math.isnan(actual):
             return True
         if tolerance is None:
             return math.isclose(expected, actual, rel_tol=1e-9, abs_tol=1e-9)
@@ -212,7 +214,10 @@ def _variable_problem(name, expected, ns):
         if isinstance(actual, str) and _is_num(expected):
             msg += " Did you put quotes around a number, or forget to convert text with int() or float()?"
         elif actual is None:
-            msg += " Methods like .append() and .sort() change a list in place and give back None, so don't assign their result."
+            msg += (
+                " A value becomes None when you store the result of something that doesn't return anything:"
+                " a function that prints instead of using `return`, or list methods like .append() and .sort()."
+            )
         return msg
     if _equal(expected, actual, NEAR):
         return f"`{name}` is very close but not exact. Did the task ask you to round with round(value, 2)?"
@@ -242,9 +247,46 @@ def _normalize_output(text):
     return "\n".join(line.rstrip() for line in text.strip("\n").splitlines()).strip()
 
 
-def _first_problem(expect, check_output, expected_ns, expected_out, ns, out):
+def _evaluate_call(call, ns):
+    """Evaluates a test call like 'apply_discount(100, 0.2)'. Returns (value, error, printed)."""
+    out = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+            return eval(compile(call, "<check>", "eval"), ns), None, out.getvalue()
+    except BaseException as exc:
+        return None, _describe_error(exc), out.getvalue()
+
+
+def _call_problem(call, expected_ns, ns):
+    """Calls the learner's function the way the solution's is called, and explains any difference."""
+    name = call.split("(", 1)[0].strip()
+    if not callable(ns.get(name)):
+        return f"Define a function called `{name}`. Check the spelling: Python names are case-sensitive."
+    expected, expected_error, _ = _evaluate_call(call, expected_ns)
+    if expected_error:
+        raise RuntimeError(f"The reference solution fails on {call}: {expected_error['type']}: {expected_error['message']}")
+    actual, error, printed = _evaluate_call(call, ns)
+    if error:
+        return f"Calling `{call}` caused an error: {error['friendly']}"
+    if _equal(expected, actual):
+        return None
+    if actual is None and expected is not None:
+        hint = " It printed something instead." if printed.strip() else ""
+        return f"`{call}` returned None.{hint} Use `return` to send the result back (print only shows it)."
+    if not (_is_num(expected) and _is_num(actual)) and type(expected) is not type(actual):
+        return f"`{call}` should return {_type_name(expected)}, but it returned {_type_name(actual)}: {_short_repr(actual)}"
+    if _equal(expected, actual, NEAR):
+        return f"`{call}` returned {_short_repr(actual)}, which is close to {_short_repr(expected)}. Did the task ask you to round?"
+    return f"`{call}` returned {_short_repr(actual)}, but it should return {_short_repr(expected)}."
+
+
+def _first_problem(expect, check_output, expected_ns, expected_out, ns, out, calls=()):
     for name in expect:
         problem = _variable_problem(name, expected_ns.get(name), ns)
+        if problem:
+            return problem, None
+    for call in calls:
+        problem = _call_problem(call, expected_ns, ns)
         if problem:
             return problem, None
     if check_output and _normalize_output(expected_out) != _normalize_output(out):
@@ -270,9 +312,14 @@ def _table(value):
     for row in head.itertuples(index=True, name=None):
         cells = []
         for cell in row:
+            if hasattr(cell, "item") and not isinstance(cell, (str, bytes)):
+                try:
+                    cell = cell.item()  # numpy number -> plain Python number
+                except (ValueError, TypeError):
+                    pass
             if isinstance(cell, float) and math.isnan(cell):
                 cells.append(None)
-            elif isinstance(cell, (int, float, str)) or cell is None:
+            elif isinstance(cell, (bool, int, float, str)) or cell is None:
                 cells.append(cell)
             else:
                 cells.append(str(cell))
@@ -304,6 +351,7 @@ def check(spec):
     expect = spec.get("expect", [])
     check_output = bool(spec.get("checkOutput"))
     variants = spec.get("variants", [])
+    calls = spec.get("calls", [])
 
     ns, out, error, given = _execute(setup, code)
     result = {"output": out, "error": error, "variables": _variables(ns, given), "expectedOutput": None}
@@ -326,7 +374,9 @@ def check(spec):
                     "message": "Your code works for the given data, but fails when the data changes: "
                     + actual_error["friendly"],
                 }
-        problem, expected_output = _first_problem(expect, check_output, expected_ns, expected_out, actual_ns, actual_out)
+        problem, expected_output = _first_problem(
+            expect, check_output, expected_ns, expected_out, actual_ns, actual_out, calls
+        )
         if problem and index == 0:
             return {**result, "pass": False, "title": "Not quite", "message": problem, "expectedOutput": expected_output}
         if problem:

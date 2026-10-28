@@ -222,9 +222,10 @@ export function CheckBanner({
   return (
     <div className="flex items-start gap-3 border-b border-amber-200 bg-amber-50 px-4 py-3">
       <CircleX size={20} className="mt-0.5 shrink-0 text-amber-600" aria-hidden />
-      <div>
+      <div className="min-w-0">
         <div className="font-semibold text-amber-900">{title}</div>
-        <div className="text-sm whitespace-pre-line text-amber-900/90">{message}</div>
+        {/* Messages may contain `code` in backticks, so render them as Markdown. */}
+        <Markdown text={message} className="prose-compact prose-feedback text-amber-900/90" />
       </div>
     </div>
   )

@@ -1,0 +1,35 @@
+id: py-greet-customer
+title: Your First Function
+concepts: [functions, def, return]
+lesson: py-functions
+task: |
+  The shop sends personalized messages. Write a function `greet_customer(name)` that **returns** the text
+  `Hello, <name>!`. For example, `greet_customer("Maria")` returns `Hello, Maria!`.
+
+  The check will call your function with different names.
+starter: |
+  # Define your function below
+
+
+  # Try it with Run (optional):
+  # print(greet_customer("Maria"))
+solution: |
+  def greet_customer(name):
+      return f"Hello, {name}!"
+calls:
+  - "greet_customer('Maria')"
+  - "greet_customer('Paolo')"
+hints:
+  - "A function starts with def, then its name, its inputs (parameters) in brackets, and a colon. Its body is indented."
+  - "Use return to send the result back. An f-string builds the text: f\"Hello, {name}!\""
+  - "def greet_customer(name):  then, indented on the next line:  return f\"Hello, {name}!\""
+explanation: |
+  `def` creates a function; `name` is a **parameter**, a placeholder for whatever value the caller passes in.
+  `return` hands the result back so other code can use it. A function is written once and can be used with any input.
+tests:
+  accept:
+    - "def greet_customer(name):\n    return 'Hello, ' + name + '!'"
+  reject:
+    - "def greet_customer(name):\n    print(f'Hello, {name}!')"
+    - "def greet_customer(name):\n    return 'Hello, Maria!'"
+    - "def greet(name):\n    return f'Hello, {name}!'"

@@ -1,0 +1,73 @@
+id: py-boss-clean-signups
+title: "Milestone: Clean the Sign-Up List"
+concepts: [cleaning, functions, duplicates, missing values, dictionaries]
+lesson: py-cleaning-data
+task: |
+  **Milestone level.** This one combines everything from Chapters 4 and 5.
+
+  `raw_signups` came straight from a web form. Create `clean_signups`, a list of dictionaries with the keys
+  `name`, `email`, `country`, and `age`, following these rules **in this order**:
+
+  1. **Skip** any sign-up whose email is missing (`None`, or empty after removing spaces).
+  2. `name`: spaces trimmed, each word capitalized.
+  3. `email`: spaces trimmed, lowercase.
+  4. `country`: trim spaces and make it lowercase, then look it up in the given `COUNTRY_NAMES` dictionary to get the official name.
+  5. `age`: converted to a whole number (`int`).
+  6. If the same **cleaned email** appears more than once, keep only the **first** sign-up.
+setup: |
+  COUNTRY_NAMES = {"ph": "Philippines", "philippines": "Philippines", "us": "USA", "usa": "USA", "uk": "UK"}
+
+  raw_signups = [
+      {"name": "  maria SANTOS ", "email": " Maria.Santos@Example.com", "country": "PH ", "age": "34"},
+      {"name": "james smith", "email": "james@example.com", "country": "usa", "age": "41"},
+      {"name": "Ana Cruz", "email": None, "country": "Philippines", "age": "28"},
+      {"name": "MARIA SANTOS", "email": "maria.santos@example.com ", "country": "ph", "age": "34"},
+      {"name": " liam white", "email": "liam@example.com", "country": " UK", "age": "22"},
+      {"name": "Zoe King", "email": "   ", "country": "uk", "age": "30"},
+  ]
+starter: |
+  # Tip: write small helper functions (like clean_name) and use them in one loop.
+  clean_signups = []
+solution: |
+  def clean_name(text):
+      return text.strip().title()
+
+  clean_signups = []
+  seen_emails = set()
+  for signup in raw_signups:
+      email = signup["email"]
+      if email is None or email.strip() == "":
+          continue
+      email = email.strip().lower()
+      if email in seen_emails:
+          continue
+      seen_emails.add(email)
+      clean_signups.append({
+          "name": clean_name(signup["name"]),
+          "email": email,
+          "country": COUNTRY_NAMES[signup["country"].strip().lower()],
+          "age": int(signup["age"]),
+      })
+expect: [clean_signups]
+variants:
+  - |
+    COUNTRY_NAMES = {"ph": "Philippines", "philippines": "Philippines", "us": "USA", "usa": "USA", "uk": "UK"}
+
+    raw_signups = [
+        {"name": "grace TAN", "email": "GRACE@example.com", "country": "Philippines", "age": "19"},
+        {"name": "Grace Tan", "email": " grace@example.com", "country": "PH", "age": "19"},
+        {"name": "noah lee", "email": "", "country": "US", "age": "50"},
+    ]
+hints:
+  - "Process each sign-up in one loop: skip it if the email is missing, clean the email, skip it if you've seen that email, otherwise build a new clean dictionary."
+  - "`continue` jumps to the next item in a loop, which is handy for 'skip this one'. Remember which cleaned emails you've seen in a set."
+  - "For each signup: check email → clean email → if in seen_emails: continue → add to seen → append {'name': …, 'email': …, 'country': COUNTRY_NAMES[...strip().lower()], 'age': int(...)}"
+explanation: |
+  Real cleaning pipelines look just like this: a fixed sequence of rules, applied to every record, with each rule written down.
+  The **order** matters. De-duplicating by the *cleaned* email catches `" Maria.Santos@Example.com"` and
+  `"maria.santos@example.com "` as the same person, which comparing raw text would miss. A lookup dictionary (`COUNTRY_NAMES`)
+  turns many spellings into one official value, a technique called **mapping**.
+tests:
+  reject:
+    - "clean_signups = []\nseen = set()\nfor s in raw_signups:\n    if s['email'] is None or s['email'].strip() == '':\n        continue\n    if s['email'] in seen:\n        continue\n    seen.add(s['email'])\n    clean_signups.append({'name': s['name'].strip().title(), 'email': s['email'].strip().lower(), 'country': COUNTRY_NAMES[s['country'].strip().lower()], 'age': int(s['age'])})"
+    - "clean_signups = []\nseen = set()\nfor s in raw_signups:\n    if s['email'] is None or s['email'].strip() == '':\n        continue\n    e = s['email'].strip().lower()\n    if e in seen:\n        continue\n    seen.add(e)\n    clean_signups.append({'name': s['name'].strip().title(), 'email': e, 'country': s['country'].strip(), 'age': int(s['age'])})"

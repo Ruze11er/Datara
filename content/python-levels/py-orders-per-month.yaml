@@ -1,0 +1,35 @@
+id: py-orders-per-month
+title: Orders per Month from Dates
+concepts: [dates as text, slicing, counting with dictionaries]
+lesson: py-cleaning-data
+task: |
+  `order_dates` holds dates as `YYYY-MM-DD` text. Create `orders_per_month`: a dictionary mapping each month (`YYYY-MM`)
+  to the **number of orders** in it.
+setup: |
+  order_dates = ["2025-01-15", "2025-01-28", "2025-02-03", "2025-03-11", "2025-03-19", "2025-03-30"]
+starter: |
+  orders_per_month = {}
+  # Count orders per month
+solution: |
+  orders_per_month = {}
+  for date in order_dates:
+      month = date[:7]
+      orders_per_month[month] = orders_per_month.get(month, 0) + 1
+expect: [orders_per_month]
+variants:
+  - |
+    order_dates = ["2024-12-31", "2025-01-01", "2025-01-02"]
+hints:
+  - "The month is the first 7 characters of the date text: '2025-01-15'[:7] is '2025-01'."
+  - "Count with a dictionary: add 1 to the month's count, starting from 0 the first time (.get(month, 0))."
+  - "for date in order_dates:  month = date[:7]  then  orders_per_month[month] = orders_per_month.get(month, 0) + 1"
+explanation: |
+  Because the dates follow `YYYY-MM-DD`, slicing the first 7 characters gives the month, just like SQL's
+  `strftime('%Y-%m', …)`. Counting into a dictionary is the hand-made version of `GROUP BY month` with `COUNT(*)`.
+  (Python's `datetime` module and pandas handle real date maths; you'll meet pandas dates soon.)
+tests:
+  accept:
+    - "from collections import Counter\norders_per_month = dict(Counter(d[:7] for d in order_dates))"
+  reject:
+    - "orders_per_month = {}\nfor date in order_dates:\n    month = date[5:7]\n    orders_per_month[month] = orders_per_month.get(month, 0) + 1"
+    - "orders_per_month = {}\nfor date in order_dates:\n    orders_per_month[date[:7]] = 1"

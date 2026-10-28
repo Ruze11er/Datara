@@ -152,6 +152,14 @@ pre,
   margin-top: 0.4em;
 }
 
+/* Check feedback: inherits the banner's text colour. */
+.prose-feedback {
+  color: inherit;
+}
+.prose-feedback code {
+  background: rgb(255 255 255 / 0.6);
+}
+
 /* Citation markers like [1] */
 .prose-datara sup.cite {
   line-height: 0;

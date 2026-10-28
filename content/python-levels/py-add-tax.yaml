@@ -1,0 +1,38 @@
+id: py-add-tax
+title: Return, Don't Just Print
+concepts: [functions, return vs print]
+lesson: py-functions
+task: |
+  1. Write a function `add_tax(amount)` that returns the amount **plus 12% tax**, **rounded to 2 decimals**.
+  2. Then **use your function** to create `total_with_tax` from the given `subtotal`.
+setup: |
+  subtotal = 245.5
+starter: |
+  # 1. Define add_tax(amount)
+
+  # 2. Use it on subtotal
+solution: |
+  def add_tax(amount):
+      return round(amount * 1.12, 2)
+
+  total_with_tax = add_tax(subtotal)
+expect: [total_with_tax]
+calls:
+  - "add_tax(100)"
+  - "add_tax(9.99)"
+variants:
+  - |
+    subtotal = 10.0
+hints:
+  - "Adding 12% tax is the same as multiplying by 1.12."
+  - "If your function prints the result instead of returning it, total_with_tax will be None. Use return."
+  - "def add_tax(amount):  return round(amount * 1.12, 2)   and then   total_with_tax = add_tax(subtotal)"
+explanation: |
+  `print` only **shows** a value; `return` **gives it back** to the code that called the function. Because `add_tax` returns
+  its result, you can store it, add to it, or pass it to another function. A function that only prints is a dead end:
+  its result is `None`.
+tests:
+  reject:
+    - "def add_tax(amount):\n    print(round(amount * 1.12, 2))\n\ntotal_with_tax = add_tax(subtotal)"
+    - "def add_tax(amount):\n    return round(amount * 0.12, 2)\n\ntotal_with_tax = add_tax(subtotal)"
+    - "def add_tax(amount):\n    return round(amount * 1.12, 2)\n\ntotal_with_tax = 274.96"
