@@ -87,12 +87,15 @@ export function HelpSection({
   level,
   lp,
   onHint,
-  onSolution
+  onSolution,
+  unaidedNote = 'Solve it without help for 3 stars.'
 }: {
-  level: BaseLevel
-  lp: LevelProgress
+  level: Pick<BaseLevel, 'hints' | 'solution'>
+  lp: Pick<LevelProgress, 'status' | 'hintsUsed' | 'solutionViewed'>
   onHint: () => void
   onSolution: () => void
+  /** Shown before any help is used. */
+  unaidedNote?: string
 }) {
   return (
     <section>
@@ -126,7 +129,7 @@ export function HelpSection({
         )}
       </div>
       {lp.status !== 'solved' && lp.hintsUsed === 0 && !lp.solutionViewed && (
-        <p className="mt-2 text-xs text-slate-400">Solve it without help for 3 stars.</p>
+        <p className="mt-2 text-xs text-slate-400">{unaidedNote}</p>
       )}
       {lp.solutionViewed && (
         <div className="mt-3">
@@ -270,12 +273,20 @@ export function Toolbar({
   busy,
   onRun,
   onCheck,
-  onReset
+  onReset,
+  checkLabel = 'Check answer',
+  checkDisabled = false,
+  resetLabel = 'Reset',
+  resetTitle = 'Put the starting code back'
 }: {
   busy: boolean
   onRun: () => void
   onCheck: () => void
   onReset: () => void
+  checkLabel?: string
+  checkDisabled?: boolean
+  resetLabel?: string
+  resetTitle?: string
 }) {
   return (
     <div className="flex items-center gap-2 border-b border-slate-200 bg-surface px-4 py-2">
@@ -291,20 +302,20 @@ export function Toolbar({
       <button
         type="button"
         onClick={onCheck}
-        disabled={busy}
+        disabled={busy || checkDisabled}
         title="Check whether your answer is correct (Ctrl+Shift+Enter)"
         className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
       >
-        <CircleCheck size={15} aria-hidden /> Check answer
+        <CircleCheck size={15} aria-hidden /> {checkLabel}
       </button>
       <span className="ml-1 hidden text-xs text-slate-400 lg:inline">Ctrl+Enter runs · Ctrl+Shift+Enter checks</span>
       <button
         type="button"
         onClick={onReset}
-        title="Put the starting code back"
+        title={resetTitle}
         className="ml-auto flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-slate-500 hover:bg-slate-100"
       >
-        <RotateCcw size={14} aria-hidden /> Reset
+        <RotateCcw size={14} aria-hidden /> {resetLabel}
       </button>
     </div>
   )

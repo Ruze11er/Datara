@@ -1,6 +1,8 @@
 import { runPython } from '../engines/python/pythonEngine'
 import { runSql } from '../engines/sql/sqlEngine'
 import { EngineTimeoutError } from '../engines/workerClient'
+import { cases, loadCaseDatasets } from '../content'
+import { compareWithLeads } from '../features/academy/caseEngine'
 
 // Quick health checks for the app's engines. Shown in Settings, and run
 // automatically by `npm run selftest` against the built app.
@@ -59,6 +61,37 @@ export const engineChecks: { name: string; run: () => Promise<CheckResult> }[] =
         const after = await runSql({ sql: 'SELECT 1 + 1' })
         expect(after.rows[0]?.[0] === 2, 'The SQL engine did not recover after being stopped')
         return 'Endless query stopped, and the engine recovered'
+      })
+  },
+  {
+    // Runs after the runaway-query check on purpose: that restarts the SQL worker, so this also checks that a
+    // large case dataset is sent again to the new worker.
+    name: 'Academy case data and lead checks',
+    run: () =>
+      timed('Academy case data and lead checks', async () => {
+        const c = cases[0]
+        if (!c) throw new Error('No Academy case found')
+        const datasets = await loadCaseDatasets(c)
+        const lead = c.leads[0]!
+        const sql = lead.sql.solutions[0]!.query
+        const result = await runSql({ sql, dataset: datasets.practice })
+        const solved = await compareWithLeads(c, datasets, sql, result, [lead], lead)
+        expect(solved[0]?.kind === 'cracked', `The reference answer did not crack the lead "${lead.title}"`)
+
+        // The same numbers typed in must fail on the hidden data.
+        const literal = (v: unknown) =>
+          v === null ? 'NULL' : typeof v === 'number' ? String(v) : `'${String(v).replaceAll("'", "''")}'`
+        const typed = result.rows.map((row) => `SELECT ${row.map(literal).join(', ')}`).join(' UNION ALL ')
+        const typedResult = await runSql({ sql: typed, dataset: datasets.practice })
+        const caught = await compareWithLeads(c, datasets, typed, typedResult, [lead], lead)
+        expect(caught[0]?.kind === 'almost', 'A typed-in answer was not caught by the hidden data')
+
+        // Each query gets a fresh copy of the data, so destructive statements change nothing.
+        await runSql({ sql: 'DROP TABLE orders', dataset: datasets.practice })
+        const after = await runSql({ sql: 'SELECT COUNT(*) FROM orders', dataset: datasets.practice })
+        const orders = Number(after.rows[0]?.[0])
+        expect(orders > 0, 'DROP TABLE changed the case data')
+        return `Case #${c.number}: ${orders.toLocaleString()} orders; a correct query cracks a lead, a typed-in answer is caught, DROP TABLE changes nothing`
       })
   },
   {

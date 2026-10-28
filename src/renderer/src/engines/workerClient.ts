@@ -16,8 +16,18 @@ export class WorkerClient {
   private worker: Worker | null = null
   private nextId = 1
   private readonly pending = new Map<number, Pending>()
+  private workerCount = 0
 
   constructor(private readonly createWorker: () => Worker) {}
+
+  /**
+   * Starts the worker if needed and returns a number that changes every time a new worker is started.
+   * Lets callers remember what a worker already holds (e.g. a loaded dataset) and resend it after a restart.
+   */
+  generation(): number {
+    this.ensureWorker()
+    return this.workerCount
+  }
 
   request<T>(type: string, payload: unknown, timeoutMs: number, timeoutMessage: string): Promise<T> {
     const worker = this.ensureWorker()
@@ -43,6 +53,7 @@ export class WorkerClient {
   private ensureWorker(): Worker {
     if (this.worker) return this.worker
     const worker = this.createWorker()
+    this.workerCount++
     worker.onmessage = (event: MessageEvent<Response>) => {
       const p = this.pending.get(event.data.id)
       if (!p) return

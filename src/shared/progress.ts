@@ -52,6 +52,54 @@ export interface LessonProgress {
   quizScore?: number
 }
 
+// ---------- Data Detective Academy ----------
+
+export type CaseMode = 'guided' | 'challenge'
+
+export interface CaseLeadProgress {
+  /** ISO time the lead was cracked. */
+  cracked?: string
+  /** Which of the lead's solutions the learner's result matched. */
+  solution?: number
+  /** Times "Check lead" was pressed. */
+  attempts: number
+  hintsUsed: number
+  solutionViewed: boolean
+}
+
+/** A query result saved with an evidence card (the learner's own finding), capped to keep the file small. */
+export interface EvidenceSnapshot {
+  columns: string[]
+  rows: (string | number | null)[][]
+  /** Rows in the full result (more than `rows` when it was cut). */
+  totalRows: number
+}
+
+export interface CaseEvidenceRecord {
+  /** ISO time it was found. */
+  at: string
+  /** The lead that produced it. */
+  lead: string
+  snapshot?: EvidenceSnapshot
+}
+
+/** One case, keyed in ProgressData.cases by the case id. Leads, evidence and documents by their stable ids. */
+export interface CaseProgress {
+  /** The case file version this run started on (content/cases/<id>/case.yaml `version`). */
+  caseVersion: number
+  mode: CaseMode
+  startedAt: string
+  leads: Record<string, CaseLeadProgress>
+  /** Facts found so far (claims are always available). */
+  evidence: Record<string, CaseEvidenceRecord>
+  /** Investigation Lab editor text (autosaved). */
+  draft?: string
+  /** Lead selected in the Investigation Lab. */
+  focusLead?: string
+  /** Ids of documents and evidence the learner has looked at (anything else shows as new). */
+  seen: string[]
+}
+
 export type ThemeChoice = 'system' | 'light' | 'dark'
 
 export interface Settings {
@@ -72,6 +120,8 @@ export interface ProgressData {
   activity: Record<string, number>
   /** The learner's own notes, keyed "lesson:<id>", "sql:<id>" or "python:<id>". Empty notes are removed. */
   notes: Record<string, Note>
+  /** Data Detective Academy runs, keyed by case id. */
+  cases: Record<string, CaseProgress>
   settings: Settings
 }
 
@@ -85,6 +135,7 @@ export function emptyProgress(): ProgressData {
     playground: {},
     activity: {},
     notes: {},
+    cases: {},
     settings: { editorFontSize: 14, theme: 'system' }
   }
 }

@@ -9,6 +9,8 @@ import SqlLabPage from '../features/sql-lab/SqlLabPage'
 import SqlLevelRoute from '../features/sql-lab/SqlLevelPage'
 import PythonLabPage from '../features/python-lab/PythonLabPage'
 import PythonLevelRoute from '../features/python-lab/PythonLevelPage'
+import AcademyPage from '../features/academy/AcademyPage'
+import CaseRoute from '../features/academy/CasePage'
 import ProgressPage from '../features/progress/ProgressPage'
 import ReviewPage from '../features/review/ReviewPage'
 import PlaygroundPage from '../features/playground/PlaygroundPage'
@@ -47,6 +49,9 @@ export default function App() {
             <Route path="/sql/:levelId" element={<SqlLevelRoute />} />
             <Route path="/python" element={<PythonLabPage />} />
             <Route path="/python/:levelId" element={<PythonLevelRoute />} />
+            <Route path="/academy" element={<AcademyPage />} />
+            <Route path="/academy/:caseId" element={<CaseRoute />} />
+            <Route path="/academy/:caseId/:tab" element={<CaseRoute />} />
             <Route path="/review" element={<ReviewPage />} />
             <Route path="/playground" element={<PlaygroundPage />} />
             <Route path="/notes" element={<NotesPage />} />

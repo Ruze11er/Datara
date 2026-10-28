@@ -29,6 +29,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   const update = useCallback((change: (current: ProgressData) => ProgressData) => {
     if (!latest.current) return
     const next = change(latest.current)
+    if (next === latest.current) return // nothing changed, nothing to save
     latest.current = next
     setProgress(next)
     progressStorage.save(next).then(
