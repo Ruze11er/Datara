@@ -52,7 +52,9 @@ src/shared/python/datara_check.py   The Python Lab checker (used by the app and 
 - **A Python level:** create `content/python-levels/<id>.yaml`. `setup` is the given data, `expect` lists
   the variables to compare with the solution, `checkOutput: true` compares printed output, and each
   entry in `variants` is alternative given data the learner's code must also handle (so typing in the
-  answer can't pass). Add `tests.accept` and `tests.reject` code, then run `npm run verify`.
+  answer can't pass). Optional: `calls` (test calls like `apply_discount(100, 0.2)` for function levels),
+  `files` (data files such as `products.csv` for `pd.read_csv`), and `ignoreRowOrder: true` (compare
+  pandas tables in any row order). Add `tests.accept` and `tests.reject` code, then run `npm run verify`.
 - **A lesson:** create `content/lessons/<id>.md`, add it to `index.yaml`. Cite facts with `[^1]` and list
   each source in the front matter. A source only passes `npm run verify` once `verified: true`, which means
   someone has checked that the page supports the claim.

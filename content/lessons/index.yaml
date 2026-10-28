@@ -98,3 +98,43 @@
         - py-pandas-filter-sort
         - py-pandas-groupby
         - py-pandas-clean-combine
+
+- id: statistics
+  title: Statistics for Analysts
+  description: Describe data honestly, from averages and spread to correlation, causation, and samples.
+  modules:
+    - id: describing-data
+      title: Describing Data
+      lessons:
+        - stats-center
+        - stats-spread
+        - stats-distributions
+    - id: relationships
+      title: Relationships and Conclusions
+      lessons:
+        - stats-correlation
+
+- id: spreadsheets
+  title: Spreadsheets
+  description: Formulas, the functions analysts use most, clean layouts, and pivot tables in Excel and Google Sheets.
+  modules:
+    - id: spreadsheet-skills
+      title: Spreadsheet Skills
+      lessons:
+        - sheet-formulas
+        - sheet-functions
+        - sheet-pivots
+
+- id: storytelling
+  title: Data Storytelling
+  description: Choose and design clear charts, and present findings people understand and trust.
+  modules:
+    - id: visualizing
+      title: Visualizing Data
+      lessons:
+        - story-choosing-charts
+        - story-clear-charts
+    - id: communicating
+      title: Communicating Results
+      lessons:
+        - story-presenting
