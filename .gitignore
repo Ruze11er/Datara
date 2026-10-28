@@ -3,6 +3,9 @@ out/
 dist/
 *.log
 
+# Local notes for Claude Code (not shared in the repository)
+CLAUDE.md
+
 # Engine files copied/downloaded by scripts/prepare-engines.mjs
 src/renderer/public/pyodide/
 src/renderer/public/sqljs/
