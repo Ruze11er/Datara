@@ -3,7 +3,8 @@ import { basicSetup } from 'codemirror'
 import { Compartment, EditorState, Prec, type Extension } from '@codemirror/state'
 import { EditorView, keymap } from '@codemirror/view'
 import { indentWithTab } from '@codemirror/commands'
-import { indentUnit } from '@codemirror/language'
+import { HighlightStyle, indentUnit, syntaxHighlighting } from '@codemirror/language'
+import { tags as t } from '@lezer/highlight'
 import { sql, SQLite } from '@codemirror/lang-sql'
 import { python } from '@codemirror/lang-python'
 
@@ -26,15 +27,49 @@ interface CodeEditorProps {
   ref?: Ref<CodeEditorHandle>
 }
 
+// Colours come from CSS variables (styles.css), so the editor follows the light/dark theme
+// without being rebuilt.
 const editorTheme = EditorView.theme({
-  '&': { height: '100%', backgroundColor: '#ffffff' },
+  '&': { height: '100%', backgroundColor: 'var(--color-surface)', color: 'var(--color-slate-800)' },
   '.cm-scroller': { fontFamily: 'var(--font-mono)', lineHeight: '1.6' },
-  '.cm-content': { padding: '12px 0' },
-  '.cm-gutters': { backgroundColor: '#f8fafc', borderRight: '1px solid #e2e8f0', color: '#94a3b8' },
-  '.cm-activeLine': { backgroundColor: '#f0fdfa80' },
-  '.cm-activeLineGutter': { backgroundColor: '#f0fdfa' },
+  '.cm-content': { padding: '12px 0', caretColor: 'var(--color-slate-900)' },
+  '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--color-slate-900)' },
+  '.cm-gutters': {
+    backgroundColor: 'var(--color-slate-50)',
+    borderRight: '1px solid var(--color-slate-200)',
+    color: 'var(--color-slate-400)'
+  },
+  '.cm-activeLine': { backgroundColor: 'color-mix(in srgb, var(--color-brand-50) 50%, transparent)' },
+  '.cm-activeLineGutter': { backgroundColor: 'var(--color-brand-50)' },
+  '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
+    backgroundColor: 'color-mix(in srgb, var(--color-brand-500) 30%, transparent)'
+  },
+  '.cm-matchingBracket, &.cm-focused .cm-matchingBracket': {
+    backgroundColor: 'color-mix(in srgb, var(--color-brand-500) 25%, transparent)',
+    outline: 'none'
+  },
+  '.cm-tooltip': {
+    backgroundColor: 'var(--color-surface)',
+    border: '1px solid var(--color-slate-200)',
+    color: 'var(--color-slate-800)'
+  },
+  '.cm-tooltip-autocomplete > ul > li[aria-selected]': {
+    backgroundColor: 'var(--color-brand-600)',
+    color: '#ffffff'
+  },
+  '.cm-panels': { backgroundColor: 'var(--color-slate-50)', color: 'var(--color-slate-800)' },
   '&.cm-focused': { outline: 'none' }
 })
+
+const highlightStyle = HighlightStyle.define([
+  { tag: [t.keyword, t.controlKeyword, t.operatorKeyword, t.definitionKeyword, t.moduleKeyword], color: 'var(--syn-keyword)' },
+  { tag: [t.string, t.special(t.string)], color: 'var(--syn-string)' },
+  { tag: [t.number, t.bool, t.null, t.atom], color: 'var(--syn-number)' },
+  { tag: [t.comment, t.lineComment, t.blockComment], color: 'var(--syn-comment)', fontStyle: 'italic' },
+  { tag: [t.function(t.variableName), t.function(t.propertyName)], color: 'var(--syn-function)' },
+  { tag: [t.operator, t.punctuation], color: 'var(--syn-operator)' },
+  { tag: [t.typeName, t.className, t.standard(t.name)], color: 'var(--syn-type)' }
+])
 
 const fontTheme = (size: number) => EditorView.theme({ '&': { fontSize: `${size}px` } })
 
@@ -74,6 +109,7 @@ export function CodeEditor({ language, initialValue, onChange, onRun, onCheck, s
           keymap.of([indentWithTab]),
           languageSupport(language, schema),
           editorTheme,
+          syntaxHighlighting(highlightStyle),
           fontCompartment.current.of(fontTheme(fontSize)),
           EditorView.updateListener.of((update) => {
             if (update.docChanged) callbacks.current.onChange(update.state.doc.toString())

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Menu, session, shell, type IpcMainInvokeEvent } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu, nativeTheme, session, shell, type IpcMainInvokeEvent } from 'electron'
 import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { IPC } from '@shared/api'
@@ -93,7 +93,8 @@ function createWindow(): BrowserWindow {
     minHeight: 620,
     show: false,
     title: 'Datara',
-    backgroundColor: '#f8fafc',
+    // Matches the page background, so the window doesn't flash the wrong colour before the page loads.
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#0b1120' : '#f8fafc',
     autoHideMenuBar: true,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),

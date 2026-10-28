@@ -10,6 +10,100 @@
   --color-brand-500: #14a38b;
   --color-brand-600: #0e8573;
   --color-brand-700: #0f6a5d;
+
+  /* Panels and cards (white in light mode). */
+  --color-surface: #ffffff;
+  /* Code blocks and printed output: dark in both themes. */
+  --color-code: #0f172a;
+  --color-code-fg: #f1f5f9;
+}
+
+/* Syntax colours for the code editor (see components/CodeEditor.tsx). */
+:root {
+  color-scheme: light;
+  /* Activity calendar: one teal hue, light → dark for more practice. Checked with the dataviz
+     ordinal validator: lightness steps evenly, and the palest step keeps 2:1 against the surface. */
+  --heat-0: var(--color-slate-100);
+  --heat-1: #6cc7b4;
+  --heat-2: #2fa58d;
+  --heat-3: #13806c;
+  --heat-4: #0b5a4c;
+  --syn-keyword: #7c3aed;
+  --syn-string: #b45309;
+  --syn-number: #0e7490;
+  --syn-comment: #64748b;
+  --syn-function: #1d4ed8;
+  --syn-operator: #475569;
+  --syn-type: #0f766e;
+}
+
+/* ---------- Dark mode ----------
+   The interface is written with light-mode colour classes (bg-surface, text-slate-700, bg-amber-50, …).
+   Dark mode redefines those colours instead of adding dark: variants everywhere: the slate greys flip
+   (slate-50 is the darkest background, slate-900 the brightest text), and tinted backgrounds become
+   dark tints. Colours used as button backgrounds with white text keep their light-mode value. */
+:root.dark {
+  color-scheme: dark;
+  --color-surface: #111a2b;
+  /* In dark mode more practice is brighter (validated against the dark surface separately). */
+  --heat-1: #1f6b5e;
+  --heat-2: #26927f;
+  --heat-3: #3cbfa6;
+  --heat-4: #86e5d1;
+  --color-code: #070b14;
+  --color-code-fg: #e2e8f0;
+
+  --color-slate-50: #0b1120;
+  --color-slate-100: #18233a;
+  --color-slate-200: #26324a;
+  --color-slate-300: #36435c;
+  --color-slate-400: #7184a0;
+  --color-slate-500: #8e9db3;
+  --color-slate-600: #aab6c8;
+  --color-slate-700: #c6cfdc;
+  --color-slate-800: #dde3ec;
+  --color-slate-900: #f0f3f8;
+
+  --color-brand-50: #0f2e2a;
+  --color-brand-100: #17493f;
+  --color-brand-500: #22b99d;
+  --color-brand-700: #5ad6bf; /* text and links */
+
+  --color-amber-50: #2b2210;
+  --color-amber-100: #3d2f10;
+  --color-amber-200: #5e4715;
+  --color-amber-900: #fde68a;
+
+  --color-red-50: #2d1316;
+  --color-red-200: #5f1f26;
+  --color-red-300: #7f2a33;
+  --color-red-600: #f87171;
+  --color-red-700: #fca5a5;
+  --color-red-800: #fecaca;
+  --color-red-900: #fee2e2;
+
+  --color-sky-50: #0c2534;
+  --color-sky-100: #0f3a51;
+  --color-sky-200: #165372;
+  --color-sky-700: #7dd3fc; /* text */
+  --color-sky-900: #e0f2fe;
+
+  --syn-keyword: #c4b5fd;
+  --syn-string: #fcd34d;
+  --syn-number: #67e8f9;
+  --syn-comment: #7184a0;
+  --syn-function: #93c5fd;
+  --syn-operator: #aab6c8;
+  --syn-type: #5eead4;
+}
+
+/* brand-700 and sky-700 become light text colours in dark mode, so buttons that use them as a
+   hover background get a darker shade instead (white text must stay readable). */
+:root.dark .hover\:bg-brand-700:hover {
+  background-color: #0b6b5d;
+}
+:root.dark .hover\:bg-sky-700:hover {
+  background-color: #0369a1;
 }
 
 html,
@@ -71,8 +165,8 @@ pre,
   padding: 0.1em 0.35em;
 }
 .prose-datara pre {
-  background: var(--color-slate-900);
-  color: var(--color-slate-100);
+  background: var(--color-code);
+  color: var(--color-code-fg);
   border-radius: 8px;
   padding: 0.8em 1em;
   overflow-x: auto;
@@ -157,7 +251,7 @@ pre,
   color: inherit;
 }
 .prose-feedback code {
-  background: rgb(255 255 255 / 0.6);
+  background: color-mix(in srgb, var(--color-surface) 60%, transparent);
 }
 
 /* Citation markers like [1] */

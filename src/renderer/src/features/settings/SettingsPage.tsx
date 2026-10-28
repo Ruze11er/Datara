@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { CircleCheck, CircleX, Download, LoaderCircle, Minus, Play, Plus, Trash2, Upload } from 'lucide-react'
-import { emptyProgress } from '@shared/progress'
+import { CircleCheck, CircleX, Download, LoaderCircle, Minus, Monitor, Moon, Play, Plus, Sun, Trash2, Upload } from 'lucide-react'
+import { emptyProgress, type ThemeChoice } from '@shared/progress'
 import { Card, Page } from '../../components/Page'
 import { engineChecks, type CheckResult } from '../../lib/engineChecks'
 import { useProgress } from '../../lib/ProgressContext'
@@ -31,6 +31,40 @@ function EditorSettings() {
         <code className="ml-4 rounded bg-slate-100 px-2 py-1 font-mono text-slate-700" style={{ fontSize: size }}>
           SELECT * FROM products;
         </code>
+      </div>
+    </Card>
+  )
+}
+
+const THEMES: { id: ThemeChoice; label: string; icon: typeof Sun }[] = [
+  { id: 'system', label: 'Same as Windows', icon: Monitor },
+  { id: 'light', label: 'Light', icon: Sun },
+  { id: 'dark', label: 'Dark', icon: Moon }
+]
+
+function AppearanceSettings() {
+  const { progress, update } = useProgress()
+  const current = progress?.settings.theme ?? 'system'
+  return (
+    <Card>
+      <h2 className="font-semibold text-slate-900">Appearance</h2>
+      <div className="mt-3 flex flex-wrap gap-2" role="radiogroup" aria-label="Theme">
+        {THEMES.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            type="button"
+            role="radio"
+            aria-checked={current === id}
+            onClick={() => update((p) => ({ ...p, settings: { ...p.settings, theme: id } }))}
+            className={`flex items-center gap-2 rounded-lg border px-3.5 py-2 text-sm font-medium ${
+              current === id
+                ? 'border-brand-500 bg-brand-50 text-brand-700'
+                : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            <Icon size={16} aria-hidden /> {label}
+          </button>
+        ))}
       </div>
     </Card>
   )
@@ -173,6 +207,7 @@ export default function SettingsPage() {
   return (
     <Page title="Settings" subtitle="App preferences and your local data.">
       <div className="space-y-4">
+        <AppearanceSettings />
         <EditorSettings />
         <DataSettings />
         <EngineCheck />

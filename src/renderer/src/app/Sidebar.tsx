@@ -62,7 +62,7 @@ export default function Sidebar() {
   ]
 
   return (
-    <aside className="flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white px-3 py-5">
+    <aside className="flex w-60 shrink-0 flex-col border-r border-slate-200 bg-surface px-3 py-5">
       <div className="mb-6 flex items-center gap-2.5 px-3">
         <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden>
           <rect width="28" height="28" rx="7" fill="var(--color-brand-600)" />

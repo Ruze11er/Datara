@@ -13,11 +13,13 @@ import ReviewPage from '../features/review/ReviewPage'
 import PlaygroundPage from '../features/playground/PlaygroundPage'
 import SettingsPage from '../features/settings/SettingsPage'
 import { useProgress } from '../lib/ProgressContext'
+import { useTheme } from '../lib/theme'
 
 export default function App() {
   const { progress, saveError } = useProgress()
   const location = useLocation()
   const main = useRef<HTMLElement>(null)
+  useTheme(progress?.settings.theme)
 
   // Start each page at the top.
   useEffect(() => {

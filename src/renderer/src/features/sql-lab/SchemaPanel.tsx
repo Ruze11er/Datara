@@ -12,7 +12,7 @@ interface SchemaPanelProps {
 function TableEntry({ table, open: initiallyOpen, onPreview }: { table: TableInfo; open: boolean; onPreview: () => void }) {
   const [open, setOpen] = useState(initiallyOpen)
   return (
-    <li className="rounded-lg border border-slate-200 bg-white">
+    <li className="rounded-lg border border-slate-200 bg-surface">
       <div className="flex items-center gap-1 pr-1">
         <button
           type="button"

@@ -46,8 +46,12 @@ export interface LessonProgress {
   quizScore?: number
 }
 
+export type ThemeChoice = 'system' | 'light' | 'dark'
+
 export interface Settings {
   editorFontSize: number
+  /** "system" follows the Windows light/dark setting. */
+  theme: ThemeChoice
 }
 
 export interface ProgressData {
@@ -58,6 +62,8 @@ export interface ProgressData {
   /** Bookmarked lesson IDs ("topics to revisit"). */
   bookmarks: string[]
   playground: PlaygroundState
+  /** Learning actions per local day (YYYY-MM-DD → count): Checks pressed and quizzes finished. */
+  activity: Record<string, number>
   settings: Settings
 }
 
@@ -69,7 +75,8 @@ export function emptyProgress(): ProgressData {
     pythonLevels: {},
     bookmarks: [],
     playground: {},
-    settings: { editorFontSize: 14 }
+    activity: {},
+    settings: { editorFontSize: 14, theme: 'system' }
   }
 }
 

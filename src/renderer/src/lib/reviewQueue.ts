@@ -7,32 +7,13 @@
 
 import type { LevelProgress, ProgressData, ReviewState } from '@shared/progress'
 import { labs, type BaseLevel, type Lab, type Numbered } from '../content'
+import { addDays, daysBetween, localDate } from './dates'
 import { levelProgress, starsForTry } from './labProgress'
 
 /** Days until the next review, after 0, 1, 2, 3 good reviews in a row. One more good review = mastered. */
 export const REVIEW_INTERVALS = [1, 3, 7, 21]
 /** A level solved after at least this many checks also goes into the queue. */
 export const STRUGGLE_ATTEMPTS = 4
-
-/** Today's date in local time, as YYYY-MM-DD (the user's calendar day, not UTC). */
-export function localDate(date: Date = new Date()): string {
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
-}
-
-export function addDays(day: string, days: number): string {
-  const [y, m, d] = day.split('-').map(Number)
-  return localDate(new Date(y!, m! - 1, d! + days))
-}
-
-/** Whole days from one YYYY-MM-DD date to another. */
-export function daysBetween(from: string, to: string): number {
-  const ms = (day: string) => {
-    const [y, m, d] = day.split('-').map(Number)
-    return Date.UTC(y!, m! - 1, d!)
-  }
-  return Math.round((ms(to) - ms(from)) / 86_400_000)
-}
 
 const needsReview = (lp: LevelProgress) => lp.stars < 3 || lp.attempts >= STRUGGLE_ATTEMPTS
 

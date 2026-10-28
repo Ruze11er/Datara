@@ -6,6 +6,7 @@ import { useProgress } from '../../lib/ProgressContext'
 import { nextLesson, topicsToRevisit } from '../../lib/revisit'
 import { nextLevel, overallStats } from '../../lib/labProgress'
 import { reviewHref, reviewQueue } from '../../lib/reviewQueue'
+import { activityByDay, streaks } from '../../lib/activity'
 
 function ContinueCard({
   icon: Icon,
@@ -61,6 +62,7 @@ export default function DashboardPage() {
   const lessonsDone = lessonsInOrder.filter((p) => progress?.lessons[p.lesson.id]?.completedAt).length
   const revisit = topicsToRevisit(progress)
   const queue = reviewQueue(progress)
+  const streak = streaks(activityByDay(progress)).current
   const isNew = lessonsDone === 0 && sql.solved === 0 && py.solved === 0
 
   return (
@@ -69,7 +71,9 @@ export default function DashboardPage() {
       subtitle={
         isNew
           ? 'A good way to start: read the first lesson, then try Level 1 in the SQL Lab.'
-          : 'Pick up where you left off.'
+          : streak >= 2
+            ? `Pick up where you left off. You're on a ${streak}-day practice streak.`
+            : 'Pick up where you left off.'
       }
     >
       <div className="grid gap-4 md:grid-cols-3">

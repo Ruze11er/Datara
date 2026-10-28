@@ -26,7 +26,7 @@ export function OutputBlock({ title, text, muted = false }: { title: string; tex
       <SectionTitle>{title}</SectionTitle>
       <pre
         className={`overflow-x-auto rounded-lg border px-3 py-2 font-mono text-[13px] whitespace-pre-wrap ${
-          muted ? 'border-slate-200 bg-slate-50 text-slate-700' : 'border-slate-800 bg-slate-900 text-slate-100'
+          muted ? 'border-slate-200 bg-slate-50 text-slate-700' : 'border-code bg-code text-code-fg'
         }`}
       >
         {text}

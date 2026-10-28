@@ -42,7 +42,7 @@ export function LevelHeader({
 }) {
   const chapter = lab.chapters[level.chapterIndex]
   return (
-    <header className="flex items-center gap-3 border-b border-slate-200 bg-white px-5 py-3">
+    <header className="flex items-center gap-3 border-b border-slate-200 bg-surface px-5 py-3">
       <Link to={lab.path} className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900">
         <ArrowLeft size={16} aria-hidden /> All levels
       </Link>
@@ -131,7 +131,7 @@ export function HelpSection({
       {lp.solutionViewed && (
         <div className="mt-3">
           <div className="mb-1 text-xs font-medium text-slate-500">Solution</div>
-          <pre className="overflow-x-auto rounded-lg bg-slate-900 px-3 py-2 font-mono text-[13px] text-slate-100">{level.solution}</pre>
+          <pre className="overflow-x-auto rounded-lg bg-code px-3 py-2 font-mono text-[13px] text-code-fg">{level.solution}</pre>
         </div>
       )}
     </section>
@@ -278,7 +278,7 @@ export function Toolbar({
   onReset: () => void
 }) {
   return (
-    <div className="flex items-center gap-2 border-b border-slate-200 bg-white px-4 py-2">
+    <div className="flex items-center gap-2 border-b border-slate-200 bg-surface px-4 py-2">
       <button
         type="button"
         onClick={onRun}

@@ -53,7 +53,7 @@ export function ResultTable({
           </thead>
           <tbody>
             {shown.map((row, r) => (
-              <tr key={r} className="odd:bg-white even:bg-slate-50/60">
+              <tr key={r} className="odd:bg-surface even:bg-slate-50/60">
                 {rowNumbers && <td className="px-3 py-1 text-right text-slate-400">{r + 1}</td>}
                 {row.map((v, c) => (
                   <td
@@ -71,7 +71,7 @@ export function ResultTable({
         </table>
         {rows.length === 0 && <p className="px-4 py-3 text-sm text-slate-500">No rows matched.</p>}
       </div>
-      <div className="border-t border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-500">
+      <div className="border-t border-slate-200 bg-surface px-3 py-1.5 text-xs text-slate-500">
         {total} {total === 1 ? 'row' : 'rows'}
         {hidden > 0 && ` (showing the first ${shown.length})`}
         {truncated && ' (stopped at 5,000 rows)'}

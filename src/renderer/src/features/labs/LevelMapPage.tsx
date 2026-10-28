@@ -76,7 +76,7 @@ export function LevelMapPage({ lab, subtitle }: { lab: Lab; subtitle: string }) 
                             ? 'border-brand-100 bg-brand-50/60 hover:border-brand-500'
                             : level.isMilestone
                               ? 'border-amber-200 bg-amber-50/50 hover:border-amber-400'
-                              : 'border-slate-200 bg-white hover:border-brand-500'
+                              : 'border-slate-200 bg-surface hover:border-brand-500'
                       }`}
                     >
                       <div className="flex items-center justify-between text-xs text-slate-500">

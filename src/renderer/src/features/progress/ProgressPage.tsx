@@ -1,10 +1,33 @@
+import type { ReactNode } from 'react'
 import { Link } from 'react-router'
-import { Bookmark, RotateCcw } from 'lucide-react'
+import { BookOpen, Bookmark, CircleCheck, Flame, RotateCcw } from 'lucide-react'
 import { Card, Page } from '../../components/Page'
 import { labs, lessonCategories, lessonsInOrder, type Lab } from '../../content'
 import { useProgress } from '../../lib/ProgressContext'
 import { topicsToRevisit } from '../../lib/revisit'
 import { chapterStats, isChapterUnlocked, overallStats } from '../../lib/labProgress'
+import { activityByDay, recentlyCompleted, streaks } from '../../lib/activity'
+import { daysBetween, localDate } from '../../lib/dates'
+import { ActivityCalendar } from './ActivityCalendar'
+
+function Figure({ value, label, icon }: { value: number; label: string; icon?: ReactNode }) {
+  return (
+    <span className="flex items-baseline gap-1.5">
+      {icon && <span className="self-center">{icon}</span>}
+      <span className="text-xl font-semibold text-slate-900 tabular-nums">{value}</span>
+      <span className="text-sm text-slate-500">{label}</span>
+    </span>
+  )
+}
+
+/** "Today", "Yesterday", "3 days ago", or a short date. */
+function relativeDay(iso: string): string {
+  const days = daysBetween(localDate(new Date(iso)), localDate())
+  if (days <= 0) return 'Today'
+  if (days === 1) return 'Yesterday'
+  if (days < 7) return `${days} days ago`
+  return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+}
 
 function Stat({ label, value, detail }: { label: string; value: string; detail?: string }) {
   return (
@@ -73,6 +96,9 @@ export default function ProgressPage() {
   const stars = totals.reduce((s, t) => s + t.stars, 0)
   const maxStars = totals.reduce((s, t) => s + t.maxStars, 0)
   const revisit = topicsToRevisit(progress)
+  const activity = activityByDay(progress)
+  const streak = streaks(activity)
+  const recent = recentlyCompleted(progress)
 
   return (
     <Page title="Progress" subtitle="Everything you've completed, and what to revisit.">
@@ -81,6 +107,42 @@ export default function ProgressPage() {
         <Stat label="Levels solved" value={`${solved}/${levelCount}`} detail="SQL Lab and Python Lab" />
         <Stat label="Stars earned" value={`${stars}/${maxStars}`} detail="3 stars = solved without help" />
         <Stat label="Average quiz score" value={avgQuiz === null ? '–' : `${avgQuiz}%`} detail="Best score per lesson" />
+      </div>
+
+      <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_300px]">
+        <Card>
+          <div className="flex flex-wrap items-baseline gap-x-8 gap-y-2">
+            <h2 className="font-semibold text-slate-900">Practice activity</h2>
+            <Figure icon={<Flame size={16} className="text-amber-500" aria-hidden />} value={streak.current} label="day streak" />
+            <Figure value={streak.best} label="best streak" />
+            <Figure value={streak.activeDays} label="active days in total" />
+          </div>
+          <div className="mt-4 overflow-x-auto pb-1">
+            <ActivityCalendar days={activity} />
+          </div>
+        </Card>
+        <Card flush>
+          <h2 className="border-b border-slate-100 px-5 py-3 font-semibold text-slate-900">Recently completed</h2>
+          {recent.length === 0 ? (
+            <p className="px-5 py-4 text-sm text-slate-500">Solved levels and finished lessons will appear here.</p>
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {recent.map((item) => (
+                <li key={item.href}>
+                  <Link to={item.href} className="flex items-center gap-2.5 px-5 py-2 hover:bg-slate-50">
+                    {item.kind === 'level' ? (
+                      <CircleCheck size={15} className="shrink-0 text-brand-600" aria-label="Level" />
+                    ) : (
+                      <BookOpen size={15} className="shrink-0 text-brand-600" aria-label="Lesson" />
+                    )}
+                    <span className="min-w-0 flex-1 truncate text-sm text-slate-800">{item.title}</span>
+                    <span className="shrink-0 text-xs text-slate-500">{relativeDay(item.at)}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
       </div>
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">

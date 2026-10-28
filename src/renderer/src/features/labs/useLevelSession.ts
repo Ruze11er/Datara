@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from 'react'
 import type { BaseLevel, Lab, Numbered } from '../../content'
 import { useProgress } from '../../lib/ProgressContext'
 import { isChapterUnlocked, levelProgress, starsForTry, withLevel } from '../../lib/labProgress'
+import { withActivity } from '../../lib/activity'
 import { daysUntilNext, scheduleAfterSolve } from '../../lib/reviewQueue'
 
 const AUTOSAVE_MS = 700
@@ -84,7 +85,7 @@ export function useLevelSession(lab: Lab, level: Numbered<BaseLevel>, starter: s
       let nextReview: AttemptResult['nextReview']
       update((p) => {
         const nextChapterWasLocked = !isChapterUnlocked(p, lab, level.chapterIndex + 1)
-        const next = withLevel(p, lab, level.id, (cur) => {
+        const next = withLevel(withActivity(p), lab, level.id, (cur) => {
           const base = { attempts: cur.attempts + 1, lastCode: code.current }
           if (!passed) return base
           stars = starsForTry(cur)

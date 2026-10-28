@@ -79,7 +79,7 @@ function usePlaygroundCode(language: Language) {
 
 function Toolbar({ busy, onRun, onReset }: { busy: boolean; onRun: () => void; onReset: () => void }) {
   return (
-    <div className="flex items-center gap-2 border-b border-slate-200 bg-white px-4 py-2">
+    <div className="flex items-center gap-2 border-b border-slate-200 bg-surface px-4 py-2">
       <button
         type="button"
         onClick={onRun}
@@ -151,7 +151,7 @@ function SqlPlayground() {
 
   return (
     <div className="grid min-h-0 flex-1 grid-cols-[minmax(280px,340px)_1fr]">
-      <aside className="min-h-0 overflow-y-auto border-r border-slate-200 bg-white p-5">
+      <aside className="min-h-0 overflow-y-auto border-r border-slate-200 bg-surface p-5">
         <SectionTitle>Tables</SectionTitle>
         <SchemaPanel
           schema={schema}
@@ -230,7 +230,7 @@ function PythonPlayground() {
 
   return (
     <div className="grid min-h-0 flex-1 grid-cols-[minmax(280px,340px)_1fr]">
-      <aside className="min-h-0 space-y-4 overflow-y-auto border-r border-slate-200 bg-white p-5">
+      <aside className="min-h-0 space-y-4 overflow-y-auto border-r border-slate-200 bg-surface p-5">
         <section>
           <SectionTitle>Files</SectionTitle>
           <p className="mb-3 text-xs text-slate-500">
@@ -309,7 +309,7 @@ export default function PlaygroundPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center gap-4 border-b border-slate-200 bg-white px-5 py-3">
+      <header className="flex items-center gap-4 border-b border-slate-200 bg-surface px-5 py-3">
         <div>
           <h1 className="font-semibold text-slate-900">Playground</h1>
           <p className="text-xs text-slate-500">Free practice on the shop data. Nothing is checked or graded.</p>

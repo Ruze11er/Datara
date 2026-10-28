@@ -5,6 +5,7 @@ import { Markdown } from '../../components/Markdown'
 import { Stars } from '../../components/Stars'
 import { findLevel, getLessonPlace, lessonsInOrder } from '../../content'
 import { useProgress } from '../../lib/ProgressContext'
+import { withActivity } from '../../lib/activity'
 import { isLevelUnlocked, levelProgress } from '../../lib/labProgress'
 import { Quiz } from './Quiz'
 
@@ -36,7 +37,7 @@ function LessonPage({ lessonId }: { lessonId: string }) {
     update((p) => {
       const current = p.lessons[lesson.id] ?? {}
       return {
-        ...p,
+        ...withActivity(p),
         lessons: {
           ...p.lessons,
           [lesson.id]: {

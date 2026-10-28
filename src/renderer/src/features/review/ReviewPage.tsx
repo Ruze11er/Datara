@@ -2,7 +2,8 @@ import { Link } from 'react-router'
 import { CalendarClock, CircleCheck, CodeXml, Database, RotateCcw } from 'lucide-react'
 import { Card, Page } from '../../components/Page'
 import { useProgress } from '../../lib/ProgressContext'
-import { REVIEW_INTERVALS, daysBetween, localDate, reviewHref, reviewQueue, type ReviewItem } from '../../lib/reviewQueue'
+import { daysBetween, localDate } from '../../lib/dates'
+import { REVIEW_INTERVALS, reviewHref, reviewQueue, type ReviewItem } from '../../lib/reviewQueue'
 
 function LabIcon({ item }: { item: ReviewItem }) {
   const Icon = item.lab.id === 'sql' ? Database : CodeXml

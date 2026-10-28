@@ -139,7 +139,7 @@ function SqlLevelPage({ level, reviewing }: { reviewing: boolean; level: Numbere
       <LevelHeader lab={sqlLab} level={level} lp={lp} previous={previous} next={next} />
 
       <div className="grid min-h-0 flex-1 grid-cols-[minmax(320px,400px)_1fr]">
-        <aside className="min-h-0 space-y-5 overflow-y-auto border-r border-slate-200 bg-white p-5">
+        <aside className="min-h-0 space-y-5 overflow-y-auto border-r border-slate-200 bg-surface p-5">
           {reviewing && <ReviewNote />}
           {!reviewing && <SolvedNote lp={lp} onTryAgain={tryAgain} />}
           <section>
