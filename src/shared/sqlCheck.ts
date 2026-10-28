@@ -16,6 +16,11 @@ export interface CheckOptions {
   orderMatters: boolean
   /** Column names must match (the task asks for specific names/aliases). */
   checkColumnNames: boolean
+  /**
+   * A number also matches when the learner rounded it (98765 or 98765.4 for 98765.43), as long as it is
+   * within 2% of the answer. Used by Academy case leads, where how a number is rounded doesn't matter.
+   */
+  roundingTolerant?: boolean
 }
 
 export interface CheckOutcome {
@@ -33,17 +38,35 @@ const NEAR = 0.0051
 
 const PLAIN_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/
 
-function valuesEqual(a: SqlValue, b: SqlValue, tolerance: number): boolean {
+/** Decimal places written in a number (98765.4 -> 1). Long or exponent forms count as unrounded. */
+function decimalsShown(n: number): number {
+  const text = String(n)
+  if (/e/i.test(text)) return 99
+  const dot = text.indexOf('.')
+  return dot < 0 ? 0 : text.length - dot - 1
+}
+
+/** True if `actual` is `expected` rounded to the decimals `actual` shows, and within 2% of it. */
+function roundedMatch(expected: number, actual: number): boolean {
+  const decimals = decimalsShown(actual)
+  if (decimals > 6) return false
+  const halfStep = 0.5 * 10 ** -decimals
+  const diff = Math.abs(expected - actual)
+  return diff <= halfStep * (1 + 1e-9) + 1e-9 && diff <= 0.02 * Math.abs(expected)
+}
+
+/** `a` is from the answer, `b` from the learner's result. */
+function valuesEqual(a: SqlValue, b: SqlValue, tolerance: number, rounding = false): boolean {
   if (typeof a === 'number' && typeof b === 'number') {
     // EXACT is relative (scales with the size of the numbers); NEAR is absolute.
     const allowed = tolerance === EXACT ? EXACT * Math.max(1, Math.abs(a), Math.abs(b)) : tolerance
-    return Math.abs(a - b) <= allowed
+    return Math.abs(a - b) <= allowed || (rounding && tolerance === EXACT && roundedMatch(a, b))
   }
   return a === b
 }
 
-function rowsEqual(a: SqlValue[], b: SqlValue[], tolerance: number): boolean {
-  return a.length === b.length && a.every((v, i) => valuesEqual(v, b[i] ?? null, tolerance))
+function rowsEqual(a: SqlValue[], b: SqlValue[], tolerance: number, rounding = false): boolean {
+  return a.length === b.length && a.every((v, i) => valuesEqual(v, b[i] ?? null, tolerance, rounding))
 }
 
 function rowKey(row: SqlValue[], decimals: number): string {
@@ -57,10 +80,26 @@ function sortRows(rows: SqlValue[][], decimals: number): SqlValue[][] {
     .map((x) => x.r)
 }
 
-function sameRowsAnyOrder(expected: SqlValue[][], actual: SqlValue[][], tolerance: number, decimals: number): boolean {
+function sameRowsAnyOrder(
+  expected: SqlValue[][],
+  actual: SqlValue[][],
+  tolerance: number,
+  decimals: number,
+  rounding = false
+): boolean {
+  if (expected.length !== actual.length) return false
   const e = sortRows(expected, decimals)
   const a = sortRows(actual, decimals)
-  return e.length === a.length && e.every((row, i) => rowsEqual(row, a[i] ?? [], tolerance))
+  if (e.every((row, i) => rowsEqual(row, a[i] ?? [], tolerance, rounding))) return true
+  if (!rounding || expected.length > 500) return false
+  // Rounded numbers can sort differently from the answer's, so pair the rows up one by one instead.
+  const unused = [...actual]
+  return expected.every((row) => {
+    const i = unused.findIndex((candidate) => rowsEqual(row, candidate, tolerance, rounding))
+    if (i < 0) return false
+    unused.splice(i, 1)
+    return true
+  })
 }
 
 /**
@@ -119,14 +158,15 @@ export function checkResult(expected: QueryResult, actual: QueryResult, options:
   }
 
   // 3. Same values?
+  const rounding = options.roundingTolerant === true
   let valuesMatch: boolean
   if (options.orderMatters) {
-    valuesMatch = expected.rows.every((row, i) => rowsEqual(row, actualRows[i] ?? [], EXACT))
-    if (!valuesMatch && sameRowsAnyOrder(expected.rows, actualRows, EXACT, 6)) {
+    valuesMatch = expected.rows.every((row, i) => rowsEqual(row, actualRows[i] ?? [], EXACT, rounding))
+    if (!valuesMatch && sameRowsAnyOrder(expected.rows, actualRows, EXACT, 6, rounding)) {
       return fail('You have exactly the right rows, but in the wrong order. Check your ORDER BY (ASC or DESC?).', 'Almost!')
     }
   } else {
-    valuesMatch = sameRowsAnyOrder(expected.rows, actualRows, EXACT, 6)
+    valuesMatch = sameRowsAnyOrder(expected.rows, actualRows, EXACT, 6, rounding)
   }
 
   if (!valuesMatch) {

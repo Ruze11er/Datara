@@ -16,6 +16,7 @@
     "noUnusedParameters": true,
     "skipLibCheck": true,
     "isolatedModules": true,
+    "rewriteRelativeImportExtensions": true,
     "paths": {
       "@shared/*": [
         "./src/shared/*"

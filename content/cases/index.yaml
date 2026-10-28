@@ -1,0 +1,3 @@
+# Data Detective Academy cases, in play order. Each id is a folder in content/cases/ with case.yaml and leads.yaml.
+# The first case is open from the start; each later case unlocks when the one before it is closed.
+- missing-revenue

@@ -1,5 +1,6 @@
 // Checks all learning content before it ships. Run with: npm run verify
 //
+// Academy cases: see verify-cases.ts.
 // SQL levels: every reference solution runs, every "accept" query passes the
 // checker, and every "reject" query fails it.
 // Lessons: every citation [^n] has a source, every source is cited and verified,
@@ -28,6 +29,7 @@ import {
   type QueryResult
 } from '../src/shared/sqlCheck.ts'
 import { runLastStatement } from '../src/shared/sqlRun.ts'
+import { verifyCases } from './verify-cases.ts'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const contentDir = join(root, 'content')
@@ -362,12 +364,17 @@ for (const level of [...levels.values(), ...pyLevels.values()]) {
   }
 }
 
+// ---------- Academy cases (see verify-cases.ts) ----------
+
+const caseCount = await verifyCases({ SQL, contentDir, verbose, lessonIds, error, warn })
+
 // ---------- Report ----------
 
 for (const w of warnings) console.log(`WARN   ${w}`)
 for (const e of errors) console.log(`ERROR  ${e}`)
 console.log(
   `\nChecked ${levels.size} SQL levels (${chapters.length} chapters), ${pyLevels.size} Python levels ` +
-    `(${pyChapterCount} chapters) and ${lessonIds.size} lessons: ${errors.length} errors, ${warnings.length} warnings.`
+    `(${pyChapterCount} chapters), ${lessonIds.size} lessons and ${caseCount} Academy case${caseCount === 1 ? '' : 's'}: ` +
+    `${errors.length} errors, ${warnings.length} warnings.`
 )
 process.exit(errors.length > 0 ? 1 : 0)

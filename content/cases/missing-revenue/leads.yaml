@@ -1,0 +1,604 @@
+# Case #001 leads: the questions the investigation can follow.
+# A learner's query cracks a lead when its RESULT matches one of the solutions (on this case's data and on the
+# hidden copy). Rounding doesn't matter, and extra columns are fine. `starter` is used in guided mode only.
+# Never rename a published lead id: progress is saved by id.
+
+- id: lead-reported-drop
+  title: The Number on the Dashboard
+  question: Can you reproduce the dashboard's figures? Find revenue for August and September 2025.
+  guidedTask: |
+    Finance defines revenue as the total `order_total` of **completed** orders.
+
+    Show **one row per month** for August and September 2025: the month and its revenue.
+
+    Tip: `substr(ordered_at, 1, 7)` turns `2025-08-12 14:03:22` into `2025-08`.
+  core: true
+  requires: []
+  evidence: ev-reported-drop
+  concepts: [WHERE, SUM, GROUP BY]
+  lesson: sql-group-by
+  sql:
+    starter: |
+      SELECT substr(ordered_at, 1, 7) AS month,
+             -- add the revenue for each month here
+      FROM orders
+      WHERE status = 'completed'
+        AND ordered_at >= '2025-08-01'
+      GROUP BY month;
+    solutions:
+      - query: |
+          SELECT substr(ordered_at, 1, 7) AS month, SUM(order_total) AS revenue
+          FROM orders
+          WHERE status = 'completed' AND ordered_at >= '2025-08-01'
+          GROUP BY month;
+    misconceptions:
+      - query: |
+          SELECT substr(ordered_at, 1, 7) AS month, SUM(order_total)
+          FROM orders WHERE ordered_at >= '2025-08-01' GROUP BY month;
+        feedback: >-
+          Close, but this counts cancelled and refunded orders too. Finance only counts **completed** orders as
+          revenue, so add `status = 'completed'` to the WHERE clause.
+      - query: |
+          SELECT substr(ordered_at, 1, 7) AS month, SUM(order_total)
+          FROM orders
+          WHERE status = 'completed' AND ordered_at BETWEEN '2025-08-01' AND '2025-09-30'
+          GROUP BY month;
+        feedback: >-
+          Your September number is a little low. `ordered_at` holds a date **and a time**, so
+          `BETWEEN '2025-08-01' AND '2025-09-30'` stops at midnight at the start of 30 September and misses that
+          day's orders. Use `ordered_at >= '2025-08-01'` (the data ends on 30 September), or `< '2025-10-01'`.
+    hints:
+      - You need one row per month, so group the completed orders by month.
+      - "`SUM(order_total)` adds up the order totals in each group. Keep only `status = 'completed'` and orders from 1 August 2025 onward."
+      - "SELECT substr(ordered_at, 1, 7) AS month, SUM(order_total) AS revenue FROM orders WHERE status = 'completed' AND ordered_at >= '2025-08-01' GROUP BY month;"
+    explanation: |
+      `GROUP BY month` makes one group per month, and `SUM(order_total)` adds up each group. Filtering on
+      `status = 'completed'` matches finance's definition of revenue. The result matches the dashboard, so the
+      arithmetic is right. The question is whether the data behind it is.
+    tests:
+      accept:
+        - "SELECT strftime('%Y-%m', ordered_at) AS m, ROUND(SUM(order_total), 2) FROM orders WHERE status = 'completed' AND ordered_at >= '2025-08-01' AND ordered_at < '2025-10-01' GROUP BY m ORDER BY m"
+        - "SELECT substr(o.ordered_at, 1, 7) AS m, SUM(oi.quantity * oi.unit_price) FROM orders AS o JOIN order_items AS oi ON oi.order_id = o.order_id WHERE o.status = 'completed' AND o.ordered_at >= '2025-08-01' GROUP BY m"
+        - "SELECT substr(ordered_at, 1, 7) AS month, COUNT(*) AS orders, ROUND(SUM(order_total)) AS revenue FROM orders WHERE status = 'completed' AND ordered_at >= '2025-08-01' GROUP BY month"
+      reject:
+        - "SELECT substr(ordered_at, 1, 7) AS month, SUM(order_total) FROM orders WHERE ordered_at >= '2025-08-01' GROUP BY month"
+        - "SELECT substr(ordered_at, 1, 7) AS month, SUM(order_total) FROM orders WHERE status = 'completed' AND ordered_at BETWEEN '2025-08-01' AND '2025-09-30' GROUP BY month"
+        - "SELECT '2025-08' AS month, 106531.5 AS revenue UNION ALL SELECT '2025-09', 72419.5"
+
+- id: lead-last-year
+  title: Same Time Last Year
+  question: Is a September slump normal? Compare August and September 2024.
+  guidedTask: |
+    Some months are always quieter than others. If September is usually much lower than August, the drop might
+    be nothing new.
+
+    Show revenue (completed orders) for **August and September 2024**, one row per month.
+  core: true
+  requires: [lead-reported-drop]
+  evidence: ev-last-year
+  concepts: [WHERE, dates, GROUP BY]
+  lesson: sql-dates
+  sql:
+    starter: |
+      SELECT substr(ordered_at, 1, 7) AS month, SUM(order_total) AS revenue
+      FROM orders
+      WHERE status = 'completed'
+        AND -- keep August and September 2024 only
+      GROUP BY month;
+    solutions:
+      - query: |
+          SELECT substr(ordered_at, 1, 7) AS month, SUM(order_total) AS revenue
+          FROM orders
+          WHERE status = 'completed' AND ordered_at >= '2024-08-01' AND ordered_at < '2024-10-01'
+          GROUP BY month;
+    misconceptions:
+      - query: |
+          SELECT substr(ordered_at, 1, 7) AS month, SUM(order_total)
+          FROM orders WHERE ordered_at >= '2024-08-01' AND ordered_at < '2024-10-01' GROUP BY month;
+        feedback: This includes cancelled and refunded orders. Count only completed orders, as finance does.
+      - query: |
+          SELECT substr(ordered_at, 1, 7) AS month, SUM(order_total)
+          FROM orders
+          WHERE status = 'completed' AND ordered_at BETWEEN '2024-08-01' AND '2024-09-30'
+          GROUP BY month;
+        feedback: >-
+          September 2024 comes out a little low: `BETWEEN ... AND '2024-09-30'` misses orders placed during
+          30 September, because `ordered_at` also holds a time. Use `ordered_at < '2024-10-01'` instead.
+    hints:
+      - This is the dashboard query again, with a different date range.
+      - "Keep orders from 1 August 2024 up to (but not including) 1 October 2024: `ordered_at >= '2024-08-01' AND ordered_at < '2024-10-01'`."
+      - "SELECT substr(ordered_at, 1, 7) AS month, SUM(order_total) AS revenue FROM orders WHERE status = 'completed' AND ordered_at >= '2024-08-01' AND ordered_at < '2024-10-01' GROUP BY month;"
+    explanation: |
+      Comparing with the same months a year earlier separates the normal seasonal pattern from something new.
+      Last year September was only about 6% below August. A dip is normal; 32% is not.
+    tests:
+      accept:
+        - "SELECT substr(ordered_at, 1, 7) AS m, SUM(order_total) FROM orders WHERE status = 'completed' AND substr(ordered_at, 1, 7) IN ('2024-08', '2024-09') GROUP BY m"
+        - "SELECT strftime('%Y-%m', ordered_at) AS m, ROUND(SUM(order_total), 2) FROM orders WHERE status = 'completed' AND (ordered_at LIKE '2024-08%' OR ordered_at LIKE '2024-09%') GROUP BY m"
+      reject:
+        - "SELECT substr(ordered_at, 1, 7) AS m, SUM(order_total) FROM orders WHERE status = 'completed' AND ordered_at BETWEEN '2024-08-01' AND '2024-09-30' GROUP BY m"
+        - "SELECT '2024-08', 89586 UNION ALL SELECT '2024-09', 83804"
+
+- id: lead-duplicate-payments
+  title: Charged Twice?
+  question: Is any payment recorded more than once?
+  guidedTask: |
+    Every charge from the payment provider gets its own `payment_ref`, so each reference should appear on
+    exactly one order.
+
+    List every `payment_ref` that appears on **more than one order**, with the number of orders that use it.
+  core: true
+  requires: [lead-reported-drop]
+  evidence: ev-duplicate-payments
+  concepts: [GROUP BY, HAVING, duplicates]
+  lesson: sql-having
+  sql:
+    starter: |
+      SELECT payment_ref, COUNT(*) AS orders
+      FROM orders
+      GROUP BY payment_ref
+      -- keep only the references used more than once
+    solutions:
+      - query: |
+          SELECT payment_ref, COUNT(*) AS orders
+          FROM orders
+          GROUP BY payment_ref
+          HAVING COUNT(*) > 1;
+    misconceptions:
+      - query: |
+          SELECT customer_id, COUNT(*) FROM orders GROUP BY customer_id HAVING COUNT(*) > 1;
+        feedback: >-
+          These are customers who ordered more than once. Repeat customers are good news, not an error. Look for
+          the same **charge** recorded twice: group by `payment_ref` instead.
+    hints:
+      - If a payment was recorded twice, its `payment_ref` shows up on two orders. Group the orders by reference.
+      - "`HAVING` filters groups after counting, like WHERE does for rows: `HAVING COUNT(*) > 1`."
+      - "SELECT payment_ref, COUNT(*) AS orders FROM orders GROUP BY payment_ref HAVING COUNT(*) > 1;"
+    explanation: |
+      Grouping by `payment_ref` puts all orders that share a charge together, and `HAVING COUNT(*) > 1` keeps the
+      references used more than once. Look at the dates of those orders: they all fall in one week in August.
+      Duplicates are one of the most common data-quality problems, and they always inflate totals.
+    tests:
+      accept:
+        - "SELECT payment_ref, COUNT(order_id) AS n FROM orders GROUP BY payment_ref HAVING COUNT(order_id) >= 2"
+        - "SELECT payment_ref, COUNT(*) FROM orders WHERE status = 'completed' GROUP BY payment_ref HAVING COUNT(*) > 1"
+        - "SELECT payment_ref, COUNT(*) AS n, MIN(ordered_at) AS first_seen FROM orders GROUP BY payment_ref HAVING n > 1"
+      reject:
+        - "SELECT customer_id, COUNT(*) FROM orders GROUP BY customer_id HAVING COUNT(*) > 1"
+        - "SELECT payment_ref, COUNT(*) FROM orders GROUP BY payment_ref"
+
+- id: lead-corrected-revenue
+  title: The Real Baseline
+  question: What were August and September 2025 revenue with each payment counted only once?
+  guidedTask: |
+    Repeat the dashboard calculation for August and September 2025, but count each `payment_ref` **once**.
+
+    One way: keep only the first order for each reference with
+    `order_id IN (SELECT MIN(order_id) FROM orders GROUP BY payment_ref)`.
+  core: true
+  requires: [lead-duplicate-payments]
+  evidence: ev-corrected-drop
+  concepts: [subqueries, duplicates, SUM]
+  lesson: sql-subqueries
+  sql:
+    starter: |
+      SELECT substr(ordered_at, 1, 7) AS month, SUM(order_total) AS revenue
+      FROM orders
+      WHERE status = 'completed'
+        AND ordered_at >= '2025-08-01'
+        AND -- keep one order per payment_ref
+      GROUP BY month;
+    solutions:
+      - query: |
+          SELECT substr(ordered_at, 1, 7) AS month, SUM(order_total) AS revenue
+          FROM orders
+          WHERE status = 'completed'
+            AND ordered_at >= '2025-08-01'
+            AND order_id IN (SELECT MIN(order_id) FROM orders GROUP BY payment_ref)
+          GROUP BY month;
+    misconceptions:
+      - query: |
+          SELECT substr(ordered_at, 1, 7) AS month, SUM(order_total)
+          FROM orders WHERE status = 'completed' AND ordered_at >= '2025-08-01' GROUP BY month;
+        feedback: This is the dashboard figure again. It still counts the duplicated charges. Remove the repeats first.
+      - query: |
+          SELECT substr(ordered_at, 1, 7) AS month, SUM(order_total)
+          FROM orders
+          WHERE status = 'completed' AND ordered_at >= '2025-08-01'
+            AND payment_ref NOT IN (SELECT payment_ref FROM orders GROUP BY payment_ref HAVING COUNT(*) > 1)
+          GROUP BY month;
+        feedback: >-
+          You removed **both** copies of each duplicated payment. The first one was a real sale; only the repeat
+          is wrong. Keep one order per `payment_ref`.
+    hints:
+      - The first order with each `payment_ref` is real. Only the repeats should go.
+      - "A subquery can list the first order of each reference: `SELECT MIN(order_id) FROM orders GROUP BY payment_ref`. Keep only orders whose `order_id` is IN that list."
+      - "SELECT substr(ordered_at, 1, 7) AS month, SUM(order_total) AS revenue FROM orders WHERE status = 'completed' AND ordered_at >= '2025-08-01' AND order_id IN (SELECT MIN(order_id) FROM orders GROUP BY payment_ref) GROUP BY month;"
+    explanation: |
+      The subquery finds the first order for every payment reference, so each charge is counted once. August drops
+      to its true value while September doesn't change: the real fall is about 25%, not 32%. Part of the "drop"
+      was never lost revenue. August was simply overstated.
+    tests:
+      accept:
+        - "SELECT month, SUM(order_total) FROM (SELECT DISTINCT payment_ref, substr(ordered_at, 1, 7) AS month, order_total FROM orders WHERE status = 'completed' AND ordered_at >= '2025-08-01') GROUP BY month"
+        - "SELECT substr(ordered_at, 1, 7) AS month, ROUND(SUM(order_total), 2) FROM orders WHERE status = 'completed' AND ordered_at >= '2025-08-01' AND order_id IN (SELECT MAX(order_id) FROM orders GROUP BY payment_ref) GROUP BY month"
+        - "WITH ranked AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY payment_ref ORDER BY ordered_at) AS n FROM orders) SELECT substr(ordered_at, 1, 7) AS month, SUM(order_total) FROM ranked WHERE n = 1 AND status = 'completed' AND ordered_at >= '2025-08-01' GROUP BY month"
+      reject:
+        - "SELECT substr(ordered_at, 1, 7) AS month, SUM(order_total) FROM orders WHERE status = 'completed' AND ordered_at >= '2025-08-01' GROUP BY month"
+        - "SELECT '2025-08', 97038.5 UNION ALL SELECT '2025-09', 72419.5"
+
+- id: lead-orders-basket
+  title: Fewer Orders, or Smaller Ones?
+  question: Did September lose orders, or did each order get smaller? Compare the number of orders and the average order value.
+  guidedTask: |
+    Revenue = number of orders × average order value, so a fall in revenue comes from one or both.
+
+    For completed orders in August and September 2025, show the month, the **number of orders** and the
+    **average** `order_total`.
+  core: true
+  requires: [lead-reported-drop]
+  evidence: ev-orders-basket
+  concepts: [COUNT, AVG, GROUP BY]
+  lesson: sql-aggregates
+  sql:
+    starter: |
+      SELECT substr(ordered_at, 1, 7) AS month,
+             -- number of orders, then the average order value
+      FROM orders
+      WHERE status = 'completed'
+        AND ordered_at >= '2025-08-01'
+      GROUP BY month;
+    solutions:
+      - query: |
+          SELECT substr(ordered_at, 1, 7) AS month, COUNT(*) AS orders, AVG(order_total) AS avg_order_value
+          FROM orders
+          WHERE status = 'completed' AND ordered_at >= '2025-08-01'
+          GROUP BY month;
+        note: >-
+          This still counts August's duplicated charges, which makes August look a little busier than it was.
+          The pattern is the same either way.
+      - query: |
+          SELECT substr(ordered_at, 1, 7) AS month, COUNT(*) AS orders, AVG(order_total) AS avg_order_value
+          FROM orders
+          WHERE status = 'completed' AND ordered_at >= '2025-08-01'
+            AND order_id IN (SELECT MIN(order_id) FROM orders GROUP BY payment_ref)
+          GROUP BY month;
+        note: And you kept the duplicated charges out. Sharp work.
+    misconceptions:
+      - query: |
+          SELECT substr(ordered_at, 1, 7) AS month, COUNT(*), SUM(order_total)
+          FROM orders WHERE status = 'completed' AND ordered_at >= '2025-08-01' GROUP BY month;
+        feedback: The second number should be the **average** order, not the total. Use `AVG(order_total)`.
+    hints:
+      - Two numbers per month this time - how many orders, and how big they were on average.
+      - "`COUNT(*)` counts the orders in each group and `AVG(order_total)` gives the average order value."
+      - "SELECT substr(ordered_at, 1, 7) AS month, COUNT(*) AS orders, AVG(order_total) AS avg_order_value FROM orders WHERE status = 'completed' AND ordered_at >= '2025-08-01' GROUP BY month;"
+    explanation: |
+      Splitting revenue into orders × average order value is one of the most useful first steps in any revenue
+      investigation. Here both fell, but the average order fell further: customers are buying cheaper baskets.
+      Is that everyone spending less, or something missing from the shelves? The next step is to find out.
+    tests:
+      accept:
+        - "SELECT substr(ordered_at, 1, 7) AS m, COUNT(order_id), SUM(order_total) / COUNT(*) FROM orders WHERE status = 'completed' AND ordered_at >= '2025-08-01' GROUP BY m"
+        - "SELECT substr(ordered_at, 1, 7) AS m, COUNT(*), ROUND(AVG(order_total), 2), SUM(order_total) FROM orders WHERE status = 'completed' AND ordered_at >= '2025-08-01' GROUP BY m"
+      reject:
+        - "SELECT substr(ordered_at, 1, 7) AS m, COUNT(*), SUM(order_total) FROM orders WHERE status = 'completed' AND ordered_at >= '2025-08-01' GROUP BY m"
+        - "SELECT substr(ordered_at, 1, 7) AS m, COUNT(*), AVG(order_total) FROM orders WHERE ordered_at >= '2025-08-01' GROUP BY m"
+
+- id: lead-categories
+  title: Follow the Money
+  question: Which product categories lost the most revenue between August and September 2025?
+  guidedTask: |
+    Revenue per category comes from `order_items` (quantity × unit_price). Join it to `products` for the
+    category, and to `orders` for the date and status.
+
+    Show the **category**, the **month** and the **revenue** for completed orders in August and September 2025.
+  core: true
+  requires: [lead-reported-drop]
+  evidence: ev-categories
+  concepts: [JOIN, GROUP BY, SUM]
+  lesson: sql-joins
+  sql:
+    starter: |
+      SELECT p.category,
+             substr(o.ordered_at, 1, 7) AS month,
+             -- revenue: add up quantity × unit_price
+      FROM order_items AS oi
+      JOIN orders AS o ON o.order_id = oi.order_id
+      JOIN products AS p ON p.product_id = oi.product_id
+      WHERE o.status = 'completed'
+        AND o.ordered_at >= '2025-08-01'
+      GROUP BY p.category, month;
+    solutions:
+      - query: |
+          SELECT p.category, substr(o.ordered_at, 1, 7) AS month, SUM(oi.quantity * oi.unit_price) AS revenue
+          FROM order_items AS oi
+          JOIN orders AS o ON o.order_id = oi.order_id
+          JOIN products AS p ON p.product_id = oi.product_id
+          WHERE o.status = 'completed' AND o.ordered_at >= '2025-08-01'
+          GROUP BY p.category, month;
+      - query: |
+          SELECT p.category, substr(o.ordered_at, 1, 7) AS month, SUM(oi.quantity * oi.unit_price) AS revenue
+          FROM order_items AS oi
+          JOIN orders AS o ON o.order_id = oi.order_id
+          JOIN products AS p ON p.product_id = oi.product_id
+          WHERE o.status = 'completed' AND o.ordered_at >= '2025-08-01'
+            AND o.order_id IN (SELECT MIN(order_id) FROM orders GROUP BY payment_ref)
+          GROUP BY p.category, month;
+        note: And you kept the duplicated charges out. Sharp work.
+      - query: |
+          SELECT p.category,
+                 SUM(CASE WHEN o.ordered_at < '2025-09-01' THEN oi.quantity * oi.unit_price ELSE 0 END) AS august,
+                 SUM(CASE WHEN o.ordered_at >= '2025-09-01' THEN oi.quantity * oi.unit_price ELSE 0 END) AS september
+          FROM order_items AS oi
+          JOIN orders AS o ON o.order_id = oi.order_id
+          JOIN products AS p ON p.product_id = oi.product_id
+          WHERE o.status = 'completed' AND o.ordered_at >= '2025-08-01'
+          GROUP BY p.category;
+        note: Putting the months side by side makes the change easy to read.
+      - query: |
+          SELECT p.category,
+                 SUM(CASE WHEN o.ordered_at < '2025-09-01' THEN oi.quantity * oi.unit_price ELSE 0 END) AS august,
+                 SUM(CASE WHEN o.ordered_at >= '2025-09-01' THEN oi.quantity * oi.unit_price ELSE 0 END) AS september
+          FROM order_items AS oi
+          JOIN orders AS o ON o.order_id = oi.order_id
+          JOIN products AS p ON p.product_id = oi.product_id
+          WHERE o.status = 'completed' AND o.ordered_at >= '2025-08-01'
+            AND o.order_id IN (SELECT MIN(order_id) FROM orders GROUP BY payment_ref)
+          GROUP BY p.category;
+        note: Side by side, with the duplicates removed. Textbook.
+    misconceptions:
+      - query: |
+          SELECT p.category, substr(o.ordered_at, 1, 7) AS month, SUM(o.order_total)
+          FROM order_items AS oi
+          JOIN orders AS o ON o.order_id = oi.order_id
+          JOIN products AS p ON p.product_id = oi.product_id
+          WHERE o.status = 'completed' AND o.ordered_at >= '2025-08-01'
+          GROUP BY p.category, month;
+        feedback: >-
+          `order_total` is the whole order's total, so it repeats on every line of the order and gets counted once
+          per line, in every category the order touched. Use `quantity * unit_price` from `order_items`.
+      - query: |
+          SELECT p.category, substr(o.ordered_at, 1, 7) AS month, SUM(oi.unit_price)
+          FROM order_items AS oi
+          JOIN orders AS o ON o.order_id = oi.order_id
+          JOIN products AS p ON p.product_id = oi.product_id
+          WHERE o.status = 'completed' AND o.ordered_at >= '2025-08-01'
+          GROUP BY p.category, month;
+        feedback: Don't forget the quantity. A line with quantity 2 earned twice its unit price.
+    hints:
+      - Each order line belongs to one product, and each product to one category. Group the lines by category and month.
+      - "Line revenue is `oi.quantity * oi.unit_price`. Add it up with SUM, and group by `p.category` and the month."
+      - "SELECT p.category, substr(o.ordered_at, 1, 7) AS month, SUM(oi.quantity * oi.unit_price) AS revenue FROM order_items AS oi JOIN orders AS o ON o.order_id = oi.order_id JOIN products AS p ON p.product_id = oi.product_id WHERE o.status = 'completed' AND o.ordered_at >= '2025-08-01' GROUP BY p.category, month;"
+    explanation: |
+      Joining the order lines to products and orders lets you split revenue by category. One category collapsed
+      while the rest moved by a normal September amount. A problem that hits one segment hard usually has a cause
+      that only touches that segment.
+    tests:
+      accept:
+        - "SELECT p.category AS c, strftime('%Y-%m', o.ordered_at) AS m, ROUND(SUM(oi.quantity * oi.unit_price), 2) FROM orders o, order_items oi, products p WHERE o.order_id = oi.order_id AND p.product_id = oi.product_id AND o.status = 'completed' AND o.ordered_at >= '2025-08-01' GROUP BY c, m ORDER BY c, m"
+      reject:
+        - "SELECT p.category, substr(o.ordered_at, 1, 7) AS month, SUM(o.order_total) FROM order_items AS oi JOIN orders AS o ON o.order_id = oi.order_id JOIN products AS p ON p.product_id = oi.product_id WHERE o.status = 'completed' AND o.ordered_at >= '2025-08-01' GROUP BY p.category, month"
+        - "SELECT p.category, substr(o.ordered_at, 1, 7) AS month, SUM(oi.quantity * oi.unit_price) FROM order_items AS oi JOIN orders AS o ON o.order_id = oi.order_id JOIN products AS p ON p.product_id = oi.product_id WHERE o.ordered_at >= '2025-08-01' GROUP BY p.category, month"
+
+- id: lead-stockouts
+  title: Empty Shelves
+  question: Were any products out of stock in September 2025? For how many days?
+  guidedTask: |
+    `inventory_snapshots` records how many units of each product were in stock at the end of every day.
+
+    Find the products that had **0 units** in stock on days in **September 2025**, and count those days per
+    product. Show the **product name** and the **number of days**.
+  core: true
+  requires: [lead-categories]
+  evidence: ev-stockouts
+  concepts: [JOIN, WHERE, COUNT, GROUP BY]
+  lesson: sql-joins
+  sql:
+    starter: |
+      SELECT p.product_name, COUNT(*) AS days_out_of_stock
+      FROM inventory_snapshots AS s
+      JOIN products AS p ON p.product_id = s.product_id
+      WHERE -- zero stock, in September 2025
+      GROUP BY p.product_name;
+    solutions:
+      - query: |
+          SELECT p.product_name, COUNT(*) AS days_out_of_stock
+          FROM inventory_snapshots AS s
+          JOIN products AS p ON p.product_id = s.product_id
+          WHERE s.units_in_stock = 0 AND s.snapshot_date >= '2025-09-01'
+          GROUP BY p.product_name;
+      - query: |
+          SELECT product_id, COUNT(*) AS days_out_of_stock
+          FROM inventory_snapshots
+          WHERE units_in_stock = 0 AND snapshot_date >= '2025-09-01'
+          GROUP BY product_id;
+        note: Join to `products` to see which products these IDs are.
+    misconceptions:
+      - query: |
+          SELECT p.product_name, COUNT(*)
+          FROM inventory_snapshots AS s JOIN products AS p ON p.product_id = s.product_id
+          WHERE s.units_in_stock = 0
+          GROUP BY p.product_name;
+        feedback: This counts empty days in August too. Keep only snapshots from September 2025.
+    hints:
+      - "Each row of `inventory_snapshots` is one product on one day. You want the rows where the stock is 0."
+      - "Filter with `units_in_stock = 0 AND snapshot_date >= '2025-09-01'`, then count the rows per product."
+      - "SELECT p.product_name, COUNT(*) AS days_out_of_stock FROM inventory_snapshots AS s JOIN products AS p ON p.product_id = s.product_id WHERE s.units_in_stock = 0 AND s.snapshot_date >= '2025-09-01' GROUP BY p.product_name;"
+    explanation: |
+      Counting zero-stock days per product turns thousands of snapshots into a short list. Three of the shop's
+      best-selling appliances had no stock for the whole month: customers could not buy them. One small item was
+      out for a few days too. That happens in every shop, and it is far too small to matter.
+    tests:
+      accept:
+        - "SELECT p.product_name, SUM(CASE WHEN s.units_in_stock = 0 THEN 1 ELSE 0 END) AS d FROM inventory_snapshots s JOIN products p USING (product_id) WHERE s.snapshot_date LIKE '2025-09-%' GROUP BY p.product_name HAVING d > 0"
+      reject:
+        - "SELECT p.product_name, COUNT(*) FROM inventory_snapshots AS s JOIN products AS p ON p.product_id = s.product_id WHERE s.units_in_stock = 0 GROUP BY p.product_name"
+        - "SELECT 'AeroCrisp Air Fryer', 30 UNION ALL SELECT 'Aurora Espresso Machine', 30 UNION ALL SELECT 'Copperleaf Stand Mixer', 30 UNION ALL SELECT 'Linen Throw Pillow', 3"
+
+- id: lead-channels
+  title: Test the CEO's Theory
+  question: If the campaign change caused the drop, channels it never touched should be fine. Compare revenue by channel for August and September 2025.
+  guidedTask: |
+    On 1 September marketing moved budget from **Paid Search** to **Social**. **Email**, **Organic Search** and
+    **Direct** were not changed, so they show what happened to the shop without the campaign change.
+
+    Show the **channel**, the **month** and the **revenue** (completed orders) for August and September 2025.
+  core: true
+  requires: [lead-reported-drop]
+  evidence: ev-channels
+  concepts: [GROUP BY, SUM, comparison]
+  lesson: sql-group-by
+  sql:
+    starter: |
+      SELECT channel,
+             substr(ordered_at, 1, 7) AS month,
+             -- revenue here
+      FROM orders
+      WHERE status = 'completed'
+        AND ordered_at >= '2025-08-01'
+      GROUP BY channel, month;
+    solutions:
+      - query: |
+          SELECT channel, substr(ordered_at, 1, 7) AS month, SUM(order_total) AS revenue
+          FROM orders
+          WHERE status = 'completed' AND ordered_at >= '2025-08-01'
+          GROUP BY channel, month;
+      - query: |
+          SELECT channel, substr(ordered_at, 1, 7) AS month, SUM(order_total) AS revenue
+          FROM orders
+          WHERE status = 'completed' AND ordered_at >= '2025-08-01'
+            AND order_id IN (SELECT MIN(order_id) FROM orders GROUP BY payment_ref)
+          GROUP BY channel, month;
+        note: And you kept the duplicated charges out. Sharp work.
+      - query: |
+          SELECT channel,
+                 SUM(CASE WHEN ordered_at < '2025-09-01' THEN order_total ELSE 0 END) AS august,
+                 SUM(CASE WHEN ordered_at >= '2025-09-01' THEN order_total ELSE 0 END) AS september
+          FROM orders
+          WHERE status = 'completed' AND ordered_at >= '2025-08-01'
+          GROUP BY channel;
+        note: Putting the months side by side makes the change easy to read.
+      - query: |
+          SELECT channel,
+                 SUM(CASE WHEN ordered_at < '2025-09-01' THEN order_total ELSE 0 END) AS august,
+                 SUM(CASE WHEN ordered_at >= '2025-09-01' THEN order_total ELSE 0 END) AS september
+          FROM orders
+          WHERE status = 'completed' AND ordered_at >= '2025-08-01'
+            AND order_id IN (SELECT MIN(order_id) FROM orders GROUP BY payment_ref)
+          GROUP BY channel;
+        note: Side by side, with the duplicates removed. Textbook.
+    misconceptions:
+      - query: |
+          SELECT channel, substr(ordered_at, 1, 7) AS month, COUNT(*)
+          FROM orders WHERE status = 'completed' AND ordered_at >= '2025-08-01' GROUP BY channel, month;
+        feedback: Order counts are useful too, but this question is about revenue. Use `SUM(order_total)`.
+      - query: |
+          SELECT channel, substr(ordered_at, 1, 7) AS month, SUM(order_total)
+          FROM orders WHERE ordered_at >= '2025-08-01' GROUP BY channel, month;
+        feedback: This includes cancelled and refunded orders. Count only completed ones.
+    hints:
+      - Group by two things at once - the channel and the month.
+      - "`GROUP BY channel, month` gives one row for each channel in each month. Add up `order_total` in each."
+      - "SELECT channel, substr(ordered_at, 1, 7) AS month, SUM(order_total) AS revenue FROM orders WHERE status = 'completed' AND ordered_at >= '2025-08-01' GROUP BY channel, month;"
+    explanation: |
+      The channels the campaign never touched act as a **control group**: they show what would have happened
+      without the change. They fell just as much as the total, so the campaign can't be the main cause. Paid
+      Search fell because its budget moved to Social, and Social rose by roughly what Paid Search lost.
+    tests:
+      accept:
+        - "SELECT substr(ordered_at, 1, 7) AS m, channel, ROUND(SUM(order_total), 2) AS r, COUNT(*) AS n FROM orders WHERE status = 'completed' AND ordered_at >= '2025-08-01' GROUP BY m, channel ORDER BY channel, m"
+      reject:
+        - "SELECT channel, substr(ordered_at, 1, 7) AS month, COUNT(*) FROM orders WHERE status = 'completed' AND ordered_at >= '2025-08-01' GROUP BY channel, month"
+        - "SELECT channel, substr(ordered_at, 1, 7) AS month, SUM(order_total) FROM orders WHERE status = 'completed' AND ordered_at >= '2025-09-01' GROUP BY channel, month"
+
+- id: lead-traffic
+  title: Did Visitors Stay Away?
+  question: Did the new marketing plan cost the shop budget or visitors? Compare total spend and sessions for August and September 2025.
+  guidedTask: |
+    `marketing_monthly` has one row per month and channel, with the money spent and the number of website
+    visits (sessions).
+
+    Show the **month**, the **total spend** and the **total sessions** for August and September 2025.
+  core: false
+  requires: [lead-channels]
+  evidence: ev-traffic
+  concepts: [SUM, GROUP BY, IN]
+  lesson: sql-aggregates
+  sql:
+    starter: |
+      SELECT month,
+             -- total spend and total sessions
+      FROM marketing_monthly
+      WHERE month IN ('2025-08', '2025-09')
+      GROUP BY month;
+    solutions:
+      - query: |
+          SELECT month, SUM(spend) AS spend, SUM(sessions) AS sessions
+          FROM marketing_monthly
+          WHERE month IN ('2025-08', '2025-09')
+          GROUP BY month;
+    misconceptions:
+      - query: |
+          SELECT month, AVG(spend), AVG(sessions)
+          FROM marketing_monthly WHERE month IN ('2025-08', '2025-09') GROUP BY month;
+        feedback: That's the average per channel. Use SUM for the shop's totals.
+    hints:
+      - Add up all five channels for each month.
+      - "`SUM(spend)` and `SUM(sessions)`, grouped by month, for the two months you need."
+      - "SELECT month, SUM(spend) AS spend, SUM(sessions) AS sessions FROM marketing_monthly WHERE month IN ('2025-08', '2025-09') GROUP BY month;"
+    explanation: |
+      The shop spent about the same and got slightly **more** visitors in September. Visitors still came; fewer of
+      them bought. That points away from marketing and towards something on the site itself, like products
+      they couldn't buy.
+    tests:
+      accept:
+        - "SELECT month, ROUND(SUM(spend)), SUM(sessions) FROM marketing_monthly WHERE month >= '2025-08' GROUP BY month"
+      reject:
+        - "SELECT month, AVG(spend), AVG(sessions) FROM marketing_monthly WHERE month IN ('2025-08', '2025-09') GROUP BY month"
+
+- id: lead-test-orders
+  title: Inside Job
+  question: Are some of the orders from the company's own test accounts?
+  guidedTask: |
+    Staff test the website with accounts whose email addresses end in `@copperleaf.example`.
+
+    Show the `customer_id` and `email` of those accounts.
+  core: false
+  secret: true
+  requires: []
+  evidence: ev-test-orders
+  concepts: [LIKE, data quality]
+  lesson: sql-like-null
+  sql:
+    starter: |
+      SELECT customer_id, email
+      FROM customers
+      WHERE -- email ends in @copperleaf.example
+    solutions:
+      - query: |
+          SELECT customer_id, email FROM customers WHERE email LIKE '%@copperleaf.example';
+      - query: |
+          SELECT o.order_id, o.order_total
+          FROM orders AS o JOIN customers AS c ON c.customer_id = o.customer_id
+          WHERE c.email LIKE '%@copperleaf.example';
+        note: You went straight to their orders. Good instinct.
+      - query: |
+          SELECT COUNT(*) AS orders, SUM(o.order_total) AS total
+          FROM orders AS o JOIN customers AS c ON c.customer_id = o.customer_id
+          WHERE c.email LIKE '%@copperleaf.example';
+        note: And you sized it up. Always ask whether a problem is big enough to matter.
+    misconceptions: []
+    hints:
+      - Look at the end of the email addresses.
+      - "`LIKE '%@copperleaf.example'` matches any text that ends in @copperleaf.example."
+      - "SELECT customer_id, email FROM customers WHERE email LIKE '%@copperleaf.example';"
+    explanation: |
+      Test accounts are real rows in the data, but they aren't real customers. Here they placed only a handful of
+      small orders: worth knowing, far too small to explain anything. Part of the job is deciding which problems
+      matter.
+    tests:
+      accept:
+        - "SELECT * FROM customers WHERE first_name = 'QA'"
+      reject:
+        - "SELECT customer_id, email FROM customers WHERE email LIKE '%copperleaf%' AND email IS NULL"
