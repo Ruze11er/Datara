@@ -274,3 +274,23 @@ pre,
 .source-flash {
   background: var(--color-amber-100);
 }
+
+/* Toasts and the promotion card slide in gently; not at all with reduced motion. */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.toast-in {
+  animation: toast-in 220ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast-in {
+    animation: none;
+  }
+}

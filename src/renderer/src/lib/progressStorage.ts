@@ -1,6 +1,6 @@
 import type { DataraDesktopApi } from '@shared/api'
 import { emptyProgress, type ProgressData } from '@shared/progress'
-import { normalizeCases } from './caseProgress'
+import { normalizeAcademy, normalizeCases } from './caseProgress'
 
 // Where progress is saved. The rest of the interface only uses this module,
 // so a future website version just needs a different storage here.
@@ -92,6 +92,7 @@ export function normalizeProgress(raw: unknown): ProgressData {
     activity: obj(data.activity) as ProgressData['activity'],
     notes: obj(data.notes) as ProgressData['notes'],
     cases: normalizeCases(data.cases),
+    academy: normalizeAcademy(data.academy),
     settings: { ...base.settings, ...obj(data.settings) }
   }
 }

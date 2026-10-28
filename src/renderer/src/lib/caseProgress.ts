@@ -2,9 +2,11 @@
 // cracking a lead, the board, the verdict, closing the case, and cleaning up saved data on load.
 // Pure functions over ProgressData, like labProgress.ts.
 
+import { caseRunXp } from '@shared/academy'
 import { scoreCase, type CaseScore } from '@shared/cases/scoring'
 import type { BoardState, CaseDef, CaseDocument, CaseRun, Evidence, HypothesisStatus, Lead, Relation } from '@shared/cases/types'
 import type {
+  AcademyState,
   CaseGrade,
   CaseLeadProgress,
   CaseMode,
@@ -244,21 +246,34 @@ export const scoreOf = (c: CaseDef, cp: CaseProgress): CaseScore => scoreCase(c,
 
 const GRADE_ORDER: CaseGrade[] = ['reopened', 'provisional', 'solid', 'distinguished']
 
-/** Closes the case: scores the run and keeps it as the best result if it beats the earlier ones. */
-export function closeCase(p: ProgressData, c: CaseDef): { progress: ProgressData; score: CaseScore } {
+/** Leads cracked in this run without hints or the solution. */
+export const unassistedLeads = (c: CaseDef, cp: CaseProgress): number =>
+  c.leads.filter((l) => {
+    const lp = leadProgress(cp, l.id)
+    return !!lp.cracked && lp.hintsUsed === 0 && !lp.solutionViewed
+  }).length
+
+/** XP this (closed) run earns. */
+export const runXpOf = (c: CaseDef, cp: CaseProgress, total: number): number =>
+  caseRunXp({ total, challenge: cp.mode === 'challenge', unassistedLeads: unassistedLeads(c, cp) })
+
+/**
+ * Closes the case: scores the run and keeps it as the best result if it beats the earlier ones. The best rating
+ * and the best XP are kept separately.
+ */
+export function closeCase(p: ProgressData, c: CaseDef): { progress: ProgressData; score: CaseScore; xp: number } {
   const cp = p.cases[c.id]
   if (!cp) throw new Error('The case has not been started')
   const score = scoreOf(c, cp)
+  const xp = runXpOf(c, cp, score.total)
   const now = new Date().toISOString()
-  const better = !cp.best || score.total > cp.best.total
-  return {
-    score,
-    progress: withCase(p, c.id, () => ({
-      stage: 'closed',
-      closedAt: now,
-      best: better ? { total: score.total, grade: score.grade, closedAt: now } : cp.best
-    }))
+  const prev = cp.best
+  const better = !prev || score.total > prev.total
+  const best = {
+    ...(better ? { total: score.total, grade: score.grade, closedAt: now } : prev),
+    xp: Math.max(prev?.xp ?? 0, xp)
   }
+  return { score, xp, progress: withCase(p, c.id, () => ({ stage: 'closed', closedAt: now, best })) }
 }
 
 // ---------- Loading saved data ----------
@@ -339,7 +354,12 @@ export function normalizeCases(raw: unknown): Record<string, CaseProgress> {
       evidence[evId] = { at: str(e.at) ?? '', lead: str(e.lead)!, snapshot: cleanSnapshot(e.snapshot) }
     }
     const best = isObj(value.best) && GRADES.has(String(value.best.grade))
-      ? { total: count(value.best.total), grade: value.best.grade as CaseGrade, closedAt: str(value.best.closedAt) ?? '' }
+      ? {
+          total: count(value.best.total),
+          grade: value.best.grade as CaseGrade,
+          closedAt: str(value.best.closedAt) ?? '',
+          xp: typeof value.best.xp === 'number' ? count(value.best.xp) : undefined
+        }
       : undefined
     out[id] = {
       caseVersion: count(value.caseVersion),
@@ -366,4 +386,12 @@ export function normalizeCases(raw: unknown): Record<string, CaseProgress> {
     }
   }
   return out
+}
+
+/** Cleans the saved Academy rewards record (achievement times and the last rank shown). */
+export function normalizeAcademy(raw: unknown): AcademyState {
+  const v = isObj(raw) ? raw : {}
+  const achievements: Record<string, string> = {}
+  for (const [id, at] of Object.entries(isObj(v.achievements) ? v.achievements : {})) if (typeof at === 'string') achievements[id] = at
+  return { achievements, rankSeen: typeof v.rankSeen === 'number' ? count(v.rankSeen) : undefined }
 }

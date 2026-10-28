@@ -2,8 +2,9 @@
 // the learner's summary next to the model answer (self-checked), other ways to crack each lead, what to practise
 // next, and how this applies on the job.
 
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { BookOpen, CircleCheck, CircleDot, RotateCcw, TriangleAlert } from 'lucide-react'
+import { Award, BookOpen, CircleCheck, CircleDot, RotateCcw, TriangleAlert } from 'lucide-react'
 import { GRADES } from '@shared/cases/scoring'
 import type { CaseDef, HypothesisTruth } from '@shared/cases/types'
 import type { CaseProgress } from '@shared/progress'
@@ -11,8 +12,11 @@ import { Card } from '../../components/Page'
 import { Markdown } from '../../components/Markdown'
 import { getLesson } from '../../content'
 import { useProgress } from '../../lib/ProgressContext'
-import { isCracked, leadProgress, scoreOf, startCase, verdictOf, withCase } from '../../lib/caseProgress'
+import { academyRank } from '../../lib/academyXp'
+import { earnedIn } from '../../lib/achievements'
+import { isCracked, leadProgress, runXpOf, scoreOf, startCase, verdictOf, withCase } from '../../lib/caseProgress'
 import { FileLabel, ProgressBar, Stamp, type StampTone } from './CaseParts'
+import { RankSummary } from './RankParts'
 
 const TRUTH: Record<HypothesisTruth, { label: string; tone: StampTone }> = {
   cause: { label: 'The cause', tone: 'solved' },
@@ -68,6 +72,8 @@ export function CaseClosed({ c, cp }: { c: CaseDef; cp: CaseProgress }) {
           The rating measures the investigation only. Hints, failed checks and time never lower it.
         </p>
       </Card>
+
+      <Rewards c={c} cp={cp} total={score.total} />
 
       <section>
         <FileLabel>How the rating adds up</FileLabel>
@@ -246,5 +252,67 @@ export function CaseClosed({ c, cp }: { c: CaseDef; cp: CaseProgress }) {
         </Link>
       </div>
     </div>
+  )
+}
+
+/** Counts up to `value` once (instantly when the system asks for reduced motion). */
+function CountUp({ value }: { value: number }) {
+  const [shown, setShown] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? value : 0
+  )
+  useEffect(() => {
+    if (shown === value) return
+    const start = performance.now()
+    let frame = 0
+    const step = (now: number) => {
+      const t = Math.min(1, (now - start) / 900)
+      setShown(Math.round(value * (1 - (1 - t) ** 3)))
+      if (t < 1) frame = requestAnimationFrame(step)
+    }
+    frame = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(frame)
+  }, [value])
+  return <>{shown.toLocaleString()}</>
+}
+
+/** XP this run earned, the rank it moves you towards, and the achievements it earned. */
+function Rewards({ c, cp, total }: { c: CaseDef; cp: CaseProgress; total: number }) {
+  const { progress } = useProgress()
+  if (!progress) return null
+  const runXp = runXpOf(c, cp, total)
+  const bestXp = cp.best?.xp ?? runXp
+  const achievements = earnedIn(c, cp)
+  const isNew = (id: string) => {
+    const at = progress.academy.achievements[id]
+    return !!at && !!cp.closedAt && at >= cp.closedAt.slice(0, 16)
+  }
+  return (
+    <Card>
+      <FileLabel>Rewards</FileLabel>
+      <div className="grid items-center gap-6 md:grid-cols-[auto_1fr]">
+        <div className="text-center md:pr-6">
+          <div className="font-mono text-4xl font-bold text-brand-700">
+            +<CountUp value={runXp} />
+          </div>
+          <div className="text-sm text-slate-500">XP for this run</div>
+        </div>
+        <RankSummary state={academyRank(progress)} />
+      </div>
+      {bestXp > runXp && (
+        <p className="mt-3 text-sm text-slate-500">
+          Your best run of this case earned {bestXp.toLocaleString()} XP. A case counts its best run, so your XP stays.
+        </p>
+      )}
+      {achievements.length > 0 && (
+        <ul className="mt-4 flex flex-wrap gap-2">
+          {achievements.map((a) => (
+            <li key={a.id} className="flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-sm text-slate-800">
+              <Award size={15} className="text-amber-500" aria-hidden /> {a.title}
+              {isNew(a.id) && <Stamp tone="alert">New</Stamp>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
   )
 }

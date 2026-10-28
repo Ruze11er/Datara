@@ -8,14 +8,22 @@ import { cases } from '../../content'
 import { useProgress } from '../../lib/ProgressContext'
 import { GRADES } from '@shared/cases/scoring'
 import { caseProgress, caseStats, isCaseUnlocked } from '../../lib/caseProgress'
+import { academyRank, academyXp } from '../../lib/academyXp'
 import { FileLabel, ProgressBar, Stamp } from './CaseParts'
+import { AchievementGrid, RankLadder, RankSummary, XpRules } from './RankParts'
 
 export default function AcademyPage() {
   const { progress } = useProgress()
   const anyStarted = cases.some((c) => caseProgress(progress, c.id))
+  if (!progress) return null
+  const rank = academyRank(progress)
+  const xp = academyXp(progress)
 
   return (
     <Page title="Data Detective Academy" subtitle="Every number tells a story. Your job is to find out which one is true.">
+      <Card className="mb-6">
+        <RankSummary state={rank} />
+      </Card>
       {!anyStarted && (
         <Card className="mb-6">
           <FileLabel>From the Chief</FileLabel>
@@ -97,6 +105,32 @@ export default function AcademyPage() {
           )
         })}
       </div>
+
+      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+        <section>
+          <FileLabel>Ranks</FileLabel>
+          <Card>
+            <RankLadder state={rank} />
+            <p className="mt-3 text-xs text-slate-500">
+              A promotion needs the XP and a closed case for your current rank, rated Solid or better. Points alone never promote you.
+            </p>
+          </Card>
+        </section>
+        <section>
+          <FileLabel>Where your XP comes from</FileLabel>
+          <Card>
+            <XpRules xp={xp} />
+            <p className="mt-3 text-xs text-slate-500">
+              XP is worked out from everything you've done in Datara, including work from before the Academy existed. Hints never cost XP you already have.
+            </p>
+          </Card>
+        </section>
+      </div>
+
+      <section className="mt-8">
+        <FileLabel>Achievements</FileLabel>
+        <AchievementGrid progress={progress} />
+      </section>
     </Page>
   )
 }

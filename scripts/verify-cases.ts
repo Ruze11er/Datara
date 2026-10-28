@@ -14,6 +14,7 @@ import type { SqlJsStatic } from 'sql.js'
 import { parse as parseYaml } from 'yaml'
 import { caseProblems, parseCase } from '../src/shared/cases/parse.ts'
 import { compareResult, confirmOnHidden, leadCheckOptions, matchLead, type LeadReference } from '../src/shared/cases/leadMatch.ts'
+import { caseRunXp, rankState, xpBreakdown } from '../src/shared/academy.ts'
 import { caseSetup, pyTableResult, type PyTableLike } from '../src/shared/cases/python.ts'
 import { scoreCase } from '../src/shared/cases/scoring.ts'
 import { toCsv } from '../src/shared/csv.ts'
@@ -32,9 +33,34 @@ export interface CaseCheckContext {
   python: ((kind: 'run' | 'check', spec: object) => any) | null
 }
 
+/** The XP and rank rules give the documented numbers (CLAUDE.md, docs/plan.md, the Academy page). */
+function checkXpRules(error: (msg: string) => void): void {
+  const expect = (what: string, actual: unknown, expected: unknown) => {
+    if (JSON.stringify(actual) !== JSON.stringify(expected)) error(`XP rules: ${what} gives ${JSON.stringify(actual)}, expected ${JSON.stringify(expected)}`)
+  }
+  const xp = xpBreakdown({
+    levels: [{ status: 'solved', stars: 3 }, { status: 'solved', stars: 1 }, { status: 'unsolved', stars: 0 }],
+    lessons: [{ completedAt: '2026-01-01', quizScore: 1 }, { completedAt: '2026-01-02' }, {}],
+    caseXp: [300],
+    achievements: 2
+  })
+  // Levels: (10 + 3×5) + (10 + 1×5) = 40. Lessons: (15 + 10) + 15 = 40. Achievements: 2 × 25 = 50.
+  expect('xpBreakdown', xp, { labs: 40, lessons: 40, cases: 300, achievements: 50, total: 430 })
+  // 3 × 100 + 50 (Challenge) + 10 × 5 (unassisted leads).
+  expect('caseRunXp (perfect Challenge run)', caseRunXp({ total: 100, challenge: true, unassistedLeads: 10 }), 400)
+  expect('caseRunXp (guided, 70, no unassisted leads)', caseRunXp({ total: 70, challenge: false, unassistedLeads: 0 }), 210)
+  const case1 = (grade?: string) => [{ title: 'Case #001', rank: 1, grade }]
+  expect('rank with 600 XP and Case #001 Solid', rankState(600, case1('solid')).current.rank, 2)
+  expect('rank with 600 XP and Case #001 Provisional', rankState(600, case1('provisional')).current.rank, 1)
+  expect('rank with 400 XP and Case #001 Distinguished', rankState(400, case1('distinguished')).current.rank, 1)
+  expect('rank with 9999 XP and no rank-2 case', rankState(9999, case1('solid')).current.rank, 2)
+  expect('promotion blocked by a missing case', rankState(9999, case1('solid')).needs?.noCaseYet, true)
+}
+
 /** Checks all cases and returns how many were checked. */
 export async function verifyCases(ctx: CaseCheckContext): Promise<number> {
   const { SQL, contentDir, verbose, error, warn } = ctx
+  checkXpRules(error)
   const casesDir = join(contentDir, 'cases')
   let ids: string[]
   try {

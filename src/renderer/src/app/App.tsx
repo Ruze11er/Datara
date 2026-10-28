@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router'
 import Sidebar from './Sidebar'
 import { FullScreenHint } from './FullScreenHint'
+import { ToastHost } from './ToastHost'
 import DashboardPage from '../features/dashboard/DashboardPage'
 import LearnPage from '../features/learn/LearnPage'
 import LessonRoute from '../features/learn/LessonPage'
@@ -34,6 +35,7 @@ export default function App() {
     <div className="flex h-full">
       <Sidebar />
       <FullScreenHint />
+      {progress && <ToastHost />}
       <main ref={main} className="min-w-0 flex-1 overflow-y-auto">
         {saveError && (
           <div className="border-b border-red-200 bg-red-50 px-5 py-2 text-sm text-red-800" role="alert">

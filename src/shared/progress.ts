@@ -129,8 +129,11 @@ export interface CaseProgress {
   closedAt?: string
   /** Summary checklist items the learner ticked when comparing with the model answer. */
   summaryChecks: number[]
-  /** Best result over all runs of this case (kept when the case is replayed). */
-  best?: { total: number; grade: CaseGrade; closedAt: string }
+  /**
+   * Best result over all runs of this case (kept when the case is replayed): the best rating, and separately the
+   * best XP (src/shared/academy.ts caseRunXp), since a lower-rated Challenge run can earn more XP.
+   */
+  best?: { total: number; grade: CaseGrade; closedAt: string; xp?: number }
   /** Runs started, including this one. */
   runs: number
 }
@@ -157,6 +160,7 @@ export interface ProgressData {
   notes: Record<string, Note>
   /** Data Detective Academy runs, keyed by case id. */
   cases: Record<string, CaseProgress>
+  academy: AcademyState
   settings: Settings
 }
 
@@ -171,10 +175,19 @@ export function emptyProgress(): ProgressData {
     activity: {},
     notes: {},
     cases: {},
+    academy: { achievements: {} },
     settings: { editorFontSize: 14, theme: 'system' }
   }
 }
 
 export function emptyLevelProgress(): LevelProgress {
   return { status: 'unsolved', stars: 0, attempts: 0, hintsUsed: 0, solutionViewed: false }
+}
+
+/** Data Detective Academy rewards. XP itself is worked out from progress (src/shared/academy.ts), never stored. */
+export interface AcademyState {
+  /** Achievement id -> ISO time it was earned. Stored so each one is celebrated only once. */
+  achievements: Record<string, string>
+  /** The rank last shown to the learner, so a promotion is announced once. */
+  rankSeen?: number
 }
