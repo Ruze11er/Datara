@@ -20,7 +20,13 @@ import {
   parseSqlChapters,
   parseSqlLevel
 } from '../src/shared/content.ts'
-import { checkResult, type QueryResult } from '../src/shared/sqlCheck.ts'
+import {
+  checkHiddenResult,
+  checkResult,
+  type CheckOptions,
+  type CheckOutcome,
+  type QueryResult
+} from '../src/shared/sqlCheck.ts'
 import { runLastStatement } from '../src/shared/sqlRun.ts'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
@@ -35,23 +41,80 @@ const warn = (msg: string): void => void warnings.push(msg)
 // ---------- SQL levels ----------
 
 const SQL = await initSqlJs()
-const storeSql = await readFile(join(contentDir, 'datasets', 'store.sql'), 'utf8')
-const storeBytes = (() => {
+async function buildDataset(file: string): Promise<Uint8Array> {
   const db = new SQL.Database()
-  db.exec(storeSql)
+  db.exec(await readFile(join(contentDir, 'datasets', file), 'utf8'))
   const bytes = db.export()
   db.close()
   return bytes
-})()
+}
+const storeBytes = await buildDataset('store.sql')
+const hiddenBytes = await buildDataset('store-hidden.sql')
 
-function run(query: string): QueryResult {
-  const db = new SQL.Database(storeBytes)
+function run(query: string, bytes: Uint8Array = storeBytes): QueryResult {
+  const db = new SQL.Database(bytes)
   try {
     const { columns, rows } = runLastStatement(db, query)
     return { columns, rows }
   } finally {
     db.close()
   }
+}
+
+/**
+ * Runs the query with SQLite reading every table in reverse order. If the result changes, it depends on
+ * how rows happen to be stored: usually a tie at a LIMIT cut-off, or ORDER BY on a column with equal values.
+ * Another correct query could then break the tie differently and be marked wrong.
+ */
+const runReversed = (query: string, bytes: Uint8Array): QueryResult =>
+  run(`PRAGMA reverse_unordered_selects = ON;\n${query}`, bytes)
+
+/** True if the numbers only go up (or stay equal), or only go down: the column the rows are probably sorted by. */
+function isSortedColumn(values: QueryResult['rows'][number]): boolean {
+  if (values.some((v) => typeof v !== 'number')) return false
+  const nums = values as number[]
+  const up = nums.every((v, i) => i === 0 || v >= nums[i - 1]!)
+  const down = nums.every((v, i) => i === 0 || v <= nums[i - 1]!)
+  return up || down
+}
+
+/**
+ * Looks for ties that would make "top N" answers ambiguous. SQLite breaks ORDER BY ties using the selected
+ * values, so the pragma check above can't see them. Instead: when the solution ends in LIMIT n, fetch one more
+ * row, find the numeric columns the rows are sorted by, and see whether rows n and n+1 have the same value there.
+ * Returns a description of the tie, or null.
+ */
+function limitTie(query: string, bytes: Uint8Array): string | null {
+  const match = /\bLIMIT\s+(\d+)\s*;?\s*$/i.exec(query)
+  if (!match) return null
+  const n = Number(match[1])
+  const { columns, rows } = run(query.slice(0, match.index) + `LIMIT ${n + 1}`, bytes)
+  if (rows.length <= n || n === 0) return null
+  for (let c = 0; c < columns.length; c++) {
+    const values = rows.map((r) => r[c] ?? null)
+    if (isSortedColumn(values) && values[n - 1] === values[n]) {
+      return `rows ${n} and ${n + 1} both have ${columns[c]} = ${values[n]}`
+    }
+  }
+  return null
+}
+
+/** The same two-step check the app does: practice data first, then the hidden shop. */
+function fullCheck(
+  query: string,
+  expected: QueryResult,
+  hiddenExpected: QueryResult | null,
+  options: CheckOptions
+): CheckOutcome {
+  const outcome = checkResult(expected, run(query), options)
+  if (!outcome.pass || !hiddenExpected) return outcome
+  let hiddenActual: QueryResult | null = null
+  try {
+    hiddenActual = run(query, hiddenBytes)
+  } catch {
+    // Treated like the app: a query that fails on the hidden data doesn't pass.
+  }
+  return checkHiddenResult(hiddenExpected, hiddenActual, options)
 }
 
 const levelDir = join(contentDir, 'sql-levels')
@@ -99,9 +162,43 @@ for (const chapter of chapters) {
     if (level.hints.length !== 3) warn(`${where}: has ${level.hints.length} hints (3 recommended)`)
     if (verbose) console.log(`${where}: ${expected.rows.length} rows, columns: ${expected.columns.join(', ')}`)
 
+    let hiddenExpected: QueryResult | null = null
+    if (level.hiddenData) {
+      try {
+        hiddenExpected = run(level.solution, hiddenBytes)
+        if (expected.rows.length > 0 && hiddenExpected.rows.length === 0) {
+          warn(`${where}: the solution returns no rows on the hidden data, so the hidden check proves little`)
+        }
+      } catch (e) {
+        error(`${where}: the reference solution fails on the hidden data: ${(e as Error).message}`)
+      }
+    }
+
+    // Ties: the answer must not depend on the order rows happen to be stored in.
+    for (const [name, bytes, answer] of [
+      ['practice', storeBytes, expected],
+      ['hidden', hiddenBytes, hiddenExpected]
+    ] as const) {
+      if (!answer) continue
+      const reversed = checkResult(answer, runReversed(level.solution, bytes), options)
+      if (!reversed.pass) {
+        error(
+          `${where}: on the ${name} data the solution's result depends on row storage order (a tie?). ` +
+            `Add a tie-breaker to the ORDER BY${name === 'hidden' ? ', or set hiddenData: false' : ''}.`
+        )
+      }
+      const tie = limitTie(level.solution, bytes)
+      if (tie) {
+        error(
+          `${where}: on the ${name} data there's a tie at the LIMIT cut-off (${tie}). Another correct query could ` +
+            `pick a different row. Add a tie-breaker to the task and solution${name === 'hidden' ? ', or set hiddenData: false' : ''}.`
+        )
+      }
+    }
+
     for (const query of level.tests.accept) {
       try {
-        const outcome = checkResult(expected, run(query), options)
+        const outcome = fullCheck(query, expected, hiddenExpected, options)
         if (!outcome.pass) error(`${where}: should ACCEPT "${query}" but says: ${outcome.message}`)
       } catch (e) {
         error(`${where}: accept query errors: "${query}": ${(e as Error).message}`)
@@ -109,7 +206,7 @@ for (const chapter of chapters) {
     }
     for (const query of level.tests.reject) {
       try {
-        const outcome = checkResult(expected, run(query), options)
+        const outcome = fullCheck(query, expected, hiddenExpected, options)
         if (outcome.pass) error(`${where}: should REJECT "${query}", but it passes`)
         else if (verbose) console.log(`    rejects "${query}": ${outcome.message}`)
       } catch {

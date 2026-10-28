@@ -20,6 +20,11 @@ export interface SqlLevel {
   solution: string
   orderMatters: boolean
   checkColumnNames: boolean
+  /**
+   * Also check the answer on the hidden shop (content/datasets/store-hidden.sql), so typed-in values fail.
+   * On by default. Turn it off only for a level whose task names values that don't exist in the hidden data.
+   */
+  hiddenData: boolean
   /** From gentle nudge to near-solution. */
   hints: string[]
   /** Why the solution works. Shown after solving. */
@@ -150,6 +155,7 @@ export function parseSqlLevel(text: string, where: string): SqlLevel {
     solution: requireString(raw, 'solution', where),
     orderMatters: raw.orderMatters === true,
     checkColumnNames: raw.checkColumnNames === true,
+    hiddenData: raw.hiddenData !== false,
     hints: stringList(raw, 'hints'),
     explanation: requireString(raw, 'explanation', where),
     tests: { accept: stringList(tests, 'accept'), reject: stringList(tests, 'reject') }

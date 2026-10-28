@@ -24,5 +24,7 @@ tests:
   accept:
     - "SELECT customer_id, first_name, last_name FROM customers WHERE customer_id NOT IN (SELECT customer_id FROM orders)"
   reject:
+    # A value typed in from the practice data: passes there, fails on the hidden data.
+    - "SELECT customer_id, first_name, last_name FROM customers WHERE customer_id IN (5, 10, 25, 33, 42, 46, 48, 50, 53, 55, 57)"
     - "SELECT c.customer_id, c.first_name, c.last_name FROM customers AS c LEFT JOIN orders AS o ON o.customer_id = c.customer_id WHERE o.order_id IS NOT NULL"
     - "SELECT c.customer_id, c.first_name, c.last_name FROM customers AS c LEFT JOIN orders AS o ON o.customer_id = c.customer_id WHERE o.order_id = NULL"

@@ -14,7 +14,7 @@ See [docs/plan.md](docs/plan.md) for the agreed plan and roadmap.
 | `npm run dev` | Start the app in development mode with live reload |
 | `npm run build` | Type-check, verify all content, and build the app into `out/` |
 | `npm run verify` | Check every SQL level and lesson (solutions run, tests pass, citations verified) |
-| `npm run dataset` | Regenerate the practice shop database (`content/datasets/store.sql`) |
+| `npm run dataset` | Regenerate the practice shop (`content/datasets/store.sql`) and the hidden test shop (`store-hidden.sql`) |
 | `npm start` | Run the built app from `out/` (works even with Smart App Control on) |
 | `npm run selftest` | Open the built app hidden and check the SQL and Python engines |
 | `npm run dist` | Build the Windows installer into `dist/` |
@@ -37,7 +37,7 @@ src/
     src/lib/       Progress storage, engine checks
 scripts/       prepare-engines, generate-dataset, verify-content, selftest
 content/
-  datasets/    The practice shop database (generated, do not edit by hand)
+  datasets/    The practice shop and the hidden test shop used to check answers (generated, do not edit by hand)
   sql-levels/     chapters.yaml (order and chapters) + one .yaml file per level
   python-levels/  same structure as sql-levels
   lessons/        index.yaml (categories and modules) + one .md file per lesson

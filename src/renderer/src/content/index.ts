@@ -16,10 +16,13 @@ import sqlChaptersText from '@content/sql-levels/chapters.yaml?raw'
 import pythonChaptersText from '@content/python-levels/chapters.yaml?raw'
 import lessonIndexText from '@content/lessons/index.yaml?raw'
 import storeSql from '@content/datasets/store.sql?raw'
+import storeHiddenSql from '@content/datasets/store-hidden.sql?raw'
 
 // ---------- Practice database ----------
 
 export const STORE_DATASET = { id: 'store', setupSql: storeSql }
+/** Same tables, different data. Only used to check answers (see checkHiddenResult). */
+export const STORE_HIDDEN_DATASET = { id: 'store-hidden', setupSql: storeHiddenSql }
 
 // ---------- Labs (SQL and Python share the same structure) ----------
 

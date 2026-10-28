@@ -1,5 +1,8 @@
-// Generates the practice database for the SQL Lab: a fictional online shop.
-// Output: content/datasets/store.sql (CREATE TABLE + INSERT statements).
+// Generates the databases for the SQL Lab: a fictional online shop.
+// Output (CREATE TABLE + INSERT statements):
+//   content/datasets/store.sql         the practice shop learners see
+//   content/datasets/store-hidden.sql  a second shop with the same tables and different data, used only
+//                                      to check answers, so typed-in values (instead of calculations) fail
 //
 // The random generator is seeded, so this always produces exactly the same data.
 // Level answers are computed live from each level's reference solution, but level
@@ -10,10 +13,10 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
-const outFile = join(root, 'content', 'datasets', 'store.sql')
+const datasetsDir = join(root, 'content', 'datasets')
 
-// Deterministic pseudo-random numbers (mulberry32).
-let seed = 20251028
+// Deterministic pseudo-random numbers (mulberry32). Each shop resets the seed before it starts.
+let seed = 0
 function rand() {
   seed |= 0
   seed = (seed + 0x6d2b79f5) | 0
@@ -100,88 +103,124 @@ const LOCATIONS = [
   ['Australia', 12, ['Sydney', 'Melbourne']]
 ]
 
-const CUSTOMER_COUNT = 60
-const customers = []
-const usedNames = new Set()
-while (customers.length < CUSTOMER_COUNT) {
-  const first = pick(FIRST_NAMES)
-  const last = pick(LAST_NAMES)
-  if (usedNames.has(`${first} ${last}`)) continue
-  usedNames.add(`${first} ${last}`)
-  const [country, , cities] = weighted(LOCATIONS.map((l) => [l, l[1]]))
-  customers.push({
-    customer_id: customers.length + 1,
-    first_name: first,
-    last_name: last,
-    // About 1 in 10 customers never gave an email address (for NULL practice).
-    // example.com is reserved for examples, so these are never real addresses.
-    email: rand() < 0.1 ? null : `${first}.${last}${randInt(1, 99)}@example.com`.toLowerCase(),
-    city: pick(cities),
-    country,
-    signup_date: randomDate('2023-01-01', '2025-06-30')
-  })
-}
 
-// ---- Orders and order items (generated)
 const STATUSES = [['Delivered', 70], ['Shipped', 10], ['Cancelled', 12], ['Returned', 8]]
 const PAYMENTS = [['Credit Card', 50], ['PayPal', 25], ['Debit Card', 15], ['Bank Transfer', 10]]
 
-// About 1 in 8 customers never orders anything (useful for LEFT JOIN later).
-const buyers = customers.filter(() => rand() > 0.125)
-const ORDER_COUNT = 250
-const orders = []
-const items = []
+/**
+ * Builds one shop. Everything random comes from a single seeded stream, in a fixed order,
+ * so the same settings always give exactly the same data.
+ */
+function buildShop({ startSeed, adjustProducts, customerCount, orderCount, neverReviewed }) {
+  seed = startSeed
+  const products = adjustProducts ? adjustProducts(PRODUCTS) : PRODUCTS
 
-const rawOrders = []
-for (let i = 0; i < ORDER_COUNT; i++) {
-  const customer = pick(buyers)
-  const earliest = customer.signup_date > '2025-01-01' ? customer.signup_date : '2025-01-01'
-  rawOrders.push({ customer, date: randomDate(earliest, '2025-12-31') })
-}
-// Order IDs follow the date, like a real shop's order numbers.
-rawOrders.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
-
-for (const { customer, date } of rawOrders) {
-  const order_id = orders.length + 1001
-  const lineCount = weighted([[1, 45], [2, 30], [3, 17], [4, 8]])
-  const chosen = new Set()
-  while (chosen.size < lineCount) chosen.add(randInt(0, PRODUCTS.length - 1))
-
-  let total = 0
-  for (const p of chosen) {
-    const quantity = weighted([[1, 70], [2, 22], [3, 8]])
-    const unit_price = PRODUCTS[p][2]
-    total += quantity * unit_price
-    items.push({ order_item_id: items.length + 1, order_id, product_id: p + 1, quantity, unit_price })
+  // ---- Customers (generated)
+  const customers = []
+  const usedNames = new Set()
+  while (customers.length < customerCount) {
+    const first = pick(FIRST_NAMES)
+    const last = pick(LAST_NAMES)
+    if (usedNames.has(`${first} ${last}`)) continue
+    usedNames.add(`${first} ${last}`)
+    const [country, , cities] = weighted(LOCATIONS.map((l) => [l, l[1]]))
+    customers.push({
+      customer_id: customers.length + 1,
+      first_name: first,
+      last_name: last,
+      // About 1 in 10 customers never gave an email address (for NULL practice).
+      // example.com is reserved for examples, so these are never real addresses.
+      email: rand() < 0.1 ? null : `${first}.${last}${randInt(1, 99)}@example.com`.toLowerCase(),
+      city: pick(cities),
+      country,
+      signup_date: randomDate('2023-01-01', '2025-06-30')
+    })
   }
 
-  orders.push({
-    order_id,
-    customer_id: customer.customer_id,
-    order_date: date,
-    status: weighted(STATUSES),
-    payment_method: weighted(PAYMENTS),
-    total_amount: Math.round(total * 100) / 100
-  })
+  // ---- Orders and order items (generated)
+  // About 1 in 8 customers never orders anything (useful for LEFT JOIN later).
+  const buyers = customers.filter(() => rand() > 0.125)
+  const orders = []
+  const items = []
+
+  const rawOrders = []
+  for (let i = 0; i < orderCount; i++) {
+    const customer = pick(buyers)
+    const earliest = customer.signup_date > '2025-01-01' ? customer.signup_date : '2025-01-01'
+    rawOrders.push({ customer, date: randomDate(earliest, '2025-12-31') })
+  }
+  // Order IDs follow the date, like a real shop's order numbers.
+  rawOrders.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
+
+  for (const { customer, date } of rawOrders) {
+    const order_id = orders.length + 1001
+    const lineCount = weighted([[1, 45], [2, 30], [3, 17], [4, 8]])
+    const chosen = new Set()
+    while (chosen.size < lineCount) chosen.add(randInt(0, products.length - 1))
+
+    let total = 0
+    for (const p of chosen) {
+      const quantity = weighted([[1, 70], [2, 22], [3, 8]])
+      const unit_price = products[p][2]
+      total += quantity * unit_price
+      items.push({ order_item_id: items.length + 1, order_id, product_id: p + 1, quantity, unit_price })
+    }
+
+    orders.push({
+      order_id,
+      customer_id: customer.customer_id,
+      order_date: date,
+      status: weighted(STATUSES),
+      payment_method: weighted(PAYMENTS),
+      total_amount: Math.round(total * 100) / 100
+    })
+  }
+
+  // ---- Reviews (generated AFTER everything above, so adding them did not change any earlier data)
+  // Some delivered order items get a review. A few products never get one, which is
+  // useful for LEFT JOIN practice ("which products have no reviews?").
+  const orderById = new Map(orders.map((o) => [o.order_id, o]))
+  const reviews = []
+  for (const item of items) {
+    const order = orderById.get(item.order_id)
+    if (order.status !== 'Delivered' || neverReviewed.has(item.product_id) || rand() > 0.4) continue
+    const delay = randInt(3, 30)
+    const reviewDate = toDate(dateMs(order.order_date) + delay * DAY)
+    reviews.push({
+      review_id: reviews.length + 1,
+      product_id: item.product_id,
+      customer_id: order.customer_id,
+      rating: weighted([[5, 40], [4, 30], [3, 15], [2, 8], [1, 7]]),
+      review_date: reviewDate > '2025-12-31' ? '2025-12-31' : reviewDate
+    })
+  }
+
+  const productRows = products.map(([product_name, category, price, cost, stock_quantity], i) => ({
+    product_id: i + 1,
+    product_name,
+    category,
+    price,
+    cost,
+    stock_quantity
+  }))
+  return { customers, productRows, orders, items, reviews }
 }
 
-// ---- Reviews (generated AFTER everything above, so adding them did not change any earlier data)
-// Some delivered order items get a review. A few products never get one, which is
-// useful for LEFT JOIN practice ("which products have no reviews?").
-const NEVER_REVIEWED = new Set([8, 16, 24, 32, 40]) // product_ids
-const orderById = new Map(orders.map((o) => [o.order_id, o]))
-const reviews = []
-for (const item of items) {
-  const order = orderById.get(item.order_id)
-  if (order.status !== 'Delivered' || NEVER_REVIEWED.has(item.product_id) || rand() > 0.4) continue
-  const delay = randInt(3, 30)
-  const reviewDate = toDate(dateMs(order.order_date) + delay * DAY)
-  reviews.push({
-    review_id: reviews.length + 1,
-    product_id: item.product_id,
-    customer_id: order.customer_id,
-    rating: weighted([[5, 40], [4, 30], [3, 15], [2, 8], [1, 7]]),
-    review_date: reviewDate > '2025-12-31' ? '2025-12-31' : reviewDate
+/**
+ * The hidden shop's products: the same names and categories, but different prices and stock.
+ * A query that hard-codes a value read from the practice data (an average price, a stock level)
+ * then gives a different answer here. Prices stay unique so "top N" levels have no ties.
+ */
+function hiddenProducts(products) {
+  const used = new Set()
+  return products.map(([name, category, price, cost]) => {
+    // Prices rise by 5–45%, so the averages move well away from the practice shop's values.
+    const factor = 1.05 + rand() * 0.4
+    let newPrice = Math.round(price * factor * 100) / 100
+    while (used.has(newPrice)) newPrice = Math.round((newPrice + 0.01) * 100) / 100
+    used.add(newPrice)
+    const stock = rand() < 0.12 ? 0 : randInt(5, 320)
+    return [name, category, newPrice, Math.round(cost * factor * 100) / 100, stock]
   })
 }
 
@@ -195,16 +234,7 @@ const insert = (table, rows) =>
       rows.map((r) => `  (${Object.values(r).map(sqlValue).join(', ')})`).join(',\n') +
       ';\n'
 
-const productRows = PRODUCTS.map(([product_name, category, price, cost, stock_quantity], i) => ({
-  product_id: i + 1,
-  product_name,
-  category,
-  price,
-  cost,
-  stock_quantity
-}))
-
-const sql = `-- Datara practice database: a fictional online shop.
+const toSql = (title, { customers, productRows, orders, items, reviews }) => `-- ${title}
 -- Generated by scripts/generate-dataset.mjs. Do not edit by hand.
 
 CREATE TABLE customers (
@@ -257,8 +287,34 @@ ${insert('orders', orders)}
 ${insert('order_items', items)}
 ${insert('reviews', reviews)}`
 
-await mkdir(dirname(outFile), { recursive: true })
-await writeFile(outFile, sql, 'utf8')
-console.log(
-  `[dataset] wrote ${customers.length} customers, ${productRows.length} products, ${orders.length} orders, ${items.length} order items, ${reviews.length} reviews`
-)
+const SHOPS = [
+  {
+    // The practice shop learners see. Never change these settings: every level is written against this data.
+    file: 'store.sql',
+    title: 'Datara practice database: a fictional online shop.',
+    settings: { startSeed: 20251028, customerCount: 60, orderCount: 250, neverReviewed: new Set([8, 16, 24, 32, 40]) }
+  },
+  {
+    // The hidden shop: same tables, different data. Answers are also checked here, so a query that types in
+    // a number read from the practice data (instead of calculating it) fails. Learners never see this data.
+    file: 'store-hidden.sql',
+    title: 'Datara hidden test database: the same tables as store.sql with different data (used only for checking).',
+    settings: {
+      startSeed: 31337,
+      adjustProducts: hiddenProducts,
+      customerCount: 52,
+      orderCount: 214,
+      neverReviewed: new Set([3, 12, 21, 30, 39])
+    }
+  }
+]
+
+await mkdir(datasetsDir, { recursive: true })
+for (const { file, title, settings } of SHOPS) {
+  const shop = buildShop(settings)
+  await writeFile(join(datasetsDir, file), toSql(title, shop), 'utf8')
+  console.log(
+    `[dataset] ${file}: ${shop.customers.length} customers, ${shop.productRows.length} products, ` +
+      `${shop.orders.length} orders, ${shop.items.length} order items, ${shop.reviews.length} reviews`
+  )
+}

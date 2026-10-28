@@ -162,6 +162,27 @@ export function checkResult(expected: QueryResult, actual: QueryResult, options:
   return { pass: true, title: 'Correct!', message: 'Your query returns exactly the right result.' }
 }
 
+/**
+ * The second step of a check: after the query is right on the practice data, the learner's query
+ * and the solution both run on a hidden shop with the same tables but different data. A query that
+ * types in a number read from the practice data (an average, a count, an ID) passes the first step
+ * by luck but fails here. `actual` is null when the learner's query fails to run on the hidden data.
+ */
+export function checkHiddenResult(expected: QueryResult, actual: QueryResult | null, options: CheckOptions): CheckOutcome {
+  const outcome = actual ? checkResult(expected, actual, options) : null
+  if (outcome?.pass) return outcome
+  // The usual feedback ("you may need a filter") would talk about data the learner can't see, so it isn't repeated.
+  return {
+    pass: false,
+    title: 'Almost!',
+    message:
+      'Your query gives the right result for this data, but answers are also checked on a second, hidden copy of the ' +
+      "shop with different data, and there your query's result doesn't match. Did you type in a value you looked up, " +
+      'like an average, a total, or an ID? Calculate it in the query instead (for example with a subquery), so it ' +
+      'works on any data.'
+  }
+}
+
 /** Turns SQLite error messages into beginner-friendly explanations. */
 export function friendlySqlError(raw: string): string {
   const message = raw.replace(/^Error:\s*/, '')

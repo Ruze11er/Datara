@@ -1,11 +1,11 @@
 import { useCallback, useRef, useState } from 'react'
 import { Navigate, useParams } from 'react-router'
 import { CircleX, LoaderCircle } from 'lucide-react'
-import { checkResult, friendlySqlError, type CheckOutcome } from '@shared/sqlCheck'
+import { checkHiddenResult, checkResult, friendlySqlError, type CheckOutcome } from '@shared/sqlCheck'
 import { CodeEditor, type CodeEditorHandle } from '../../components/CodeEditor'
 import { Markdown } from '../../components/Markdown'
 import { ResultTable } from '../../components/ResultTable'
-import { sqlLab, STORE_DATASET, type NumberedLevel } from '../../content'
+import { sqlLab, STORE_DATASET, STORE_HIDDEN_DATASET, type NumberedLevel } from '../../content'
 import { runSql } from '../../engines/sql/sqlEngine'
 import type { SqlResult } from '../../engines/sql/types'
 import { followingLevel, isLevelUnlocked } from '../../lib/labProgress'
@@ -84,7 +84,18 @@ function SqlLevelPage({ level }: { level: NumberedLevel }) {
       return
     }
 
-    const outcome = checkResult(answer, result, { orderMatters: level.orderMatters, checkColumnNames: level.checkColumnNames })
+    const options = { orderMatters: level.orderMatters, checkColumnNames: level.checkColumnNames }
+    let outcome = checkResult(answer, result, options)
+    if (outcome.pass && level.hiddenData) {
+      // Step 2: same check on the hidden shop, so typed-in values (instead of calculations) fail.
+      try {
+        const hiddenAnswer = await runSql({ sql: level.solution, dataset: STORE_HIDDEN_DATASET })
+        const hiddenResult = await runSql({ sql: code.current, dataset: STORE_HIDDEN_DATASET }).catch(() => null)
+        outcome = checkHiddenResult(hiddenAnswer, hiddenResult, options)
+      } catch {
+        // If the reference answer can't run on the hidden data, the visible check stands.
+      }
+    }
     const attempt = session.recordAttempt(outcome.pass)
     setOutput({ kind: 'check', outcome, result, attempt })
   }, [code, level, session])

@@ -21,4 +21,6 @@ tests:
   accept:
     - "SELECT product_name, price FROM products ORDER BY price DESC LIMIT 1"
   reject:
+    # A value typed in from the practice data: passes there, fails on the hidden data.
+    - "SELECT product_name, price FROM products WHERE price = 189"
     - "SELECT product_name, price FROM products WHERE price = (SELECT MIN(price) FROM products)"

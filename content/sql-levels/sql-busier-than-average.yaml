@@ -27,5 +27,7 @@ tests:
   accept:
     - "SELECT customer_id, COUNT(*) FROM orders GROUP BY customer_id HAVING COUNT(*) > (SELECT AVG(n) FROM (SELECT COUNT(*) AS n FROM orders GROUP BY customer_id))"
   reject:
+    # A value typed in from the practice data: passes there, fails on the hidden data.
+    - "WITH counts AS (SELECT customer_id, COUNT(*) AS order_count FROM orders GROUP BY customer_id) SELECT customer_id, order_count FROM counts WHERE order_count > 5.1"
     - "WITH counts AS (SELECT customer_id, COUNT(*) AS order_count FROM orders GROUP BY customer_id) SELECT customer_id, order_count FROM counts WHERE order_count > 7"
     - "WITH counts AS (SELECT customer_id, COUNT(*) AS order_count FROM orders GROUP BY customer_id) SELECT customer_id, order_count FROM counts WHERE order_count >= (SELECT AVG(order_count) FROM counts) - 1"

@@ -30,5 +30,7 @@ tests:
   accept:
     - "WITH spend AS (SELECT customer_id, SUM(total_amount) AS total FROM orders WHERE status = 'Delivered' GROUP BY customer_id) SELECT ROUND(100.0 * (SELECT SUM(total) FROM (SELECT total FROM spend ORDER BY total DESC LIMIT 10)) / (SELECT SUM(total) FROM spend), 1)"
   reject:
+    # A value typed in from the practice data: passes there, fails on the hidden data.
+    - "SELECT 40.2"
     - "WITH spend AS (SELECT customer_id, SUM(total_amount) AS total FROM orders GROUP BY customer_id), ranked AS (SELECT total, ROW_NUMBER() OVER (ORDER BY total DESC) AS rn FROM spend) SELECT ROUND(100.0 * SUM(CASE WHEN rn <= 10 THEN total ELSE 0 END) / SUM(total), 1) FROM ranked"
     - "WITH spend AS (SELECT customer_id, SUM(total_amount) AS total FROM orders WHERE status = 'Delivered' GROUP BY customer_id), ranked AS (SELECT total, ROW_NUMBER() OVER (ORDER BY total) AS rn FROM spend) SELECT ROUND(100.0 * SUM(CASE WHEN rn <= 10 THEN total ELSE 0 END) / SUM(total), 1) FROM ranked"
