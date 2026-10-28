@@ -76,4 +76,5 @@ citation marker has no matching source.
   certificate (e.g. Azure Trusted Signing), or run it with `npm start`.
   With Smart App Control off, SmartScreen instead shows a warning on first install
   ("More info" → "Run anyway").
-- The app currently uses the default Electron icon; a Datara icon is still needed.
+- Day-to-day launching: the Desktop/Start menu shortcut from npm run shortcut opens the latest build
+  (run npm run build after changes). The logo lives in build/ and is regenerated with npm run icons.

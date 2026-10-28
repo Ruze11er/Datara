@@ -15,7 +15,9 @@
     "preview": "electron-vite preview",
     "start": "electron .",
     "dist": "npm run build && electron-builder --win",
-    "selftest": "node scripts/selftest.mjs"
+    "selftest": "node scripts/selftest.mjs",
+    "icons": "electron scripts/make-icons.mjs",
+    "shortcut": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/create-shortcut.ps1"
   },
   "devDependencies": {
     "@codemirror/commands": "^6.11.1",

@@ -16,6 +16,8 @@ See [docs/plan.md](docs/plan.md) for the agreed plan and roadmap.
 | `npm run verify` | Check every SQL level and lesson (solutions run, tests pass, citations verified) |
 | `npm run dataset` | Regenerate the practice shop (`content/datasets/store.sql`) and the hidden test shop (`store-hidden.sql`) |
 | `npm start` | Run the built app from `out/` (works even with Smart App Control on) |
+| `npm run shortcut` | Create a **Datara** shortcut on the Desktop and in the Start menu, to open the app with a double-click |
+| `npm run icons` | Regenerate the logo and icon files (in `build/`) from `scripts/make-icons.mjs` |
 | `npm run selftest` | Open the built app hidden and check the SQL and Python engines |
 | `npm run dist` | Build the Windows installer into `dist/` |
 | `npm run selftest -- --packaged` | Run the same checks against the packaged app in `dist/win-unpacked` |

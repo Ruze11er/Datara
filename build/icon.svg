@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>Datara</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22345a"/>
+      <stop offset="1" stop-color="#0a1121"/>
+    </linearGradient>
+    <radialGradient id="bgGlow" cx="0.5" cy="0.72" r="0.55">
+      <stop offset="0" stop-color="#1fd1a8" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#1fd1a8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bar" gradientUnits="userSpaceOnUse" x1="0" y1="146" x2="0" y2="400">
+      <stop offset="0" stop-color="#8ff8de"/>
+      <stop offset="0.45" stop-color="#3ad6b6"/>
+      <stop offset="1" stop-color="#11938a"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="0.38" stop-color="#ffffff" stop-opacity="0.06"/>
+      <stop offset="0.55" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="dot" cx="0.4" cy="0.35" r="0.7">
+      <stop offset="0" stop-color="#eafff9"/>
+      <stop offset="0.45" stop-color="#6ff2d1"/>
+      <stop offset="1" stop-color="#20c4a2"/>
+    </radialGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.6 0" result="soft"/>
+      <feMerge><feMergeNode in="soft"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#bg)"/>
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#bgGlow)"/>
+  <rect x="17.5" y="17.5" width="477" height="477" rx="106.5" fill="none" stroke="#ffffff" stroke-opacity="0.08" stroke-width="3"/>
+  <g filter="url(#glow)">
+    <path d="M94,391 L94,313 Q94,300 107,296.96666666666664 L141,289.03333333333336 Q154,286 154,299 L154,391 Q154,400 145,400 L103,400 Q94,400 94,391 Z" fill="url(#bar)"/>
+    <path d="M182,391 L182,249 Q182,236 195,232.96666666666667 L229,225.03333333333333 Q242,222 242,235 L242,391 Q242,400 233,400 L191,400 Q182,400 182,391 Z" fill="url(#bar)"/>
+    <path d="M270,391 L270,173 Q270,160 283,156.96666666666667 L317,149.03333333333333 Q330,146 330,159 L330,391 Q330,400 321,400 L279,400 Q270,400 270,391 Z" fill="url(#bar)"/>
+    <path d="M358,391 L358,227 Q358,214 371,210.96666666666667 L405,203.03333333333333 Q418,200 418,213 L418,391 Q418,400 409,400 L367,400 Q358,400 358,391 Z" fill="url(#bar)"/>
+    <circle cx="300" cy="106" r="20" fill="url(#dot)"/>
+  </g>
+  <path d="M94,391 L94,313 Q94,300 107,296.96666666666664 L141,289.03333333333336 Q154,286 154,299 L154,391 Q154,400 145,400 L103,400 Q94,400 94,391 Z" fill="url(#sheen)"/>
+  <path d="M182,391 L182,249 Q182,236 195,232.96666666666667 L229,225.03333333333333 Q242,222 242,235 L242,391 Q242,400 233,400 L191,400 Q182,400 182,391 Z" fill="url(#sheen)"/>
+  <path d="M270,391 L270,173 Q270,160 283,156.96666666666667 L317,149.03333333333333 Q330,146 330,159 L330,391 Q330,400 321,400 L279,400 Q270,400 270,391 Z" fill="url(#sheen)"/>
+  <path d="M358,391 L358,227 Q358,214 371,210.96666666666667 L405,203.03333333333333 Q418,200 418,213 L418,391 Q418,400 409,400 L367,400 Q358,400 358,391 Z" fill="url(#sheen)"/>
+</svg>
