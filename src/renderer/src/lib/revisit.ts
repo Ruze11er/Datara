@@ -4,9 +4,8 @@ import type { Lesson } from '@shared/content'
 import type { ProgressData } from '@shared/progress'
 import { getLesson, labs, lessonsInOrder, type BaseLevel, type Lab, type Numbered } from '../content'
 import { levelProgress } from './labProgress'
+import { STRUGGLE_ATTEMPTS } from './reviewQueue'
 
-/** Unsolved levels with at least this many checks count as "struggling". */
-const STRUGGLE_ATTEMPTS = 4
 /** Quiz scores below this suggest re-reading the lesson. */
 const LOW_QUIZ = 0.67
 
@@ -26,10 +25,10 @@ export function topicsToRevisit(progress: ProgressData | null): RevisitSummary {
   const levels: LevelToRevisit[] = []
   for (const lab of labs) {
     for (const level of lab.levels) {
+      // Solved levels that were hard are in the review queue (lib/reviewQueue.ts); here we only list
+      // levels the learner is still stuck on.
       const lp = levelProgress(progress, lab, level.id)
-      if (lp.status === 'solved' && lp.stars === 1) levels.push({ lab, level, reason: 'You viewed the solution' })
-      else if (lp.status === 'solved' && lp.stars === 2) levels.push({ lab, level, reason: 'You used hints' })
-      else if (lp.status !== 'solved' && lp.attempts >= STRUGGLE_ATTEMPTS)
+      if (lp.status !== 'solved' && lp.attempts >= STRUGGLE_ATTEMPTS)
         levels.push({ lab, level, reason: `${lp.attempts} tries, not solved yet` })
     }
   }

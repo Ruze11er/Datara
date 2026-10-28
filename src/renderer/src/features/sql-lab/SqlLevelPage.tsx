@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
-import { Navigate, useParams } from 'react-router'
+import { Navigate, useParams, useSearchParams } from 'react-router'
 import { CircleX, LoaderCircle } from 'lucide-react'
 import { checkHiddenResult, checkResult, friendlySqlError, type CheckOutcome } from '@shared/sqlCheck'
 import { CodeEditor, type CodeEditorHandle } from '../../components/CodeEditor'
@@ -18,7 +18,10 @@ import {
   LevelHeader,
   LockedLevel,
   SectionTitle,
+  ReviewNote,
+  REVIEW_NEXT,
   SolvedNote,
+  type NextLink,
   Toolbar
 } from '../labs/LevelParts'
 import { useLevelSession, type AttemptResult } from '../labs/useLevelSession'
@@ -34,13 +37,15 @@ type Output =
 /** Route wrapper: remounts the level screen whenever the level changes. */
 export default function SqlLevelRoute() {
   const { levelId = '' } = useParams()
+  const [search] = useSearchParams()
+  const reviewing = search.get('review') === '1'
   const level = sqlLab.get(levelId)
   if (!level) return <Navigate to="/sql" replace />
-  return <SqlLevelPage key={level.id} level={level} />
+  return <SqlLevelPage key={`${level.id}-${reviewing}`} level={level} reviewing={reviewing} />
 }
 
-function SqlLevelPage({ level }: { level: NumberedLevel }) {
-  const session = useLevelSession(sqlLab, level, level.starter)
+function SqlLevelPage({ level, reviewing }: { reviewing: boolean; level: NumberedLevel }) {
+  const session = useLevelSession(sqlLab, level, level.starter, reviewing)
   const { progress, lp, code } = session
   const schema = useStoreSchema()
   const editor = useRef<CodeEditorHandle>(null)
@@ -135,13 +140,14 @@ function SqlLevelPage({ level }: { level: NumberedLevel }) {
 
       <div className="grid min-h-0 flex-1 grid-cols-[minmax(320px,400px)_1fr]">
         <aside className="min-h-0 space-y-5 overflow-y-auto border-r border-slate-200 bg-white p-5">
-          <SolvedNote lp={lp} onTryAgain={tryAgain} />
+          {reviewing && <ReviewNote />}
+          {!reviewing && <SolvedNote lp={lp} onTryAgain={tryAgain} />}
           <section>
             <SectionTitle>Your task</SectionTitle>
             <Markdown text={level.task} />
           </section>
           <HelpSection level={level} lp={lp} onHint={session.revealHint} onSolution={session.revealSolution} />
-          <ExplanationSection level={level} lp={lp} />
+          {!reviewing && <ExplanationSection level={level} lp={lp} />}
           <LessonLink lessonId={level.lesson} />
           <section>
             <SectionTitle>Tables</SectionTitle>
@@ -167,14 +173,14 @@ function SqlLevelPage({ level }: { level: NumberedLevel }) {
 
           <Toolbar busy={busy} onRun={run} onCheck={check} onReset={resetCode} />
 
-          <SqlOutput output={output} nextHref={next ? `/sql/${next.id}` : null} />
+          <SqlOutput output={output} next={reviewing ? REVIEW_NEXT : next ? { href: `/sql/${next.id}`, label: 'Next level' } : null} />
         </section>
       </div>
     </div>
   )
 }
 
-function SqlOutput({ output, nextHref }: { output: Output; nextHref: string | null }) {
+function SqlOutput({ output, next }: { output: Output; next: NextLink | null }) {
   if (output.kind === 'idle') {
     return (
       <div className="flex flex-1 items-center justify-center p-6 text-center text-sm text-slate-400">
@@ -213,7 +219,9 @@ function SqlOutput({ output, nextHref }: { output: Output; nextHref: string | nu
           message={output.outcome.message}
           stars={output.attempt.stars}
           unlockedChapter={output.attempt.unlockedChapter}
-          nextHref={nextHref}
+          nextHref={next?.href ?? null}
+          nextLabel={next?.label}
+          nextReview={output.attempt.nextReview}
         />
       ) : (
         <div className="px-4 py-2 text-xs font-medium text-slate-500">{output.label}</div>

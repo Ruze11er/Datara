@@ -9,6 +9,8 @@ import SqlLevelRoute from '../features/sql-lab/SqlLevelPage'
 import PythonLabPage from '../features/python-lab/PythonLabPage'
 import PythonLevelRoute from '../features/python-lab/PythonLevelPage'
 import ProgressPage from '../features/progress/ProgressPage'
+import ReviewPage from '../features/review/ReviewPage'
+import PlaygroundPage from '../features/playground/PlaygroundPage'
 import SettingsPage from '../features/settings/SettingsPage'
 import { useProgress } from '../lib/ProgressContext'
 
@@ -40,6 +42,8 @@ export default function App() {
             <Route path="/sql/:levelId" element={<SqlLevelRoute />} />
             <Route path="/python" element={<PythonLabPage />} />
             <Route path="/python/:levelId" element={<PythonLevelRoute />} />
+            <Route path="/review" element={<ReviewPage />} />
+            <Route path="/playground" element={<PlaygroundPage />} />
             <Route path="/progress" element={<ProgressPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />

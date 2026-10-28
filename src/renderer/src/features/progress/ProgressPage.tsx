@@ -105,7 +105,7 @@ export default function ProgressPage() {
       {revisit.levels.length === 0 && revisit.lessons.length === 0 ? (
         <Card>
           <p className="text-sm text-slate-500">
-            Nothing yet. Levels where you needed hints or the solution, low quiz scores, and lessons you save with{' '}
+            Nothing yet. Levels you're stuck on, low quiz scores, and lessons you save with{' '}
             <Bookmark size={13} className="inline" aria-label="Revisit later" /> will appear here.
           </p>
         </Card>
@@ -126,7 +126,7 @@ export default function ProgressPage() {
             </ul>
           </Card>
           <Card flush>
-            <h3 className="border-b border-slate-100 px-5 py-3 text-sm font-semibold text-slate-700">Levels to practise again</h3>
+            <h3 className="border-b border-slate-100 px-5 py-3 text-sm font-semibold text-slate-700">Levels you're stuck on</h3>
             <ul className="divide-y divide-slate-100">
               {revisit.levels.map(({ lab, level, reason }) => (
                 <li key={`${lab.id}-${level.id}`}>
@@ -143,6 +143,13 @@ export default function ProgressPage() {
           </Card>
         </div>
       )}
+      <p className="mt-3 text-sm text-slate-500">
+        Solved levels you found hard come back in your{' '}
+        <Link to="/review" className="text-brand-700 hover:underline">
+          review queue
+        </Link>
+        .
+      </p>
     </Page>
   )
 }

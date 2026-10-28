@@ -179,6 +179,35 @@ export function LockedLevel({ lab, level }: { lab: Lab; level: Numbered<BaseLeve
   )
 }
 
+/** Where the button in the success banner goes. */
+export interface NextLink {
+  href: string
+  label: string
+}
+
+/** After a review, go back to the queue instead of on to the next level. */
+export const REVIEW_NEXT: NextLink = { href: '/review', label: 'Back to reviews' }
+
+/** Shown above the task when the level was opened from the review queue. */
+export function ReviewNote() {
+  return (
+    <div className="flex gap-2 rounded-lg bg-sky-50 px-3 py-2 text-sm text-sky-900">
+      <RotateCcw size={16} className="mt-0.5 shrink-0 text-sky-600" aria-hidden />
+      <span>
+        <b>Review.</b> Solve it again from scratch. Without hints, your next review moves further out; with help, it comes
+        back tomorrow.
+      </span>
+    </div>
+  )
+}
+
+function reviewSentence(nextReview: { days: number | null } | undefined): string {
+  if (!nextReview) return ''
+  if (nextReview.days === null) return ' Mastered: this level leaves your review queue.'
+  const when = nextReview.days === 1 ? 'tomorrow' : `in ${nextReview.days} days`
+  return ` Next review ${when}.`
+}
+
 /** Result banner after pressing Check. */
 export function CheckBanner({
   pass,
@@ -186,7 +215,9 @@ export function CheckBanner({
   message,
   stars,
   unlockedChapter,
-  nextHref
+  nextHref,
+  nextLabel = 'Next level',
+  nextReview
 }: {
   pass: boolean
   title: string
@@ -194,6 +225,8 @@ export function CheckBanner({
   stars: number
   unlockedChapter: number | null
   nextHref: string | null
+  nextLabel?: string
+  nextReview?: { days: number | null }
 }) {
   if (pass) {
     return (
@@ -206,6 +239,7 @@ export function CheckBanner({
           <div className="text-sm text-slate-600">
             {message}
             {unlockedChapter && ` Chapter ${unlockedChapter} is now unlocked!`}
+            {reviewSentence(nextReview)}
           </div>
         </div>
         {nextHref && (
@@ -213,7 +247,7 @@ export function CheckBanner({
             to={nextHref}
             className="flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
           >
-            Next level <ArrowRight size={15} aria-hidden />
+            {nextLabel} <ArrowRight size={15} aria-hidden />
           </Link>
         )}
       </div>

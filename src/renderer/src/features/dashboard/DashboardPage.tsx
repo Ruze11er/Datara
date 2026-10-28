@@ -5,6 +5,7 @@ import { lessonsInOrder, pythonLab, sqlLab, type Lab } from '../../content'
 import { useProgress } from '../../lib/ProgressContext'
 import { nextLesson, topicsToRevisit } from '../../lib/revisit'
 import { nextLevel, overallStats } from '../../lib/labProgress'
+import { reviewHref, reviewQueue } from '../../lib/reviewQueue'
 
 function ContinueCard({
   icon: Icon,
@@ -59,6 +60,7 @@ export default function DashboardPage() {
   const py = overallStats(progress, pythonLab)
   const lessonsDone = lessonsInOrder.filter((p) => progress?.lessons[p.lesson.id]?.completedAt).length
   const revisit = topicsToRevisit(progress)
+  const queue = reviewQueue(progress)
   const isNew = lessonsDone === 0 && sql.solved === 0 && py.solved === 0
 
   return (
@@ -81,6 +83,26 @@ export default function DashboardPage() {
         <LabContinue lab={sqlLab} icon={Database} />
         <LabContinue lab={pythonLab} icon={CodeXml} />
       </div>
+
+      {queue.due.length > 0 && (
+        <Card className="mt-4 flex items-center gap-4 border-sky-200 bg-sky-50">
+          <RotateCcw size={22} className="shrink-0 text-sky-600" aria-hidden />
+          <div className="min-w-0 flex-1">
+            <div className="font-semibold text-slate-900">
+              {queue.due.length === 1 ? '1 level is' : `${queue.due.length} levels are`} due for review
+            </div>
+            <div className="text-sm text-slate-600">
+              Solve {queue.due.length === 1 ? 'it' : 'them'} again without help to make the skills stick.
+            </div>
+          </div>
+          <Link
+            to={reviewHref(queue.due[0]!.lab, queue.due[0]!.level)}
+            className="flex shrink-0 items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700"
+          >
+            Start reviewing <ArrowRight size={16} aria-hidden />
+          </Link>
+        </Card>
+      )}
 
       {(revisit.levels.length > 0 || revisit.lessons.length > 0) && (
         <>

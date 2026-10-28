@@ -1,13 +1,12 @@
 import { useCallback, useRef, useState } from 'react'
-import { Navigate, useParams } from 'react-router'
-import { CircleX, LoaderCircle } from 'lucide-react'
+import { Navigate, useParams, useSearchParams } from 'react-router'
+import { LoaderCircle } from 'lucide-react'
 import type { PythonLevel } from '@shared/content'
 import { CodeEditor, type CodeEditorHandle } from '../../components/CodeEditor'
 import { Markdown } from '../../components/Markdown'
-import { ResultTable } from '../../components/ResultTable'
 import { pythonLab, type Numbered } from '../../content'
 import { checkPythonLab, isPythonStarted, runPythonLab } from '../../engines/python/pythonEngine'
-import type { PyError, PyLabCheck, PyLabRun, PyVariable } from '../../engines/python/types'
+import type { PyLabCheck, PyLabRun } from '../../engines/python/types'
 import { followingLevel, isLevelUnlocked } from '../../lib/labProgress'
 import {
   CheckBanner,
@@ -17,10 +16,14 @@ import {
   LevelHeader,
   LockedLevel,
   SectionTitle,
+  ReviewNote,
+  REVIEW_NEXT,
   SolvedNote,
+  type NextLink,
   Toolbar
 } from '../labs/LevelParts'
 import { useLevelSession, type AttemptResult } from '../labs/useLevelSession'
+import { ErrorBox, OutputBlock, Variables } from './PythonResultParts'
 
 type Output =
   | { kind: 'idle' }
@@ -32,13 +35,15 @@ type Output =
 /** Route wrapper: remounts the level screen whenever the level changes. */
 export default function PythonLevelRoute() {
   const { levelId = '' } = useParams()
+  const [search] = useSearchParams()
+  const reviewing = search.get('review') === '1'
   const level = pythonLab.get(levelId)
   if (!level) return <Navigate to="/python" replace />
-  return <PythonLevelPage key={level.id} level={level} />
+  return <PythonLevelPage key={`${level.id}-${reviewing}`} level={level} reviewing={reviewing} />
 }
 
-function PythonLevelPage({ level }: { level: Numbered<PythonLevel> }) {
-  const session = useLevelSession(pythonLab, level, level.starter)
+function PythonLevelPage({ level, reviewing }: { reviewing: boolean; level: Numbered<PythonLevel> }) {
+  const session = useLevelSession(pythonLab, level, level.starter, reviewing)
   const { progress, lp, code } = session
   const editor = useRef<CodeEditorHandle>(null)
   const [output, setOutput] = useState<Output>({ kind: 'idle' })
@@ -105,7 +110,8 @@ function PythonLevelPage({ level }: { level: Numbered<PythonLevel> }) {
 
       <div className="grid min-h-0 flex-1 grid-cols-[minmax(320px,400px)_1fr]">
         <aside className="min-h-0 space-y-5 overflow-y-auto border-r border-slate-200 bg-white p-5">
-          <SolvedNote lp={lp} onTryAgain={tryAgain} />
+          {reviewing && <ReviewNote />}
+          {!reviewing && <SolvedNote lp={lp} onTryAgain={tryAgain} />}
           <section>
             <SectionTitle>Your task</SectionTitle>
             <Markdown text={level.task} />
@@ -129,7 +135,7 @@ function PythonLevelPage({ level }: { level: Numbered<PythonLevel> }) {
             </section>
           )}
           <HelpSection level={level} lp={lp} onHint={session.revealHint} onSolution={session.revealSolution} />
-          <ExplanationSection level={level} lp={lp} />
+          {!reviewing && <ExplanationSection level={level} lp={lp} />}
           <LessonLink lessonId={level.lesson} />
         </aside>
 
@@ -146,94 +152,14 @@ function PythonLevelPage({ level }: { level: Numbered<PythonLevel> }) {
             />
           </div>
           <Toolbar busy={busy} onRun={run} onCheck={check} onReset={resetCode} />
-          <PythonOutput output={output} nextHref={next ? `/python/${next.id}` : null} />
+          <PythonOutput output={output} next={reviewing ? REVIEW_NEXT : next ? { href: `/python/${next.id}`, label: 'Next level' } : null} />
         </section>
       </div>
     </div>
   )
 }
 
-function ErrorBox({ error }: { error: PyError }) {
-  return (
-    <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-      <div className="flex items-center gap-2 font-semibold text-red-800">
-        <CircleX size={16} aria-hidden /> {error.type}
-        {error.line !== null && <span className="font-normal text-red-700">on line {error.line}</span>}
-      </div>
-      <p className="mt-1 text-sm text-red-900">{error.friendly}</p>
-      {error.message && !error.friendly.includes(error.message) && (
-        <p className="mt-2 font-mono text-xs text-red-700/80">{error.message}</p>
-      )}
-    </div>
-  )
-}
-
-function OutputBlock({ title, text, muted = false }: { title: string; text: string; muted?: boolean }) {
-  return (
-    <section>
-      <SectionTitle>{title}</SectionTitle>
-      <pre
-        className={`overflow-x-auto rounded-lg border px-3 py-2 font-mono text-[13px] whitespace-pre-wrap ${
-          muted ? 'border-slate-200 bg-slate-50 text-slate-700' : 'border-slate-800 bg-slate-900 text-slate-100'
-        }`}
-      >
-        {text}
-      </pre>
-    </section>
-  )
-}
-
-function Variables({ variables: all }: { variables: PyVariable[] }) {
-  if (all.length === 0) return null
-  // The learner's own variables first; given data (often a big table) after them.
-  const variables = [...all.filter((v) => !v.given), ...all.filter((v) => v.given)]
-  return (
-    <section>
-      <SectionTitle>Variables</SectionTitle>
-      <div className="overflow-x-auto rounded-lg border border-slate-200">
-        <table className="w-full border-collapse text-left text-[13px]">
-          <thead className="bg-slate-100 text-slate-600">
-            <tr>
-              <th className="px-3 py-1.5 font-semibold">Name</th>
-              <th className="px-3 py-1.5 font-semibold">Type</th>
-              <th className="px-3 py-1.5 font-semibold">Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            {variables.map((v) => (
-              <tr key={v.name} className={`border-t border-slate-100 align-top ${v.given ? 'text-slate-400' : 'text-slate-800'}`}>
-                <td className="px-3 py-1.5 font-mono whitespace-nowrap">
-                  {v.name}
-                  {v.given && <span className="ml-1.5 rounded bg-slate-100 px-1 font-sans text-[10px] text-slate-500">given</span>}
-                </td>
-                <td className="px-3 py-1.5 font-mono whitespace-nowrap">{v.type}</td>
-                <td className="px-3 py-1.5 font-mono break-all">
-                  {v.table ? (
-                    <div className="flex max-h-64 max-w-full flex-col rounded border border-slate-200">
-                      <ResultTable
-                        columns={v.table.columns}
-                        rows={v.table.rows}
-                        totalRows={v.table.totalRows}
-                        rowNumbers={false}
-                        indexColumn
-                        nullLabel="NaN"
-                      />
-                    </div>
-                  ) : (
-                    v.value
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {variables.some((v) => v.given) && <p className="mt-1 text-xs text-slate-400">Grey rows come from the given data.</p>}
-    </section>
-  )
-}
-
-function PythonOutput({ output, nextHref }: { output: Output; nextHref: string | null }) {
+function PythonOutput({ output, next }: { output: Output; next: NextLink | null }) {
   if (output.kind === 'idle') {
     return (
       <div className="flex flex-1 items-center justify-center p-6 text-center text-sm text-slate-400">
@@ -267,7 +193,9 @@ function PythonOutput({ output, nextHref }: { output: Output; nextHref: string |
           message={output.result.message}
           stars={output.attempt.stars}
           unlockedChapter={output.attempt.unlockedChapter}
-          nextHref={nextHref}
+          nextHref={next?.href ?? null}
+          nextLabel={next?.label}
+          nextReview={output.attempt.nextReview}
         />
       )}
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">

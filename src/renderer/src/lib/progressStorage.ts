@@ -87,6 +87,7 @@ export function normalizeProgress(raw: unknown): ProgressData {
     sqlLevels: obj(data.sqlLevels) as ProgressData['sqlLevels'],
     pythonLevels: obj(data.pythonLevels) as ProgressData['pythonLevels'],
     bookmarks: Array.isArray(data.bookmarks) ? data.bookmarks.filter((b) => typeof b === 'string') : [],
+    playground: obj(data.playground) as ProgressData['playground'],
     settings: { ...base.settings, ...obj(data.settings) }
   }
 }

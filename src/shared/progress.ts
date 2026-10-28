@@ -21,6 +21,23 @@ export interface LevelProgress {
   /** Last code typed in the editor (autosaved). */
   lastCode?: string
   solvedAt?: string
+  /** Spaced-review schedule. Missing for levels that never needed review (see renderer/src/lib/reviewQueue.ts). */
+  review?: ReviewState
+}
+
+export interface ReviewState {
+  /** How many reviews in a row went well. Decides the next interval. */
+  step: number
+  /** Next review date, local time, YYYY-MM-DD. */
+  due: string
+  /** Reviewed successfully enough times: no longer in the queue. */
+  done?: boolean
+}
+
+/** Free-practice code from the Playground (autosaved). */
+export interface PlaygroundState {
+  sql?: string
+  python?: string
 }
 
 export interface LessonProgress {
@@ -40,6 +57,7 @@ export interface ProgressData {
   pythonLevels: Record<string, LevelProgress>
   /** Bookmarked lesson IDs ("topics to revisit"). */
   bookmarks: string[]
+  playground: PlaygroundState
   settings: Settings
 }
 
@@ -50,6 +68,7 @@ export function emptyProgress(): ProgressData {
     sqlLevels: {},
     pythonLevels: {},
     bookmarks: [],
+    playground: {},
     settings: { editorFontSize: 14 }
   }
 }

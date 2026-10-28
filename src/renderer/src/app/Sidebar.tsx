@@ -1,19 +1,25 @@
 import { NavLink } from 'react-router'
-import { BookOpen, ChartColumn, CodeXml, Database, LayoutDashboard, Settings, type LucideIcon } from 'lucide-react'
+import {
+  BookOpen,
+  ChartColumn,
+  CodeXml,
+  Database,
+  LayoutDashboard,
+  RotateCcw,
+  Settings,
+  SquareTerminal,
+  type LucideIcon
+} from 'lucide-react'
+import { useProgress } from '../lib/ProgressContext'
+import { reviewQueue } from '../lib/reviewQueue'
 
 interface NavItem {
   to: string
   label: string
   icon: LucideIcon
+  /** Small count shown on the right, e.g. reviews due. */
+  badge?: number
 }
-
-const MAIN_NAV: NavItem[] = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/learn', label: 'Learn', icon: BookOpen },
-  { to: '/sql', label: 'SQL Lab', icon: Database },
-  { to: '/python', label: 'Python Lab', icon: CodeXml },
-  { to: '/progress', label: 'Progress', icon: ChartColumn }
-]
 
 function NavButton({ item }: { item: NavItem }) {
   const Icon = item.icon
@@ -29,11 +35,32 @@ function NavButton({ item }: { item: NavItem }) {
     >
       <Icon size={18} strokeWidth={2} aria-hidden />
       {item.label}
+      {!!item.badge && (
+        <span
+          className="ml-auto rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-700"
+          aria-label={`${item.badge} due`}
+        >
+          {item.badge}
+        </span>
+      )}
     </NavLink>
   )
 }
 
 export default function Sidebar() {
+  const { progress } = useProgress()
+  const due = reviewQueue(progress).due.length
+
+  const mainNav: NavItem[] = [
+    { to: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/learn', label: 'Learn', icon: BookOpen },
+    { to: '/sql', label: 'SQL Lab', icon: Database },
+    { to: '/python', label: 'Python Lab', icon: CodeXml },
+    { to: '/review', label: 'Review', icon: RotateCcw, badge: due },
+    { to: '/playground', label: 'Playground', icon: SquareTerminal },
+    { to: '/progress', label: 'Progress', icon: ChartColumn }
+  ]
+
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white px-3 py-5">
       <div className="mb-6 flex items-center gap-2.5 px-3">
@@ -47,7 +74,7 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex flex-1 flex-col gap-1" aria-label="Main">
-        {MAIN_NAV.map((item) => (
+        {mainNav.map((item) => (
           <NavButton key={item.to} item={item} />
         ))}
       </nav>
