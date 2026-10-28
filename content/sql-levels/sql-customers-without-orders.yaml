@@ -1,0 +1,28 @@
+id: sql-customers-without-orders
+title: Customers Who Never Ordered
+concepts: [LEFT JOIN, IS NULL]
+lesson: sql-left-join
+tables: [customers, orders]
+task: |
+  Marketing wants to send a welcome discount to people who signed up but **never placed an order**.
+
+  Show their `customer_id`, `first_name`, and `last_name`.
+solution: |
+  SELECT c.customer_id, c.first_name, c.last_name
+  FROM customers AS c
+  LEFT JOIN orders AS o ON o.customer_id = c.customer_id
+  WHERE o.order_id IS NULL;
+hints:
+  - "Start with the previous level: LEFT JOIN customers to orders."
+  - "Customers without orders get NULL in every orders column. Keep only those rows."
+  - "... LEFT JOIN orders AS o ON o.customer_id = c.customer_id WHERE o.order_id IS NULL;"
+explanation: |
+  `LEFT JOIN` + `WHERE right_table.key IS NULL` finds rows with **no match**. It's sometimes called an *anti-join*.
+  It answers "who hasn't…?" questions: customers who never ordered, products never reviewed, students who never
+  logged in. Check the key column (here `order_id`), which can only be NULL when there was no match.
+tests:
+  accept:
+    - "SELECT customer_id, first_name, last_name FROM customers WHERE customer_id NOT IN (SELECT customer_id FROM orders)"
+  reject:
+    - "SELECT c.customer_id, c.first_name, c.last_name FROM customers AS c LEFT JOIN orders AS o ON o.customer_id = c.customer_id WHERE o.order_id IS NOT NULL"
+    - "SELECT c.customer_id, c.first_name, c.last_name FROM customers AS c LEFT JOIN orders AS o ON o.customer_id = c.customer_id WHERE o.order_id = NULL"

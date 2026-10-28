@@ -91,7 +91,7 @@ something differently, the lessons will point it out.
 
 ## Meet the practice shop
 
-All SQL Lab levels use one fictional online shop with four tables:
+All SQL Lab levels use one fictional online shop with five tables:
 
 | Table | One row is… | Useful columns |
 |---|---|---|
@@ -99,9 +99,11 @@ All SQL Lab levels use one fictional online shop with four tables:
 | `products` | a product | `product_id`, `product_name`, `category`, `price`, `cost`, `stock_quantity` |
 | `orders` | an order | `order_id`, `customer_id`, `order_date`, `status`, `payment_method`, `total_amount` |
 | `order_items` | one product in an order | `order_item_id`, `order_id`, `product_id`, `quantity`, `unit_price` |
+| `reviews` | a customer's rating of a product | `review_id`, `product_id`, `customer_id`, `rating` (1–5), `review_date` |
 
-The tables connect through their IDs: an order belongs to a customer (`orders.customer_id`), and each order item points to an
-order and a product. You will use these connections later, when you learn JOINs.
+The tables connect through their IDs: an order belongs to a customer (`orders.customer_id`), each order item points to an
+order and a product, and each review points to a product and a customer. You will use these connections later, when you
+learn JOINs.
 
 You can explore every table in the SQL Lab: open a level and click **Preview** next to a table name.
 

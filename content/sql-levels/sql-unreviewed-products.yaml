@@ -1,0 +1,25 @@
+id: sql-unreviewed-products
+title: Products Without Reviews
+concepts: [LEFT JOIN, IS NULL]
+lesson: sql-left-join
+tables: [products, reviews]
+task: |
+  Products without reviews sell less. The team wants to ask buyers for feedback.
+
+  Using the `reviews` table, show the `product_name` of every product that has **no reviews at all**.
+solution: |
+  SELECT p.product_name
+  FROM products AS p
+  LEFT JOIN reviews AS r ON r.product_id = p.product_id
+  WHERE r.review_id IS NULL;
+hints:
+  - "This is the same pattern as the last level, with different tables."
+  - "LEFT JOIN products to reviews, then keep rows where the review's key is NULL."
+  - "SELECT p.product_name FROM products AS p LEFT JOIN reviews AS r ON r.product_id = p.product_id WHERE r.review_id IS NULL;"
+explanation: |
+  Once you know the anti-join pattern, you can reuse it anywhere. Make sure the table you want to keep **all** rows of
+  (here `products`) is on the **left**, right after `FROM`.
+tests:
+  reject:
+    - "SELECT p.product_name FROM products AS p JOIN reviews AS r ON r.product_id = p.product_id WHERE r.review_id IS NULL"
+    - "SELECT p.product_name FROM reviews AS r LEFT JOIN products AS p ON r.product_id = p.product_id WHERE r.review_id IS NULL"

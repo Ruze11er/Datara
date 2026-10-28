@@ -1,0 +1,28 @@
+id: sql-all-customers-orders
+title: Every Customer, Even Without Orders
+concepts: [LEFT JOIN]
+lesson: sql-left-join
+tables: [customers, orders]
+task: |
+  Some customers signed up but never ordered. An inner join would silently drop them.
+
+  Show **every customer's** `customer_id` and `first_name`, with the `order_id` of each of their orders.
+  Customers with no orders must still appear (their `order_id` will be empty, NULL).
+solution: |
+  SELECT c.customer_id, c.first_name, o.order_id
+  FROM customers AS c
+  LEFT JOIN orders AS o ON o.customer_id = c.customer_id;
+hints:
+  - "A normal JOIN only keeps rows that match in both tables. You need to keep all customers."
+  - "LEFT JOIN keeps every row from the table on the left (the one after FROM), matched or not."
+  - "SELECT c.customer_id, c.first_name, o.order_id FROM customers AS c LEFT JOIN orders AS o ON o.customer_id = c.customer_id;"
+explanation: |
+  `LEFT JOIN` keeps every row from the **left** table. Customers with orders appear once per order; customers without
+  any orders appear once, with `NULL` in the order columns. That's why this result has more rows (261) than there are
+  orders (250).
+tests:
+  accept:
+    - "SELECT c.customer_id, c.first_name, o.order_id FROM customers c LEFT OUTER JOIN orders o ON c.customer_id = o.customer_id"
+  reject:
+    - "SELECT c.customer_id, c.first_name, o.order_id FROM customers AS c JOIN orders AS o ON o.customer_id = c.customer_id"
+    - "SELECT c.customer_id, c.first_name, o.order_id FROM orders AS o LEFT JOIN customers AS c ON o.customer_id = c.customer_id"

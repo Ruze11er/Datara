@@ -43,7 +43,9 @@ function languageSupport(language: 'sql' | 'python', schema?: Record<string, str
     // Python code is indented with 4 spaces.
     return [python(), indentUnit.of('    '), EditorState.tabSize.of(4)]
   }
-  return sql({ dialect: SQLite, schema, upperCaseKeywords: true })
+  // Long one-line queries wrap instead of scrolling sideways. (Python is left unwrapped so
+  // indentation stays easy to read.)
+  return [sql({ dialect: SQLite, schema, upperCaseKeywords: true }), EditorView.lineWrapping]
 }
 
 export function CodeEditor({ language, initialValue, onChange, onRun, onCheck, schema, fontSize, ref }: CodeEditorProps) {

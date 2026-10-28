@@ -1,0 +1,24 @@
+id: sql-reviews-per-product
+title: Reviews per Product
+concepts: [LEFT JOIN, COUNT(column), GROUP BY]
+lesson: sql-left-join
+tables: [products, reviews]
+task: |
+  Show **every** product's `product_name` and its **number of reviews**, with **0** for products that have none.
+solution: |
+  SELECT p.product_name, COUNT(r.review_id) AS review_count
+  FROM products AS p
+  LEFT JOIN reviews AS r ON r.product_id = p.product_id
+  GROUP BY p.product_id, p.product_name;
+hints:
+  - "Same idea as counting orders per customer, including zero."
+  - "LEFT JOIN products to reviews, group by product, and count a column from reviews."
+  - "SELECT p.product_name, COUNT(r.review_id) AS review_count FROM products AS p LEFT JOIN reviews AS r ON r.product_id = p.product_id GROUP BY p.product_id, p.product_name;"
+explanation: |
+  `COUNT(r.review_id)` is 0 for the five products without reviews, because their joined review columns are NULL.
+  Including the zeros matters: a report that silently leaves out products with no reviews would hide exactly the
+  products that need attention.
+tests:
+  reject:
+    - "SELECT p.product_name, COUNT(*) AS review_count FROM products AS p LEFT JOIN reviews AS r ON r.product_id = p.product_id GROUP BY p.product_id, p.product_name"
+    - "SELECT p.product_name, COUNT(r.review_id) AS review_count FROM products AS p JOIN reviews AS r ON r.product_id = p.product_id GROUP BY p.product_id, p.product_name"

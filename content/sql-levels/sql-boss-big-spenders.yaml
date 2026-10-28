@@ -1,0 +1,39 @@
+id: sql-boss-big-spenders
+title: "Milestone: Big Spenders"
+concepts: [WHERE, GROUP BY, HAVING, ORDER BY]
+lesson: sql-having
+tables: [orders]
+orderMatters: true
+checkColumnNames: true
+task: |
+  **Milestone level.** This one combines everything from Chapter 4.
+
+  For **Delivered** orders, find customers who spent **more than 500** in total. Show:
+
+  - `customer_id`
+  - `delivered_orders`: how many delivered orders they have
+  - `total_spent`: their total spend, **rounded to 2 decimals**
+
+  Sort by `total_spent`, **highest first**.
+solution: |
+  SELECT customer_id,
+         COUNT(*) AS delivered_orders,
+         ROUND(SUM(total_amount), 2) AS total_spent
+  FROM orders
+  WHERE status = 'Delivered'
+  GROUP BY customer_id
+  HAVING SUM(total_amount) > 500
+  ORDER BY total_spent DESC;
+hints:
+  - "There are two kinds of filters here: one on rows (status) and one on groups (total spend). Which clause handles each?"
+  - "WHERE status = 'Delivered' filters rows before grouping; HAVING SUM(total_amount) > 500 filters the groups afterwards."
+  - "SELECT customer_id, COUNT(*) AS delivered_orders, ROUND(SUM(total_amount), 2) AS total_spent FROM orders WHERE status = 'Delivered' GROUP BY customer_id HAVING SUM(total_amount) > 500 ORDER BY total_spent DESC;"
+explanation: |
+  This query uses every clause in its logical order: `FROM` → `WHERE` (keep delivered rows) → `GROUP BY` (one group
+  per customer) → `HAVING` (keep groups over 500) → `SELECT` (calculate the columns) → `ORDER BY` (sort).
+  Knowing **when** each clause runs tells you where each condition belongs.
+tests:
+  reject:
+    - "SELECT customer_id, COUNT(*) AS delivered_orders, ROUND(SUM(total_amount), 2) AS total_spent FROM orders GROUP BY customer_id HAVING SUM(total_amount) > 500 ORDER BY total_spent DESC"
+    - "SELECT customer_id, COUNT(*) AS delivered_orders, ROUND(SUM(total_amount), 2) AS total_spent FROM orders WHERE status = 'Delivered' GROUP BY customer_id ORDER BY total_spent DESC"
+    - "SELECT customer_id, COUNT(*) AS orders, ROUND(SUM(total_amount), 2) AS spent FROM orders WHERE status = 'Delivered' GROUP BY customer_id HAVING SUM(total_amount) > 500 ORDER BY spent DESC"

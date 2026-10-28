@@ -1,0 +1,44 @@
+id: sql-boss-best-sellers
+title: "Milestone: Best Sellers Report"
+concepts: [three-table JOIN, GROUP BY, SUM, ORDER BY, LIMIT]
+lesson: sql-joins
+tables: [order_items, orders, products]
+orderMatters: true
+checkColumnNames: true
+task: |
+  **Milestone level.** This one combines everything from Chapter 5.
+
+  Build the "best sellers" report for **Delivered** orders: the **5 products with the highest sales value**. Show:
+
+  - `product_name`
+  - `category`
+  - `units_sold`: total quantity
+  - `revenue`: total `quantity × unit_price`, **rounded to 2 decimals**
+
+  Highest revenue first.
+solution: |
+  SELECT p.product_name,
+         p.category,
+         SUM(oi.quantity) AS units_sold,
+         ROUND(SUM(oi.quantity * oi.unit_price), 2) AS revenue
+  FROM order_items AS oi
+  JOIN orders AS o ON oi.order_id = o.order_id
+  JOIN products AS p ON oi.product_id = p.product_id
+  WHERE o.status = 'Delivered'
+  GROUP BY p.product_id, p.product_name, p.category
+  ORDER BY revenue DESC
+  LIMIT 5;
+hints:
+  - "You need three tables: order_items (quantities and prices), orders (status), products (name and category)."
+  - "Group by the product. Every non-aggregated column you show (name, category) should be in GROUP BY."
+  - "... WHERE o.status = 'Delivered' GROUP BY p.product_id, p.product_name, p.category ORDER BY revenue DESC LIMIT 5;"
+explanation: |
+  You combined every Chapter 5 skill: a three-table join, a row filter, grouping, two aggregates, sorting, and a limit.
+  Notice that the products with the most **units** aren't necessarily the ones with the most **revenue**. Which measure
+  you rank by changes the story, so always check what "best" means.
+tests:
+  accept:
+    - "SELECT p.product_name, p.category, SUM(oi.quantity) AS units_sold, ROUND(SUM(oi.quantity * oi.unit_price), 2) AS revenue FROM orders o JOIN order_items oi ON o.order_id = oi.order_id JOIN products p ON p.product_id = oi.product_id WHERE o.status = 'Delivered' GROUP BY p.product_name ORDER BY revenue DESC LIMIT 5"
+  reject:
+    - "SELECT p.product_name, p.category, SUM(oi.quantity) AS units_sold, ROUND(SUM(oi.quantity * oi.unit_price), 2) AS revenue FROM order_items AS oi JOIN products AS p ON oi.product_id = p.product_id GROUP BY p.product_id ORDER BY revenue DESC LIMIT 5"
+    - "SELECT p.product_name, p.category, SUM(oi.quantity) AS units_sold, ROUND(SUM(oi.quantity * oi.unit_price), 2) AS revenue FROM order_items AS oi JOIN orders AS o ON oi.order_id = o.order_id JOIN products AS p ON oi.product_id = p.product_id WHERE o.status = 'Delivered' GROUP BY p.product_id ORDER BY units_sold DESC LIMIT 5"

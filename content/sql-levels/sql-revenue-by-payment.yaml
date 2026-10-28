@@ -1,0 +1,31 @@
+id: sql-revenue-by-payment
+title: Revenue by Payment Method
+concepts: [GROUP BY, SUM, WHERE, ORDER BY]
+lesson: sql-group-by
+tables: [orders]
+orderMatters: true
+task: |
+  Finance wants to know which payment methods bring in the most money.
+
+  For **Delivered** orders only, show each `payment_method` and its total `total_amount`
+  (**rounded to 2 decimals**), sorted from the **highest total to the lowest**.
+solution: |
+  SELECT payment_method, ROUND(SUM(total_amount), 2) AS revenue
+  FROM orders
+  WHERE status = 'Delivered'
+  GROUP BY payment_method
+  ORDER BY revenue DESC;
+hints:
+  - "Filter to delivered orders first, then group by payment method."
+  - "WHERE comes before GROUP BY, and ORDER BY comes last. You can sort by an alias you created."
+  - "SELECT payment_method, ROUND(SUM(total_amount), 2) AS revenue FROM orders WHERE status = 'Delivered' GROUP BY payment_method ORDER BY revenue DESC;"
+explanation: |
+  The clauses always go in this order: `SELECT … FROM … WHERE … GROUP BY … ORDER BY`.
+  `WHERE` removes non-delivered rows *before* grouping, and `ORDER BY` sorts the finished groups.
+  Sorting by the alias `revenue` keeps the query readable.
+tests:
+  accept:
+    - "SELECT payment_method, ROUND(SUM(total_amount), 2) FROM orders WHERE status = 'Delivered' GROUP BY payment_method ORDER BY SUM(total_amount) DESC"
+  reject:
+    - "SELECT payment_method, ROUND(SUM(total_amount), 2) AS revenue FROM orders GROUP BY payment_method ORDER BY revenue DESC"
+    - "SELECT payment_method, ROUND(SUM(total_amount), 2) AS revenue FROM orders WHERE status = 'Delivered' GROUP BY payment_method ORDER BY revenue"

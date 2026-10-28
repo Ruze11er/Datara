@@ -1,0 +1,25 @@
+id: sql-average-rating-per-product
+title: Average Rating per Product
+concepts: [LEFT JOIN, AVG, "NULL"]
+lesson: sql-left-join
+tables: [products, reviews]
+task: |
+  Show **every** product's `product_name` and its **average `rating`**, **rounded to 2 decimals**.
+  Products without reviews should still appear. What will their average be?
+solution: |
+  SELECT p.product_name, ROUND(AVG(r.rating), 2) AS avg_rating
+  FROM products AS p
+  LEFT JOIN reviews AS r ON r.product_id = p.product_id
+  GROUP BY p.product_id, p.product_name;
+hints:
+  - "Keep all products with a LEFT JOIN, then group by product."
+  - "AVG ignores NULLs. If a group has no ratings at all, the average is NULL, not 0."
+  - "SELECT p.product_name, ROUND(AVG(r.rating), 2) AS avg_rating FROM products AS p LEFT JOIN reviews AS r ON r.product_id = p.product_id GROUP BY p.product_id, p.product_name;"
+explanation: |
+  For products with no reviews, `AVG(r.rating)` is **NULL**: there is nothing to average. That's correct. Showing 0 would
+  claim those products are rated terribly. Knowing the difference between "zero" and "unknown" is a key analyst skill.
+  (In the next chapter you'll meet `COALESCE`, which can replace NULL with a label or value when you need to.)
+tests:
+  reject:
+    - "SELECT p.product_name, ROUND(AVG(r.rating), 2) AS avg_rating FROM products AS p JOIN reviews AS r ON r.product_id = p.product_id GROUP BY p.product_id, p.product_name"
+    - "SELECT p.product_name, AVG(r.rating) AS avg_rating FROM products AS p LEFT JOIN reviews AS r ON r.product_id = p.product_id GROUP BY p.product_id, p.product_name"

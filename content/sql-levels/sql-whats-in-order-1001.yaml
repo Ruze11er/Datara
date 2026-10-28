@@ -1,0 +1,29 @@
+id: sql-whats-in-order-1001
+title: What's in Order 1001?
+concepts: [INNER JOIN, ON]
+lesson: sql-joins
+tables: [order_items, products]
+task: |
+  A customer calls about order **1001**. The `order_items` table knows *which* products are in the order, but only by
+  `product_id`. The names are in `products`.
+
+  Show the `product_name` and `quantity` of every item in order **1001**.
+solution: |
+  SELECT p.product_name, oi.quantity
+  FROM order_items AS oi
+  JOIN products AS p ON oi.product_id = p.product_id
+  WHERE oi.order_id = 1001;
+hints:
+  - "You need columns from two tables, so you need a JOIN. Both tables have a product_id column that links them."
+  - "FROM order_items JOIN products ON order_items.product_id = products.product_id, then filter with WHERE."
+  - "SELECT p.product_name, oi.quantity FROM order_items AS oi JOIN products AS p ON oi.product_id = p.product_id WHERE oi.order_id = 1001;"
+explanation: |
+  `JOIN … ON` matches each order item with the product whose `product_id` is the same, so you can use columns from both
+  tables in one row. `oi` and `p` are **table aliases**: short names that save typing and make it clear which table each
+  column comes from.
+tests:
+  accept:
+    - "SELECT products.product_name, order_items.quantity FROM order_items INNER JOIN products ON order_items.product_id = products.product_id WHERE order_items.order_id = 1001"
+  reject:
+    - "SELECT product_id, quantity FROM order_items WHERE order_id = 1001"
+    - "SELECT p.product_name, oi.quantity FROM order_items AS oi JOIN products AS p ON oi.order_id = p.product_id WHERE oi.order_id = 1001"

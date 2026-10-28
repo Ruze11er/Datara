@@ -1,0 +1,28 @@
+id: sql-well-rated-products
+title: Trustworthy Top Ratings
+concepts: [JOIN, GROUP BY, HAVING, ORDER BY]
+lesson: sql-having
+tables: [products, reviews]
+orderMatters: true
+task: |
+  A product with one 5-star review isn't necessarily great. Show products that have **at least 5 reviews** and an
+  **average rating of 4 or more**: the `product_name`, the number of reviews, and the average rating
+  (**rounded to 2 decimals**). Sort by average rating, **highest first**.
+solution: |
+  SELECT p.product_name, COUNT(*) AS review_count, ROUND(AVG(r.rating), 2) AS avg_rating
+  FROM reviews AS r
+  JOIN products AS p ON p.product_id = r.product_id
+  GROUP BY p.product_id, p.product_name
+  HAVING COUNT(*) >= 5 AND AVG(r.rating) >= 4
+  ORDER BY avg_rating DESC;
+hints:
+  - "Only reviewed products matter here, so an inner join is fine."
+  - "Both conditions are about groups (a count and an average), so both go in HAVING, joined with AND."
+  - "... GROUP BY p.product_id, p.product_name HAVING COUNT(*) >= 5 AND AVG(r.rating) >= 4 ORDER BY avg_rating DESC;"
+explanation: |
+  `HAVING` can combine several group conditions with `AND`. Requiring a minimum number of reviews stops tiny samples
+  from looking like winners. A real statistical idea: averages based on few data points are unreliable.
+tests:
+  reject:
+    - "SELECT p.product_name, COUNT(*) AS review_count, ROUND(AVG(r.rating), 2) AS avg_rating FROM reviews AS r JOIN products AS p ON p.product_id = r.product_id GROUP BY p.product_id, p.product_name HAVING AVG(r.rating) >= 4 ORDER BY avg_rating DESC"
+    - "SELECT p.product_name, COUNT(*) AS review_count, ROUND(AVG(r.rating), 2) AS avg_rating FROM reviews AS r JOIN products AS p ON p.product_id = r.product_id GROUP BY p.product_id, p.product_name HAVING COUNT(*) >= 5 ORDER BY avg_rating DESC"

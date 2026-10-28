@@ -1,0 +1,28 @@
+id: sql-top-products-units
+title: Top 5 by Units
+concepts: [INNER JOIN, GROUP BY, ORDER BY, LIMIT, ties]
+lesson: sql-joins
+tables: [order_items, products]
+orderMatters: true
+task: |
+  Show the `product_name` and total units ordered for the **5 products with the most units ordered**, highest first.
+
+  Several products are tied, so break ties by `product_name` in **alphabetical order**.
+solution: |
+  SELECT p.product_name, SUM(oi.quantity) AS units_sold
+  FROM order_items AS oi
+  JOIN products AS p ON oi.product_id = p.product_id
+  GROUP BY p.product_name
+  ORDER BY units_sold DESC, p.product_name
+  LIMIT 5;
+hints:
+  - "Start from the previous level's query, then sort and limit."
+  - "Sort by the total first (DESC), then by the name for ties. LIMIT goes last."
+  - "... GROUP BY p.product_name ORDER BY units_sold DESC, p.product_name LIMIT 5;"
+explanation: |
+  Join → group → sort → limit is the standard "top N" recipe. Real data has ties, and without a tie-breaker the database
+  can return tied rows in any order, so your "top 5" could change between runs.
+tests:
+  reject:
+    - "SELECT p.product_name, SUM(oi.quantity) AS units_sold FROM order_items AS oi JOIN products AS p ON oi.product_id = p.product_id GROUP BY p.product_name ORDER BY units_sold DESC, p.product_name DESC LIMIT 5"
+    - "SELECT p.product_name, SUM(oi.quantity) AS units_sold FROM order_items AS oi JOIN products AS p ON oi.product_id = p.product_id GROUP BY p.product_name ORDER BY units_sold LIMIT 5"

@@ -1,0 +1,26 @@
+id: sql-units-by-product
+title: Units Sold per Product
+concepts: [INNER JOIN, GROUP BY, SUM]
+lesson: sql-joins
+tables: [order_items, products]
+task: |
+  Show each `product_name` and the **total number of units ordered** (the sum of `quantity` in `order_items`),
+  across all orders.
+solution: |
+  SELECT p.product_name, SUM(oi.quantity) AS units_sold
+  FROM order_items AS oi
+  JOIN products AS p ON oi.product_id = p.product_id
+  GROUP BY p.product_name;
+hints:
+  - "Quantities are in order_items; names are in products."
+  - "Join them, group by the product name, and add up the quantities."
+  - "SELECT p.product_name, SUM(oi.quantity) AS units_sold FROM order_items AS oi JOIN products AS p ON oi.product_id = p.product_id GROUP BY p.product_name;"
+explanation: |
+  `SUM(oi.quantity)` adds up every order line for each product. `COUNT(*)` would only count how many order lines mention
+  the product, which is a different question, because one line can contain several units.
+  Grouping by `product_name` works here because every product name is unique; grouping by `product_id` is even safer.
+tests:
+  accept:
+    - "SELECT p.product_name, SUM(oi.quantity) FROM products AS p JOIN order_items AS oi ON p.product_id = oi.product_id GROUP BY p.product_id"
+  reject:
+    - "SELECT p.product_name, COUNT(*) FROM order_items AS oi JOIN products AS p ON oi.product_id = p.product_id GROUP BY p.product_name"

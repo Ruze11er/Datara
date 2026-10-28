@@ -1,0 +1,25 @@
+id: sql-order-count-all-customers
+title: Order Counts, Including Zero
+concepts: [LEFT JOIN, COUNT(column), GROUP BY]
+lesson: sql-left-join
+tables: [customers, orders]
+task: |
+  Show **every** customer's `customer_id`, `first_name`, and **number of orders**. Customers who never ordered must
+  show **0**.
+solution: |
+  SELECT c.customer_id, c.first_name, COUNT(o.order_id) AS order_count
+  FROM customers AS c
+  LEFT JOIN orders AS o ON o.customer_id = c.customer_id
+  GROUP BY c.customer_id, c.first_name;
+hints:
+  - "LEFT JOIN keeps the customers without orders. Group by customer to count."
+  - "Careful: COUNT(*) counts rows, and a customer with no orders still has one row (full of NULLs). Count a column from orders instead."
+  - "SELECT c.customer_id, c.first_name, COUNT(o.order_id) AS order_count FROM customers AS c LEFT JOIN orders AS o ON o.customer_id = c.customer_id GROUP BY c.customer_id, c.first_name;"
+explanation: |
+  This is one of the most common SQL traps. After a `LEFT JOIN`, a customer with no orders still has **one row**, so
+  `COUNT(*)` gives 1. `COUNT(o.order_id)` skips NULLs and correctly gives 0.
+  Rule of thumb: after a LEFT JOIN, count a column from the right-hand table.
+tests:
+  reject:
+    - "SELECT c.customer_id, c.first_name, COUNT(*) AS order_count FROM customers AS c LEFT JOIN orders AS o ON o.customer_id = c.customer_id GROUP BY c.customer_id, c.first_name"
+    - "SELECT c.customer_id, c.first_name, COUNT(o.order_id) AS order_count FROM customers AS c JOIN orders AS o ON o.customer_id = c.customer_id GROUP BY c.customer_id, c.first_name"

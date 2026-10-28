@@ -1,0 +1,24 @@
+id: sql-customers-per-city
+title: Customers per City
+concepts: [GROUP BY, multiple columns]
+lesson: sql-group-by
+tables: [customers]
+task: |
+  Marketing is planning local events. Show each `country`, each `city` in it, and the **number of customers** in that city.
+solution: |
+  SELECT country, city, COUNT(*)
+  FROM customers
+  GROUP BY country, city;
+hints:
+  - "You need one row per city, and the country too."
+  - "You can group by more than one column: GROUP BY country, city."
+  - "SELECT country, city, COUNT(*) FROM customers GROUP BY country, city;"
+explanation: |
+  With several columns, `GROUP BY` makes one group for each **combination** of values. Every non-aggregated column you
+  select (`country`, `city`) should appear in `GROUP BY`. Most databases require it, and it keeps the meaning clear.
+tests:
+  accept:
+    - "SELECT country, city, COUNT(customer_id) FROM customers GROUP BY city, country"
+  reject:
+    - "SELECT country, city, COUNT(*) FROM customers GROUP BY country"
+    - "SELECT city, COUNT(*) FROM customers GROUP BY city"

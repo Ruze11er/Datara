@@ -165,6 +165,26 @@ for (const { customer, date } of rawOrders) {
   })
 }
 
+// ---- Reviews (generated AFTER everything above, so adding them did not change any earlier data)
+// Some delivered order items get a review. A few products never get one, which is
+// useful for LEFT JOIN practice ("which products have no reviews?").
+const NEVER_REVIEWED = new Set([8, 16, 24, 32, 40]) // product_ids
+const orderById = new Map(orders.map((o) => [o.order_id, o]))
+const reviews = []
+for (const item of items) {
+  const order = orderById.get(item.order_id)
+  if (order.status !== 'Delivered' || NEVER_REVIEWED.has(item.product_id) || rand() > 0.4) continue
+  const delay = randInt(3, 30)
+  const reviewDate = toDate(dateMs(order.order_date) + delay * DAY)
+  reviews.push({
+    review_id: reviews.length + 1,
+    product_id: item.product_id,
+    customer_id: order.customer_id,
+    rating: weighted([[5, 40], [4, 30], [3, 15], [2, 8], [1, 7]]),
+    review_date: reviewDate > '2025-12-31' ? '2025-12-31' : reviewDate
+  })
+}
+
 // ---- Write SQL
 const sqlValue = (v) =>
   v === null ? 'NULL' : typeof v === 'number' ? String(v) : `'${String(v).replaceAll("'", "''")}'`
@@ -223,13 +243,22 @@ CREATE TABLE order_items (
   unit_price REAL NOT NULL
 );
 
+CREATE TABLE reviews (
+  review_id INTEGER PRIMARY KEY,
+  product_id INTEGER NOT NULL REFERENCES products(product_id),
+  customer_id INTEGER NOT NULL REFERENCES customers(customer_id),
+  rating INTEGER NOT NULL,
+  review_date TEXT NOT NULL
+);
+
 ${insert('customers', customers)}
 ${insert('products', productRows)}
 ${insert('orders', orders)}
-${insert('order_items', items)}`
+${insert('order_items', items)}
+${insert('reviews', reviews)}`
 
 await mkdir(dirname(outFile), { recursive: true })
 await writeFile(outFile, sql, 'utf8')
 console.log(
-  `[dataset] wrote ${customers.length} customers, ${productRows.length} products, ${orders.length} orders, ${items.length} order items`
+  `[dataset] wrote ${customers.length} customers, ${productRows.length} products, ${orders.length} orders, ${items.length} order items, ${reviews.length} reviews`
 )

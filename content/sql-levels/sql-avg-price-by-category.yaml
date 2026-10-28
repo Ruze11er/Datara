@@ -1,0 +1,24 @@
+id: sql-avg-price-by-category
+title: Average Price by Category
+concepts: [GROUP BY, AVG, ROUND]
+lesson: sql-group-by
+tables: [products]
+task: |
+  Which categories are premium and which are budget-friendly?
+
+  Show each `category` and the **average `price`** of its products, **rounded to 2 decimal places**.
+solution: |
+  SELECT category, ROUND(AVG(price), 2)
+  FROM products
+  GROUP BY category;
+hints:
+  - "Group by category, then calculate the average price in each group."
+  - "Wrap the average in ROUND(..., 2)."
+  - "SELECT category, ROUND(AVG(price), 2) FROM products GROUP BY category;"
+explanation: |
+  `ROUND(AVG(price), 2)` is calculated once per category. Comparing group averages side by side is a quick way to
+  see how segments differ, which is one of the core tasks of exploratory analysis.
+tests:
+  reject:
+    - "SELECT category, AVG(price) FROM products GROUP BY category"
+    - "SELECT category, ROUND(AVG(cost), 2) FROM products GROUP BY category"

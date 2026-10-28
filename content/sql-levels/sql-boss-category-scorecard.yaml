@@ -1,0 +1,40 @@
+id: sql-boss-category-scorecard
+title: "Milestone: Category Scorecard"
+concepts: [LEFT JOIN, COUNT(DISTINCT), GROUP BY, ORDER BY]
+lesson: sql-left-join
+tables: [products, reviews]
+orderMatters: true
+checkColumnNames: true
+task: |
+  **Milestone level.** This one combines everything from Chapter 6.
+
+  Build a review scorecard for each product `category`, **including products without reviews**:
+
+  - `category`
+  - `products`: how many products the category has
+  - `reviews`: how many reviews its products received
+  - `avg_rating`: the average rating, **rounded to 2 decimals**
+
+  Sort by `avg_rating`, **highest first**. Watch out: one of these counts is trickier than it looks.
+solution: |
+  SELECT p.category,
+         COUNT(DISTINCT p.product_id) AS products,
+         COUNT(r.review_id) AS reviews,
+         ROUND(AVG(r.rating), 2) AS avg_rating
+  FROM products AS p
+  LEFT JOIN reviews AS r ON r.product_id = p.product_id
+  GROUP BY p.category
+  ORDER BY avg_rating DESC;
+hints:
+  - "LEFT JOIN products to reviews so products without reviews are still counted. Then group by category."
+  - "After the join, a product with 6 reviews appears in 6 rows, so counting rows (or product_id) counts it 6 times. Count each product only once."
+  - "COUNT(DISTINCT p.product_id) AS products, COUNT(r.review_id) AS reviews, ROUND(AVG(r.rating), 2) AS avg_rating ... GROUP BY p.category ORDER BY avg_rating DESC"
+explanation: |
+  Joining **multiplies** rows: each product appears once per review. So `COUNT(*)` or `COUNT(p.product_id)` counts
+  review rows, not products. `COUNT(DISTINCT p.product_id)` fixes it. Whenever a join can create several rows per
+  item, ask yourself what you are really counting. This "fan-out" mistake causes many wrong numbers in real reports.
+tests:
+  reject:
+    - "SELECT p.category, COUNT(p.product_id) AS products, COUNT(r.review_id) AS reviews, ROUND(AVG(r.rating), 2) AS avg_rating FROM products AS p LEFT JOIN reviews AS r ON r.product_id = p.product_id GROUP BY p.category ORDER BY avg_rating DESC"
+    - "SELECT p.category, COUNT(DISTINCT p.product_id) AS products, COUNT(*) AS reviews, ROUND(AVG(r.rating), 2) AS avg_rating FROM products AS p LEFT JOIN reviews AS r ON r.product_id = p.product_id GROUP BY p.category ORDER BY avg_rating DESC"
+    - "SELECT p.category, COUNT(DISTINCT p.product_id) AS products, COUNT(r.review_id) AS reviews, ROUND(AVG(r.rating), 2) AS avg_rating FROM products AS p JOIN reviews AS r ON r.product_id = p.product_id GROUP BY p.category ORDER BY avg_rating DESC"

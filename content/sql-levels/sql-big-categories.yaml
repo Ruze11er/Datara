@@ -1,0 +1,26 @@
+id: sql-big-categories
+title: The Biggest Categories
+concepts: [HAVING]
+lesson: sql-having
+tables: [products]
+task: |
+  Which categories have a large range? Show each `category` and its number of products, but **only for categories
+  with more than 6 products**.
+solution: |
+  SELECT category, COUNT(*)
+  FROM products
+  GROUP BY category
+  HAVING COUNT(*) > 6;
+hints:
+  - "WHERE can't use COUNT(*), because WHERE runs before the groups exist."
+  - "HAVING filters groups after they're formed. It goes after GROUP BY."
+  - "SELECT category, COUNT(*) FROM products GROUP BY category HAVING COUNT(*) > 6;"
+explanation: |
+  `HAVING` is like `WHERE`, but for groups: it runs **after** `GROUP BY`, so it can use aggregates like `COUNT(*)`.
+  Writing `WHERE COUNT(*) > 6` gives an error, because at that point no groups exist yet.
+tests:
+  accept:
+    - "SELECT category, COUNT(*) AS n FROM products GROUP BY category HAVING n > 6"
+  reject:
+    - "SELECT category, COUNT(*) FROM products GROUP BY category HAVING COUNT(*) >= 6"
+    - "SELECT category, COUNT(*) FROM products GROUP BY category"

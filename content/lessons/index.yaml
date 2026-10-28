@@ -34,6 +34,16 @@
       lessons:
         - sql-aggregates
         - sql-calculations
+    - id: grouping
+      title: Grouping Data
+      lessons:
+        - sql-group-by
+        - sql-having
+    - id: joining
+      title: Joining Tables
+      lessons:
+        - sql-joins
+        - sql-left-join
 
 - id: python
   title: Python for Data Analytics

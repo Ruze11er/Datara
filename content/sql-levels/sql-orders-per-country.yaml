@@ -1,0 +1,26 @@
+id: sql-orders-per-country
+title: Orders per Country
+concepts: [INNER JOIN, GROUP BY]
+lesson: sql-joins
+tables: [orders, customers]
+task: |
+  Which countries generate the most orders?
+
+  Show each customer `country` and the **number of orders** placed by customers from that country.
+solution: |
+  SELECT c.country, COUNT(*)
+  FROM orders AS o
+  JOIN customers AS c ON o.customer_id = c.customer_id
+  GROUP BY c.country;
+hints:
+  - "Orders don't have a country, so join customers to get it."
+  - "After the join, group by the country and count the rows (each row is one order)."
+  - "SELECT c.country, COUNT(*) FROM orders AS o JOIN customers AS c ON o.customer_id = c.customer_id GROUP BY c.country;"
+explanation: |
+  Joins and grouping work together: first the join attaches a country to every order, then `GROUP BY` summarizes those
+  combined rows. Counting customers per country (Chapter 4) and orders per country gives different answers.
+  Always ask what one row represents.
+tests:
+  reject:
+    - "SELECT country, COUNT(*) FROM customers GROUP BY country"
+    - "SELECT c.country, COUNT(DISTINCT c.customer_id) FROM orders AS o JOIN customers AS c ON o.customer_id = c.customer_id GROUP BY c.country"

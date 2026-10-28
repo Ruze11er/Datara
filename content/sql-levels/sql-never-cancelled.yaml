@@ -1,0 +1,29 @@
+id: sql-never-cancelled
+title: Never Cancelled
+concepts: [LEFT JOIN, ON vs WHERE, IS NULL]
+lesson: sql-left-join
+tables: [customers, orders]
+task: |
+  Show the `customer_id` and `first_name` of customers who have **never cancelled an order**. Include customers who
+  never ordered at all, since they never cancelled anything.
+solution: |
+  SELECT c.customer_id, c.first_name
+  FROM customers AS c
+  LEFT JOIN orders AS o
+    ON o.customer_id = c.customer_id AND o.status = 'Cancelled'
+  WHERE o.order_id IS NULL;
+hints:
+  - "This is an anti-join, but only against cancelled orders."
+  - "Match only cancelled orders in the ON clause, then keep the customers that found no match."
+  - "... LEFT JOIN orders AS o ON o.customer_id = c.customer_id AND o.status = 'Cancelled' WHERE o.order_id IS NULL;"
+explanation: |
+  This combines the two ideas from the last levels: the `ON` condition limits the match to cancelled orders, and
+  `WHERE o.order_id IS NULL` keeps customers with no such match. Watch out for a tempting wrong answer:
+  `WHERE o.status <> 'Cancelled'` after a plain join keeps everyone who has at least one *other* order, including
+  people who also cancelled.
+tests:
+  accept:
+    - "SELECT customer_id, first_name FROM customers WHERE customer_id NOT IN (SELECT customer_id FROM orders WHERE status = 'Cancelled')"
+  reject:
+    - "SELECT DISTINCT c.customer_id, c.first_name FROM customers AS c JOIN orders AS o ON o.customer_id = c.customer_id WHERE o.status <> 'Cancelled'"
+    - "SELECT c.customer_id, c.first_name FROM customers AS c LEFT JOIN orders AS o ON o.customer_id = c.customer_id WHERE o.order_id IS NULL"

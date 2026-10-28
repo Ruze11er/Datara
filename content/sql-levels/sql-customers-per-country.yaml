@@ -1,0 +1,28 @@
+id: sql-customers-per-country
+title: Customers per Country (with Ties)
+concepts: [GROUP BY, ORDER BY, ties]
+lesson: sql-group-by
+tables: [customers]
+orderMatters: true
+task: |
+  Show each `country` and its **number of customers**, sorted from the **most customers to the fewest**.
+
+  Two countries have the same number of customers. Put tied countries in **alphabetical order**.
+solution: |
+  SELECT country, COUNT(*) AS customer_count
+  FROM customers
+  GROUP BY country
+  ORDER BY customer_count DESC, country;
+hints:
+  - "Group by country, count, and sort by the count from highest to lowest."
+  - "To break ties, add a second sort column after a comma. It's only used when the first column is equal."
+  - "... GROUP BY country ORDER BY customer_count DESC, country;"
+explanation: |
+  `ORDER BY customer_count DESC, country` sorts by the count first, and uses the country name only to order ties.
+  Without a tie-breaker, tied rows can come back in any order, so reports could change from one run to the next.
+tests:
+  accept:
+    - "SELECT country, COUNT(*) FROM customers GROUP BY country ORDER BY COUNT(*) DESC, country ASC"
+  reject:
+    - "SELECT country, COUNT(*) AS customer_count FROM customers GROUP BY country ORDER BY customer_count DESC, country DESC"
+    - "SELECT country, COUNT(*) AS customer_count FROM customers GROUP BY country ORDER BY country"

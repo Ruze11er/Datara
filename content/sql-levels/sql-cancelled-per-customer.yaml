@@ -1,0 +1,26 @@
+id: sql-cancelled-per-customer
+title: Cancellations per Customer (ON vs WHERE)
+concepts: [LEFT JOIN, ON vs WHERE, COUNT(column)]
+lesson: sql-left-join
+tables: [customers, orders]
+task: |
+  Show **every** customer's `customer_id`, `first_name`, and their number of **Cancelled** orders, with **0** for
+  customers who have none (including customers who never ordered).
+solution: |
+  SELECT c.customer_id, c.first_name, COUNT(o.order_id) AS cancelled_orders
+  FROM customers AS c
+  LEFT JOIN orders AS o
+    ON o.customer_id = c.customer_id AND o.status = 'Cancelled'
+  GROUP BY c.customer_id, c.first_name;
+hints:
+  - "Try putting WHERE o.status = 'Cancelled' after the LEFT JOIN. How many rows do you get? Where did the other customers go?"
+  - "WHERE runs after the join and throws away the unmatched (NULL) rows. Put the status condition inside the ON clause instead."
+  - "... LEFT JOIN orders AS o ON o.customer_id = c.customer_id AND o.status = 'Cancelled' GROUP BY c.customer_id, c.first_name;"
+explanation: |
+  A condition in `ON` decides **which rows match** and still keeps every left-hand row. The same condition in `WHERE`
+  runs **after** the join, and `NULL = 'Cancelled'` is never true, so the customers without cancellations vanish:
+  your LEFT JOIN quietly becomes an inner join. With outer joins, *where* you put a condition changes the answer.
+tests:
+  reject:
+    - "SELECT c.customer_id, c.first_name, COUNT(o.order_id) AS cancelled_orders FROM customers AS c LEFT JOIN orders AS o ON o.customer_id = c.customer_id WHERE o.status = 'Cancelled' GROUP BY c.customer_id, c.first_name"
+    - "SELECT c.customer_id, c.first_name, COUNT(*) AS cancelled_orders FROM customers AS c LEFT JOIN orders AS o ON o.customer_id = c.customer_id AND o.status = 'Cancelled' GROUP BY c.customer_id, c.first_name"

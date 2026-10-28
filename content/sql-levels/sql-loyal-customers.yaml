@@ -1,0 +1,25 @@
+id: sql-loyal-customers
+title: Loyal Customers
+concepts: [GROUP BY, HAVING]
+lesson: sql-having
+tables: [orders]
+task: |
+  The shop wants to thank its most loyal customers.
+
+  Show the `customer_id` and **number of orders** for customers who placed **8 or more** orders (any status).
+solution: |
+  SELECT customer_id, COUNT(*)
+  FROM orders
+  GROUP BY customer_id
+  HAVING COUNT(*) >= 8;
+hints:
+  - "One row per customer means grouping by customer_id."
+  - "Keep only the groups whose count is 8 or more, using HAVING."
+  - "SELECT customer_id, COUNT(*) FROM orders GROUP BY customer_id HAVING COUNT(*) >= 8;"
+explanation: |
+  Grouping by `customer_id` turns 250 orders into one row per customer, and `HAVING COUNT(*) >= 8` keeps the loyal ones.
+  "Customers who did X at least N times" is a very common business question.
+tests:
+  reject:
+    - "SELECT customer_id, COUNT(*) FROM orders GROUP BY customer_id HAVING COUNT(*) > 8"
+    - "SELECT customer_id, COUNT(*) FROM orders WHERE status = 'Delivered' GROUP BY customer_id HAVING COUNT(*) >= 8"

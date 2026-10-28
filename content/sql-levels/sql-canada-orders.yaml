@@ -1,0 +1,25 @@
+id: sql-canada-orders
+title: Orders from Canada
+concepts: [INNER JOIN, WHERE]
+lesson: sql-joins
+tables: [orders, customers]
+task: |
+  The Canadian sales rep wants to see their region's orders.
+
+  Show the `order_id`, `order_date`, `first_name`, and `last_name` for orders placed by customers in **Canada**.
+solution: |
+  SELECT o.order_id, o.order_date, c.first_name, c.last_name
+  FROM orders AS o
+  JOIN customers AS c ON o.customer_id = c.customer_id
+  WHERE c.country = 'Canada';
+hints:
+  - "The country is in customers, and the order details are in orders. Join them first."
+  - "After joining, you can filter on any column from either table with WHERE."
+  - "... JOIN customers AS c ON o.customer_id = c.customer_id WHERE c.country = 'Canada';"
+explanation: |
+  The join builds combined rows; `WHERE` then filters them using a column from the `customers` side.
+  This is how you answer questions where the condition lives in one table and the data you need lives in another.
+tests:
+  reject:
+    - "SELECT o.order_id, o.order_date, c.first_name, c.last_name FROM orders AS o JOIN customers AS c ON o.customer_id = c.customer_id"
+    - "SELECT o.order_id, o.order_date, c.first_name, c.last_name FROM orders AS o JOIN customers AS c ON o.customer_id = c.customer_id WHERE c.city = 'Canada'"

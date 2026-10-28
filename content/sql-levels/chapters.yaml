@@ -46,3 +46,48 @@
     - sql-product-profit
     - sql-average-order-value
     - sql-boss-inventory-value
+
+- id: ch4
+  title: Grouping Data
+  description: Summarize data per group with GROUP BY, sort groups, and keep only the groups you need with HAVING.
+  levels:
+    - sql-orders-by-status
+    - sql-products-per-category
+    - sql-stock-by-category
+    - sql-avg-price-by-category
+    - sql-revenue-by-payment
+    - sql-customers-per-country
+    - sql-customers-per-city
+    - sql-big-categories
+    - sql-loyal-customers
+    - sql-boss-big-spenders
+
+- id: ch5
+  title: Joining Tables
+  description: Combine tables with INNER JOIN to answer questions that need customers, orders, and products together.
+  levels:
+    - sql-whats-in-order-1001
+    - sql-orders-with-names
+    - sql-canada-orders
+    - sql-orders-per-country
+    - sql-units-by-product
+    - sql-top-products-units
+    - sql-revenue-by-category
+    - sql-delivered-category-revenue
+    - sql-davao-purchases
+    - sql-boss-best-sellers
+
+- id: ch6
+  title: Outer Joins and Missing Data
+  description: Keep unmatched rows with LEFT JOIN, find what's missing, and avoid the classic counting traps.
+  levels:
+    - sql-all-customers-orders
+    - sql-customers-without-orders
+    - sql-unreviewed-products
+    - sql-order-count-all-customers
+    - sql-reviews-per-product
+    - sql-average-rating-per-product
+    - sql-cancelled-per-customer
+    - sql-never-cancelled
+    - sql-well-rated-products
+    - sql-boss-category-scorecard

@@ -1,0 +1,25 @@
+id: sql-products-per-category
+title: Products per Category
+concepts: [GROUP BY, COUNT, AS]
+lesson: sql-group-by
+tables: [products]
+checkColumnNames: true
+task: |
+  How big is each part of the catalogue?
+
+  Show each `category` and how many products it has. Name the count column `product_count`.
+solution: |
+  SELECT category, COUNT(*) AS product_count
+  FROM products
+  GROUP BY category;
+hints:
+  - "You need one row per category, so group by it."
+  - "Count the rows in each group, and give the count a name with AS."
+  - "SELECT category, COUNT(*) AS product_count FROM products GROUP BY category;"
+explanation: |
+  Each category becomes one group, and `COUNT(*)` counts the products in it. Naming the result with `AS` makes the
+  report readable. A column called `COUNT(*)` means little to a manager.
+tests:
+  reject:
+    - "SELECT category, COUNT(*) FROM products GROUP BY category"
+    - "SELECT category, COUNT(*) AS product_count FROM products"

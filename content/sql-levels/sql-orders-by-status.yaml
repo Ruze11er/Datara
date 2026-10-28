@@ -1,0 +1,26 @@
+id: sql-orders-by-status
+title: Orders by Status
+concepts: [GROUP BY, COUNT]
+lesson: sql-group-by
+tables: [orders]
+task: |
+  The operations team wants a quick health check: how many orders are in each status?
+
+  Show each `status` and the **number of orders** with that status.
+solution: |
+  SELECT status, COUNT(*)
+  FROM orders
+  GROUP BY status;
+hints:
+  - "COUNT(*) on its own gives one number for the whole table. You need one number per status."
+  - "GROUP BY status splits the rows into one group per status, and COUNT(*) then counts each group."
+  - "SELECT status, COUNT(*) FROM orders GROUP BY status;"
+explanation: |
+  `GROUP BY status` puts all orders with the same status into one group. The aggregate `COUNT(*)` is then calculated
+  **once per group**, giving one row per status. This is the most common summary query in analytics.
+tests:
+  accept:
+    - "SELECT status, COUNT(order_id) AS order_count FROM orders GROUP BY status"
+  reject:
+    - "SELECT status, COUNT(*) FROM orders"
+    - "SELECT DISTINCT status FROM orders"

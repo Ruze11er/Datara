@@ -1,0 +1,27 @@
+id: sql-orders-with-names
+title: Orders with Customer Names
+concepts: [INNER JOIN, table aliases]
+lesson: sql-joins
+tables: [orders, customers]
+task: |
+  Order reports are hard to read with only a `customer_id`.
+
+  Show every order's `order_id` together with the customer's `first_name` and `last_name`.
+solution: |
+  SELECT o.order_id, c.first_name, c.last_name
+  FROM orders AS o
+  JOIN customers AS c ON o.customer_id = c.customer_id;
+hints:
+  - "The orders table has customer_id, and so does the customers table. That's the link."
+  - "JOIN customers ON orders.customer_id = customers.customer_id."
+  - "SELECT o.order_id, c.first_name, c.last_name FROM orders AS o JOIN customers AS c ON o.customer_id = c.customer_id;"
+explanation: |
+  Every order has exactly one matching customer, so the result has one row per order (250 rows).
+  `customer_id` is the **primary key** in `customers` and a **foreign key** in `orders`. Joining a foreign key to its
+  primary key is the most common join there is.
+tests:
+  accept:
+    - "SELECT orders.order_id, customers.first_name, customers.last_name FROM customers JOIN orders ON customers.customer_id = orders.customer_id"
+  reject:
+    - "SELECT o.order_id, c.first_name, c.last_name FROM orders AS o JOIN customers AS c ON o.order_id = c.customer_id"
+    - "SELECT o.order_id, c.first_name, c.last_name FROM orders AS o, customers AS c"

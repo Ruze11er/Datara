@@ -1,0 +1,23 @@
+id: sql-stock-by-category
+title: Stock by Category
+concepts: [GROUP BY, SUM]
+lesson: sql-group-by
+tables: [products]
+task: |
+  The warehouse wants to know how many units are on the shelves for each category.
+
+  Show each `category` and the **total `stock_quantity`** of its products.
+solution: |
+  SELECT category, SUM(stock_quantity)
+  FROM products
+  GROUP BY category;
+hints:
+  - "This is like the last level, but you add up a column instead of counting rows."
+  - "Use SUM(stock_quantity) together with GROUP BY category."
+  - "SELECT category, SUM(stock_quantity) FROM products GROUP BY category;"
+explanation: |
+  Any aggregate works with `GROUP BY`: `COUNT`, `SUM`, `AVG`, `MIN`, and `MAX` are all calculated separately for each group.
+tests:
+  reject:
+    - "SELECT category, COUNT(stock_quantity) FROM products GROUP BY category"
+    - "SELECT category, SUM(stock_quantity) FROM products"

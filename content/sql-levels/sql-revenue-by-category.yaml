@@ -1,0 +1,25 @@
+id: sql-revenue-by-category
+title: Sales Value by Category
+concepts: [INNER JOIN, GROUP BY, calculated columns]
+lesson: sql-joins
+tables: [order_items, products]
+task: |
+  Show each product `category` and the **total value of everything ordered** in it: the sum of
+  `quantity × unit_price` over all order items, **rounded to 2 decimals**. Include every order, whatever its status.
+solution: |
+  SELECT p.category, ROUND(SUM(oi.quantity * oi.unit_price), 2)
+  FROM order_items AS oi
+  JOIN products AS p ON oi.product_id = p.product_id
+  GROUP BY p.category;
+hints:
+  - "The value of one order line is quantity * unit_price (both in order_items). The category is in products."
+  - "Join, group by category, then SUM the line values and ROUND the result."
+  - "SELECT p.category, ROUND(SUM(oi.quantity * oi.unit_price), 2) FROM order_items AS oi JOIN products AS p ON oi.product_id = p.product_id GROUP BY p.category;"
+explanation: |
+  The calculation `oi.quantity * oi.unit_price` happens for each row first, then `SUM` adds those values per category.
+  Using `unit_price` from `order_items` (the price actually charged) is more accurate than today's `products.price`,
+  which could change over time.
+tests:
+  reject:
+    - "SELECT p.category, ROUND(SUM(p.price), 2) FROM order_items AS oi JOIN products AS p ON oi.product_id = p.product_id GROUP BY p.category"
+    - "SELECT p.category, ROUND(SUM(oi.unit_price), 2) FROM order_items AS oi JOIN products AS p ON oi.product_id = p.product_id GROUP BY p.category"

@@ -1,0 +1,28 @@
+id: sql-davao-purchases
+title: What Does Davao City Buy?
+concepts: [four-table JOIN, WHERE]
+lesson: sql-joins
+tables: [customers, orders, order_items, products]
+task: |
+  The shop is planning a pop-up store in **Davao City**. Show what customers there actually received.
+
+  For **Delivered** orders from customers whose `city` is **Davao City**, show the customer's `first_name`,
+  the `product_name`, and the `quantity`.
+solution: |
+  SELECT c.first_name, p.product_name, oi.quantity
+  FROM customers AS c
+  JOIN orders AS o ON o.customer_id = c.customer_id
+  JOIN order_items AS oi ON oi.order_id = o.order_id
+  JOIN products AS p ON p.product_id = oi.product_id
+  WHERE c.city = 'Davao City' AND o.status = 'Delivered';
+hints:
+  - "Follow the links: customers → orders (customer_id) → order_items (order_id) → products (product_id)."
+  - "Write one JOIN for each step, then filter on both the city and the status."
+  - "FROM customers AS c JOIN orders AS o ON o.customer_id = c.customer_id JOIN order_items AS oi ON oi.order_id = o.order_id JOIN products AS p ON p.product_id = oi.product_id WHERE c.city = 'Davao City' AND o.status = 'Delivered'"
+explanation: |
+  Four tables, three joins, each following one key. When a join gets long, sketch the path between tables first,
+  using the keys as links. The query then almost writes itself.
+tests:
+  reject:
+    - "SELECT c.first_name, p.product_name, oi.quantity FROM customers AS c JOIN orders AS o ON o.customer_id = c.customer_id JOIN order_items AS oi ON oi.order_id = o.order_id JOIN products AS p ON p.product_id = oi.product_id WHERE c.city = 'Davao City'"
+    - "SELECT c.first_name, p.product_name, oi.quantity FROM customers AS c JOIN orders AS o ON o.customer_id = c.customer_id JOIN order_items AS oi ON oi.order_id = o.order_id JOIN products AS p ON p.product_id = oi.product_id WHERE c.country = 'Philippines' AND o.status = 'Delivered'"
