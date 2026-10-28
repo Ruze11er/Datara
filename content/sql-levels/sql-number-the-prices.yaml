@@ -1,0 +1,28 @@
+id: sql-number-the-prices
+title: Numbering by Price
+concepts: [window functions, ROW_NUMBER, OVER]
+lesson: sql-window-functions
+tables: [products]
+checkColumnNames: true
+task: |
+  Show every product's `product_name` and `price`, plus a column `price_rank` that numbers the products from **1 for the
+  most expensive** to 40 for the cheapest. Keep all 40 rows.
+solution: |
+  SELECT product_name,
+         price,
+         ROW_NUMBER() OVER (ORDER BY price DESC) AS price_rank
+  FROM products;
+hints:
+  - "GROUP BY would squash rows together. You need a function that adds a value to every row while keeping them all."
+  - "Window functions use OVER (…). ROW_NUMBER() OVER (ORDER BY …) numbers the rows in that order."
+  - "SELECT product_name, price, ROW_NUMBER() OVER (ORDER BY price DESC) AS price_rank FROM products;"
+explanation: |
+  A **window function** calculates something across a set of rows *without* grouping them, so every product keeps its own
+  row. `OVER (ORDER BY price DESC)` tells `ROW_NUMBER` which order to number in. The rows themselves can still come back in
+  any order, so add an outer `ORDER BY price_rank` if you want them displayed sorted.
+tests:
+  accept:
+    - "SELECT product_name, price, RANK() OVER (ORDER BY price DESC) AS price_rank FROM products ORDER BY price_rank"
+  reject:
+    - "SELECT product_name, price, ROW_NUMBER() OVER (ORDER BY price) AS price_rank FROM products"
+    - "SELECT product_name, price, product_id AS price_rank FROM products"

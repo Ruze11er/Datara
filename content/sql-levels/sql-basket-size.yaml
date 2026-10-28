@@ -1,0 +1,31 @@
+id: sql-basket-size
+title: Average Basket Size
+concepts: [derived table, JOIN, AVG]
+lesson: sql-business-patterns
+tables: [order_items, orders]
+task: |
+  How many items does a typical delivered order contain? Calculate the **average number of units per Delivered order**
+  (units = sum of `quantity`), **rounded to 2 decimals**. Return one number.
+solution: |
+  SELECT ROUND(AVG(units), 2)
+  FROM (
+    SELECT oi.order_id, SUM(oi.quantity) AS units
+    FROM order_items AS oi
+    JOIN orders AS o ON o.order_id = oi.order_id
+    WHERE o.status = 'Delivered'
+    GROUP BY oi.order_id
+  );
+hints:
+  - "First total the units in each delivered order, then average those totals."
+  - "Join order_items to orders for the status, group by order_id, then wrap it in an outer query."
+  - "SELECT ROUND(AVG(units), 2) FROM (SELECT oi.order_id, SUM(oi.quantity) AS units FROM order_items AS oi JOIN orders AS o ON o.order_id = oi.order_id WHERE o.status = 'Delivered' GROUP BY oi.order_id);"
+explanation: |
+  `AVG(oi.quantity)` over all rows would give the average **per order line**, not per order. An order with 3 lines would
+  count three times. Aggregating to the right level first (one row per order), then averaging, is a habit that prevents
+  many wrong answers.
+tests:
+  accept:
+    - "SELECT ROUND(SUM(oi.quantity) * 1.0 / COUNT(DISTINCT oi.order_id), 2) FROM order_items oi JOIN orders o ON o.order_id = oi.order_id WHERE o.status = 'Delivered'"
+  reject:
+    - "SELECT ROUND(AVG(oi.quantity), 2) FROM order_items AS oi JOIN orders AS o ON o.order_id = oi.order_id WHERE o.status = 'Delivered'"
+    - "SELECT ROUND(AVG(units), 2) FROM (SELECT order_id, SUM(quantity) AS units FROM order_items GROUP BY order_id)"

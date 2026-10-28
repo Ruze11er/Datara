@@ -1,0 +1,56 @@
+id: sql-boss-country-summary
+title: "Final Milestone: The Executive Summary"
+concepts: [CTE, LEFT JOIN, COUNT(DISTINCT), window functions, GROUP BY]
+lesson: sql-business-patterns
+tables: [customers, orders]
+orderMatters: true
+checkColumnNames: true
+task: |
+  **Final milestone: level 100.** Everything you've learned, in one report.
+
+  The leadership team wants one row per `country`:
+
+  - `customers`: how many customers live there (all of them, ordered or not)
+  - `buyers`: how many of them have at least one **Delivered** order
+  - `revenue`: total **Delivered** revenue, **rounded to 2 decimals**
+  - `revenue_rank`: the country's rank by revenue (1 = highest)
+
+  Sort by `revenue_rank`.
+solution: |
+  WITH country_customers AS (
+    SELECT country, COUNT(*) AS customers
+    FROM customers
+    GROUP BY country
+  ),
+  country_sales AS (
+    SELECT c.country,
+           COUNT(DISTINCT o.customer_id) AS buyers,
+           SUM(o.total_amount) AS revenue
+    FROM orders AS o
+    JOIN customers AS c ON c.customer_id = o.customer_id
+    WHERE o.status = 'Delivered'
+    GROUP BY c.country
+  )
+  SELECT cc.country,
+         cc.customers,
+         COALESCE(cs.buyers, 0) AS buyers,
+         ROUND(COALESCE(cs.revenue, 0), 2) AS revenue,
+         RANK() OVER (ORDER BY COALESCE(cs.revenue, 0) DESC) AS revenue_rank
+  FROM country_customers AS cc
+  LEFT JOIN country_sales AS cs ON cs.country = cc.country
+  ORDER BY revenue_rank;
+hints:
+  - "Build two summaries separately (customers per country, and delivered sales per country), then combine them. Counting customers after joining orders would count orders instead."
+  - "COUNT(DISTINCT o.customer_id) counts buyers once each. LEFT JOIN keeps countries with no sales, and COALESCE turns their NULLs into 0."
+  - "Two CTEs (country_customers, country_sales), then: SELECT …, RANK() OVER (ORDER BY COALESCE(cs.revenue, 0) DESC) AS revenue_rank FROM country_customers cc LEFT JOIN country_sales cs ON cs.country = cc.country ORDER BY revenue_rank;"
+explanation: |
+  You built a real executive report: separate summaries at the right level (customers vs orders), a LEFT JOIN so no market is
+  lost, `COUNT(DISTINCT …)` to avoid double counting, `COALESCE` for markets without sales, and a window function to rank them.
+  Every country has buyers in today's data, but the query is written so it keeps working when a new market opens with no
+  sales yet. That's the difference between a query that works *now* and one that stays correct.
+
+  **Congratulations, you've finished all 100 SQL levels!**
+tests:
+  reject:
+    - "SELECT c.country, COUNT(*) AS customers, COUNT(DISTINCT o.customer_id) AS buyers, ROUND(SUM(o.total_amount), 2) AS revenue, RANK() OVER (ORDER BY SUM(o.total_amount) DESC) AS revenue_rank FROM customers c JOIN orders o ON o.customer_id = c.customer_id WHERE o.status = 'Delivered' GROUP BY c.country ORDER BY revenue_rank"
+    - "WITH country_customers AS (SELECT country, COUNT(*) AS customers FROM customers GROUP BY country), country_sales AS (SELECT c.country, COUNT(o.customer_id) AS buyers, SUM(o.total_amount) AS revenue FROM orders AS o JOIN customers AS c ON c.customer_id = o.customer_id WHERE o.status = 'Delivered' GROUP BY c.country) SELECT cc.country, cc.customers, COALESCE(cs.buyers, 0) AS buyers, ROUND(COALESCE(cs.revenue, 0), 2) AS revenue, RANK() OVER (ORDER BY COALESCE(cs.revenue, 0) DESC) AS revenue_rank FROM country_customers AS cc LEFT JOIN country_sales AS cs ON cs.country = cc.country ORDER BY revenue_rank"

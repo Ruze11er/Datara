@@ -1,0 +1,47 @@
+id: sql-boss-first-orders
+title: "Milestone: First Purchase Report"
+concepts: [ROW_NUMBER, PARTITION BY, CTE, JOIN, ties]
+lesson: sql-window-functions
+tables: [orders, customers]
+orderMatters: true
+checkColumnNames: true
+task: |
+  **Milestone level.** This one combines everything from Chapter 9.
+
+  For every customer who has ordered, show details of their **first order** (any status):
+
+  - `customer_id`
+  - `first_name`
+  - `first_order_date`
+  - `first_order_amount`: that order's `total_amount`
+
+  Some customers placed two orders on the same day. In that case, the order with the **lower `order_id`** counts as first.
+  Sort by `first_order_date`, then by `customer_id`.
+solution: |
+  WITH numbered AS (
+    SELECT customer_id,
+           order_date,
+           total_amount,
+           ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date, order_id) AS rn
+    FROM orders
+  )
+  SELECT n.customer_id,
+         c.first_name,
+         n.order_date AS first_order_date,
+         n.total_amount AS first_order_amount
+  FROM numbered AS n
+  JOIN customers AS c ON c.customer_id = n.customer_id
+  WHERE n.rn = 1
+  ORDER BY first_order_date, n.customer_id;
+hints:
+  - "Number each customer's orders from oldest to newest, then keep number 1."
+  - "PARTITION BY customer_id ORDER BY order_date, order_id: the second sort column breaks same-day ties."
+  - "WITH numbered AS (SELECT customer_id, order_date, total_amount, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date, order_id) AS rn FROM orders) SELECT … FROM numbered n JOIN customers c ON … WHERE n.rn = 1 ORDER BY first_order_date, n.customer_id;"
+explanation: |
+  `MIN(order_date)` can find the first *date*, but not the other details of that order. Numbering rows per customer and
+  keeping `rn = 1` gives you the **whole first row**. It's the go-to pattern for "first/latest X per Y". The tie-breaker
+  (`order_id`) makes the result predictable when two orders share a date.
+tests:
+  reject:
+    - "WITH numbered AS (SELECT customer_id, order_date, total_amount, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date, order_id DESC) AS rn FROM orders) SELECT n.customer_id, c.first_name, n.order_date AS first_order_date, n.total_amount AS first_order_amount FROM numbered AS n JOIN customers AS c ON c.customer_id = n.customer_id WHERE n.rn = 1 ORDER BY first_order_date, n.customer_id"
+    - "WITH numbered AS (SELECT customer_id, order_date, total_amount, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC) AS rn FROM orders) SELECT n.customer_id, c.first_name, n.order_date AS first_order_date, n.total_amount AS first_order_amount FROM numbered AS n JOIN customers AS c ON c.customer_id = n.customer_id WHERE n.rn = 1 ORDER BY first_order_date, n.customer_id"

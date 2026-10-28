@@ -1,0 +1,36 @@
+id: sql-first-order-cohorts
+title: New Customers per Month
+concepts: [cohorts, MIN, CTE, dates]
+lesson: sql-business-patterns
+tables: [orders]
+orderMatters: true
+checkColumnNames: true
+task: |
+  A customer's **cohort** is the month of their **first** order (any status). Show how many new customers each month brought:
+
+  - `cohort_month`: as `YYYY-MM`
+  - `new_customers`
+
+  Sort by month.
+solution: |
+  WITH first_orders AS (
+    SELECT customer_id, MIN(order_date) AS first_order_date
+    FROM orders
+    GROUP BY customer_id
+  )
+  SELECT strftime('%Y-%m', first_order_date) AS cohort_month, COUNT(*) AS new_customers
+  FROM first_orders
+  GROUP BY cohort_month
+  ORDER BY cohort_month;
+hints:
+  - "First find each customer's first order date: MIN(order_date) per customer."
+  - "Then turn those dates into months and count customers per month."
+  - "WITH first_orders AS (SELECT customer_id, MIN(order_date) AS first_order_date FROM orders GROUP BY customer_id) SELECT strftime('%Y-%m', first_order_date) AS cohort_month, COUNT(*) AS new_customers FROM first_orders GROUP BY cohort_month ORDER BY cohort_month;"
+explanation: |
+  Grouping customers by when they started is the basis of **cohort analysis**: following each starting group over time to see
+  how long they stay. Notice how most first orders happen early in the year and few later, which is a question worth
+  investigating for any shop. Counting orders per month instead would mix new and returning customers.
+tests:
+  reject:
+    - "SELECT strftime('%Y-%m', order_date) AS cohort_month, COUNT(DISTINCT customer_id) AS new_customers FROM orders GROUP BY cohort_month ORDER BY cohort_month"
+    - "WITH first_orders AS (SELECT customer_id, MAX(order_date) AS first_order_date FROM orders GROUP BY customer_id) SELECT strftime('%Y-%m', first_order_date) AS cohort_month, COUNT(*) AS new_customers FROM first_orders GROUP BY cohort_month ORDER BY cohort_month"

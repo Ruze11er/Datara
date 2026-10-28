@@ -1,0 +1,35 @@
+id: sql-at-risk-customers
+title: Customers at Risk
+concepts: [GROUP BY, HAVING, MAX, JOIN]
+lesson: sql-business-patterns
+tables: [orders, customers]
+orderMatters: true
+checkColumnNames: true
+task: |
+  Customers who haven't ordered in a while may be drifting away. Find customers whose **most recent order** (any status) was
+  **before 2025-09-01**. Show:
+
+  - `customer_id`
+  - `first_name`
+  - `last_order_date`
+
+  Sort by `last_order_date` (oldest first), then by `customer_id`.
+solution: |
+  SELECT o.customer_id, c.first_name, MAX(o.order_date) AS last_order_date
+  FROM orders AS o
+  JOIN customers AS c ON c.customer_id = o.customer_id
+  GROUP BY o.customer_id, c.first_name
+  HAVING MAX(o.order_date) < '2025-09-01'
+  ORDER BY last_order_date, o.customer_id;
+hints:
+  - "A customer's most recent order is MAX(order_date)."
+  - "That's a condition on a group, so it goes in HAVING, not WHERE."
+  - "… GROUP BY o.customer_id, c.first_name HAVING MAX(o.order_date) < '2025-09-01' ORDER BY last_order_date, o.customer_id;"
+explanation: |
+  `WHERE order_date < '2025-09-01'` would be wrong: it keeps everyone who had *any* early order, even if they also ordered in
+  December. You need each customer's **latest** date, and only then can you compare it. "Days since last order" is a key
+  input for retention campaigns.
+tests:
+  reject:
+    - "SELECT o.customer_id, c.first_name, MAX(o.order_date) AS last_order_date FROM orders AS o JOIN customers AS c ON c.customer_id = o.customer_id WHERE o.order_date < '2025-09-01' GROUP BY o.customer_id, c.first_name ORDER BY last_order_date, o.customer_id"
+    - "SELECT o.customer_id, c.first_name, MIN(o.order_date) AS last_order_date FROM orders AS o JOIN customers AS c ON c.customer_id = o.customer_id GROUP BY o.customer_id, c.first_name HAVING MIN(o.order_date) < '2025-09-01' ORDER BY last_order_date, o.customer_id"

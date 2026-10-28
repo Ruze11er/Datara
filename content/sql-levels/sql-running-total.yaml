@@ -1,0 +1,38 @@
+id: sql-running-total
+title: Revenue So Far This Year
+concepts: [running total, SUM OVER, CTE]
+lesson: sql-window-analytics
+tables: [orders]
+orderMatters: true
+checkColumnNames: true
+task: |
+  Management wants to see revenue building up over the year. For **Delivered** orders, show one row per month (`YYYY-MM`):
+
+  - `month`
+  - `revenue`: that month's revenue, **rounded to 2 decimals**
+  - `running_total`: total revenue from January **up to and including** that month, **rounded to 2 decimals**
+
+  Sort by month.
+solution: |
+  WITH monthly AS (
+    SELECT strftime('%Y-%m', order_date) AS month, SUM(total_amount) AS revenue
+    FROM orders
+    WHERE status = 'Delivered'
+    GROUP BY month
+  )
+  SELECT month,
+         ROUND(revenue, 2) AS revenue,
+         ROUND(SUM(revenue) OVER (ORDER BY month), 2) AS running_total
+  FROM monthly
+  ORDER BY month;
+hints:
+  - "First build monthly revenue (Chapter 7) in a CTE."
+  - "SUM(revenue) OVER (ORDER BY month) adds up all months from the first one up to the current row."
+  - "WITH monthly AS (…) SELECT month, ROUND(revenue, 2) AS revenue, ROUND(SUM(revenue) OVER (ORDER BY month), 2) AS running_total FROM monthly ORDER BY month;"
+explanation: |
+  With `ORDER BY` inside `OVER`, an aggregate like `SUM` becomes **cumulative**: each row adds up everything from the start
+  of the window up to itself. That's a running total, and the last month's value equals the year's total.
+tests:
+  reject:
+    - "WITH monthly AS (SELECT strftime('%Y-%m', order_date) AS month, SUM(total_amount) AS revenue FROM orders WHERE status = 'Delivered' GROUP BY month) SELECT month, ROUND(revenue, 2) AS revenue, ROUND(SUM(revenue) OVER (), 2) AS running_total FROM monthly ORDER BY month"
+    - "WITH monthly AS (SELECT strftime('%Y-%m', order_date) AS month, SUM(total_amount) AS revenue FROM orders WHERE status = 'Delivered' GROUP BY month) SELECT month, ROUND(revenue, 2) AS revenue, ROUND(SUM(revenue) OVER (ORDER BY month DESC), 2) AS running_total FROM monthly ORDER BY month"

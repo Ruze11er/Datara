@@ -1,0 +1,32 @@
+id: sql-priciest-per-category
+title: The Priciest Product in Each Category
+concepts: [window functions, ROW_NUMBER, CTE, top N per group]
+lesson: sql-window-functions
+tables: [products]
+task: |
+  Show the `category`, `product_name`, and `price` of the **most expensive product in each category**: one row per category.
+solution: |
+  WITH ranked AS (
+    SELECT category,
+           product_name,
+           price,
+           ROW_NUMBER() OVER (PARTITION BY category ORDER BY price DESC) AS rn
+    FROM products
+  )
+  SELECT category, product_name, price
+  FROM ranked
+  WHERE rn = 1;
+hints:
+  - "Rank products within each category (like the last level), then keep only rank 1."
+  - "You can't use a window function in WHERE, because it's calculated after WHERE runs. Put the ranking in a CTE first, then filter it."
+  - "WITH ranked AS (SELECT category, product_name, price, ROW_NUMBER() OVER (PARTITION BY category ORDER BY price DESC) AS rn FROM products) SELECT category, product_name, price FROM ranked WHERE rn = 1;"
+explanation: |
+  **Rank, then filter** is the standard recipe for "top N per group". Window functions run after `WHERE`, so the ranking has to
+  happen in a CTE (or subquery) and the filter outside it. `GROUP BY category` with `MAX(price)` can find the top *price*,
+  but not cleanly the product that has it.
+tests:
+  accept:
+    - "SELECT category, product_name, price FROM products p WHERE price = (SELECT MAX(price) FROM products p2 WHERE p2.category = p.category)"
+  reject:
+    - "SELECT category, product_name, MIN(price) FROM products GROUP BY category"
+    - "WITH ranked AS (SELECT category, product_name, price, ROW_NUMBER() OVER (ORDER BY price DESC) AS rn FROM products) SELECT category, product_name, price FROM ranked WHERE rn = 1"

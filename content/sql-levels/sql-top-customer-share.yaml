@@ -1,0 +1,34 @@
+id: sql-top-customer-share
+title: How Much Do the Top 10 Customers Bring?
+concepts: [window functions, CTE, percentages]
+lesson: sql-business-patterns
+tables: [orders]
+task: |
+  Is revenue concentrated in a few customers? Calculate what **percentage** of all **Delivered** revenue comes from the
+  **10 customers who spent the most**. Return one number, **rounded to 1 decimal**.
+solution: |
+  WITH spend AS (
+    SELECT customer_id, SUM(total_amount) AS total
+    FROM orders
+    WHERE status = 'Delivered'
+    GROUP BY customer_id
+  ),
+  ranked AS (
+    SELECT total, ROW_NUMBER() OVER (ORDER BY total DESC) AS rn
+    FROM spend
+  )
+  SELECT ROUND(100.0 * SUM(CASE WHEN rn <= 10 THEN total ELSE 0 END) / SUM(total), 1)
+  FROM ranked;
+hints:
+  - "Step 1: delivered spend per customer. Step 2: rank customers by spend. Step 3: compare the top 10's spend with the total."
+  - "In the final step, SUM(CASE WHEN rn <= 10 THEN total ELSE 0 END) is the top-10 part and SUM(total) is the whole."
+  - "WITH spend AS (…), ranked AS (SELECT total, ROW_NUMBER() OVER (ORDER BY total DESC) AS rn FROM spend) SELECT ROUND(100.0 * SUM(CASE WHEN rn <= 10 THEN total ELSE 0 END) / SUM(total), 1) FROM ranked;"
+explanation: |
+  About 40% of revenue comes from 10 of the 45 buying customers. Measuring **concentration** like this shows how dependent
+  a business is on a small group, which matters for risk and for where to focus loyalty efforts.
+tests:
+  accept:
+    - "WITH spend AS (SELECT customer_id, SUM(total_amount) AS total FROM orders WHERE status = 'Delivered' GROUP BY customer_id) SELECT ROUND(100.0 * (SELECT SUM(total) FROM (SELECT total FROM spend ORDER BY total DESC LIMIT 10)) / (SELECT SUM(total) FROM spend), 1)"
+  reject:
+    - "WITH spend AS (SELECT customer_id, SUM(total_amount) AS total FROM orders GROUP BY customer_id), ranked AS (SELECT total, ROW_NUMBER() OVER (ORDER BY total DESC) AS rn FROM spend) SELECT ROUND(100.0 * SUM(CASE WHEN rn <= 10 THEN total ELSE 0 END) / SUM(total), 1) FROM ranked"
+    - "WITH spend AS (SELECT customer_id, SUM(total_amount) AS total FROM orders WHERE status = 'Delivered' GROUP BY customer_id), ranked AS (SELECT total, ROW_NUMBER() OVER (ORDER BY total) AS rn FROM spend) SELECT ROUND(100.0 * SUM(CASE WHEN rn <= 10 THEN total ELSE 0 END) / SUM(total), 1) FROM ranked"

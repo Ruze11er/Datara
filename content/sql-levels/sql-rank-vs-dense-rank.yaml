@@ -1,0 +1,34 @@
+id: sql-rank-vs-dense-rank
+title: Ties in Rankings (RANK vs DENSE_RANK)
+concepts: [RANK, DENSE_RANK, ties]
+lesson: sql-window-functions
+tables: [orders]
+checkColumnNames: true
+task: |
+  Several customers have the same number of orders. Rank customers by number of orders (most first) in two ways and compare.
+  Show:
+
+  - `customer_id`
+  - `order_count`
+  - `rank_with_gaps`: tied customers share a rank, and the next rank skips ahead (1, 1, 1, 4 …)
+  - `rank_no_gaps`: tied customers share a rank, and the next rank continues (1, 1, 1, 2 …)
+solution: |
+  SELECT customer_id,
+         COUNT(*) AS order_count,
+         RANK() OVER (ORDER BY COUNT(*) DESC) AS rank_with_gaps,
+         DENSE_RANK() OVER (ORDER BY COUNT(*) DESC) AS rank_no_gaps
+  FROM orders
+  GROUP BY customer_id;
+hints:
+  - "Group by customer to count orders. Window functions can use aggregates like COUNT(*) in their ORDER BY."
+  - "RANK() leaves gaps after ties; DENSE_RANK() doesn't."
+  - "RANK() OVER (ORDER BY COUNT(*) DESC) AS rank_with_gaps, DENSE_RANK() OVER (ORDER BY COUNT(*) DESC) AS rank_no_gaps"
+explanation: |
+  Three customers tied for most orders all get rank 1. `RANK` then jumps to 4 (three places are taken), while `DENSE_RANK`
+  continues with 2. `ROW_NUMBER` would give every row a different number and break ties arbitrarily. Choose the function
+  that matches the question: "is this customer in the top 3 *positions*?" (RANK) or "the top 3 *order counts*?" (DENSE_RANK).
+  Window functions run after `GROUP BY`, which is why they can rank by `COUNT(*)`.
+tests:
+  reject:
+    - "SELECT customer_id, COUNT(*) AS order_count, DENSE_RANK() OVER (ORDER BY COUNT(*) DESC) AS rank_with_gaps, RANK() OVER (ORDER BY COUNT(*) DESC) AS rank_no_gaps FROM orders GROUP BY customer_id"
+    - "SELECT customer_id, COUNT(*) AS order_count, ROW_NUMBER() OVER (ORDER BY COUNT(*) DESC) AS rank_with_gaps, DENSE_RANK() OVER (ORDER BY COUNT(*) DESC) AS rank_no_gaps FROM orders GROUP BY customer_id"

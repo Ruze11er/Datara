@@ -1,0 +1,36 @@
+id: sql-top-two-per-category
+title: Top 2 Sellers per Category
+concepts: [window functions, top N per group, JOIN]
+lesson: sql-window-functions
+tables: [order_items, orders, products]
+task: |
+  For **Delivered** orders, find the **2 products with the highest sales value** (`quantity × unit_price`) in **each category**.
+  Show `category`, `product_name`, and `revenue` (**rounded to 2 decimals**).
+solution: |
+  WITH product_revenue AS (
+    SELECT p.category, p.product_name, SUM(oi.quantity * oi.unit_price) AS revenue
+    FROM order_items AS oi
+    JOIN orders AS o ON o.order_id = oi.order_id
+    JOIN products AS p ON p.product_id = oi.product_id
+    WHERE o.status = 'Delivered'
+    GROUP BY p.product_id, p.category, p.product_name
+  ),
+  ranked AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY category ORDER BY revenue DESC) AS rn
+    FROM product_revenue
+  )
+  SELECT category, product_name, ROUND(revenue, 2) AS revenue
+  FROM ranked
+  WHERE rn <= 2;
+hints:
+  - "Step 1: revenue per product (a join and GROUP BY, like Chapter 5). Step 2: rank within each category. Step 3: keep ranks 1 and 2."
+  - "Use two CTEs: the second one adds ROW_NUMBER() OVER (PARTITION BY category ORDER BY revenue DESC)."
+  - "… ranked AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY category ORDER BY revenue DESC) AS rn FROM product_revenue) SELECT category, product_name, ROUND(revenue, 2) AS revenue FROM ranked WHERE rn <= 2;"
+explanation: |
+  Chaining CTEs keeps each step simple: aggregate, then rank, then filter. Changing `rn <= 2` to any number gives the top N per
+  category. This recipe shows up constantly in real analysis: top products per region, best salespeople per team, latest
+  order per customer.
+tests:
+  reject:
+    - "WITH product_revenue AS (SELECT p.category, p.product_name, SUM(oi.quantity * oi.unit_price) AS revenue FROM order_items AS oi JOIN products AS p ON p.product_id = oi.product_id GROUP BY p.product_id), ranked AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY category ORDER BY revenue DESC) AS rn FROM product_revenue) SELECT category, product_name, ROUND(revenue, 2) AS revenue FROM ranked WHERE rn <= 2"
+    - "WITH product_revenue AS (SELECT p.category, p.product_name, SUM(oi.quantity * oi.unit_price) AS revenue FROM order_items AS oi JOIN orders AS o ON o.order_id = oi.order_id JOIN products AS p ON p.product_id = oi.product_id WHERE o.status = 'Delivered' GROUP BY p.product_id), ranked AS (SELECT *, ROW_NUMBER() OVER (ORDER BY revenue DESC) AS rn FROM product_revenue) SELECT category, product_name, ROUND(revenue, 2) AS revenue FROM ranked WHERE rn <= 2"

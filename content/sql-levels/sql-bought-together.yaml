@@ -1,0 +1,35 @@
+id: sql-bought-together
+title: Frequently Bought Together
+concepts: [self join, GROUP BY, HAVING]
+lesson: sql-business-patterns
+tables: [order_items, products]
+checkColumnNames: true
+task: |
+  Which pairs of products end up in the **same order**? Find every pair of different products that appear together in
+  **at least 3 orders** (any status). Show:
+
+  - `product_a` and `product_b`: the two product names. List each pair **once**, with the product that has the **lower
+    `product_id`** as `product_a`.
+  - `times`: in how many orders they appeared together
+solution: |
+  SELECT pa.product_name AS product_a,
+         pb.product_name AS product_b,
+         COUNT(*) AS times
+  FROM order_items AS a
+  JOIN order_items AS b ON b.order_id = a.order_id AND a.product_id < b.product_id
+  JOIN products AS pa ON pa.product_id = a.product_id
+  JOIN products AS pb ON pb.product_id = b.product_id
+  GROUP BY a.product_id, b.product_id
+  HAVING COUNT(*) >= 3;
+hints:
+  - "Join order_items to itself on the same order_id. That pairs every item with every other item in its order."
+  - "Use a.product_id < b.product_id so each pair appears once (not as A–B and B–A) and a product isn't paired with itself."
+  - "FROM order_items AS a JOIN order_items AS b ON b.order_id = a.order_id AND a.product_id < b.product_id … GROUP BY a.product_id, b.product_id HAVING COUNT(*) >= 3"
+explanation: |
+  Joining a table to itself (a **self join**) compares rows of the same table, here items within one order. The `<` condition
+  is the key trick: `<>` would list every pair twice (A–B and B–A), and `=` would pair products with themselves.
+  This is the core of **market basket analysis**, which powers "customers also bought" suggestions.
+tests:
+  reject:
+    - "SELECT pa.product_name AS product_a, pb.product_name AS product_b, COUNT(*) AS times FROM order_items AS a JOIN order_items AS b ON b.order_id = a.order_id AND a.product_id <> b.product_id JOIN products AS pa ON pa.product_id = a.product_id JOIN products AS pb ON pb.product_id = b.product_id GROUP BY a.product_id, b.product_id HAVING COUNT(*) >= 3"
+    - "SELECT pa.product_name AS product_a, pb.product_name AS product_b, COUNT(*) AS times FROM order_items AS a JOIN order_items AS b ON b.order_id = a.order_id AND a.product_id > b.product_id JOIN products AS pa ON pa.product_id = a.product_id JOIN products AS pb ON pb.product_id = b.product_id GROUP BY a.product_id, b.product_id HAVING COUNT(*) >= 3"

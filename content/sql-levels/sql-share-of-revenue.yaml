@@ -1,0 +1,34 @@
+id: sql-share-of-revenue
+title: Share of Total Revenue
+concepts: [window functions, SUM OVER (), percentages]
+lesson: sql-window-analytics
+tables: [order_items, orders, products]
+checkColumnNames: true
+task: |
+  For **Delivered** orders, show each `category`, its `revenue` (`quantity × unit_price`, **rounded to 2 decimals**), and
+  `pct_of_total`: the category's **percentage of all delivered revenue**, **rounded to 1 decimal**.
+solution: |
+  WITH category_revenue AS (
+    SELECT p.category, SUM(oi.quantity * oi.unit_price) AS revenue
+    FROM order_items AS oi
+    JOIN orders AS o ON o.order_id = oi.order_id
+    JOIN products AS p ON p.product_id = oi.product_id
+    WHERE o.status = 'Delivered'
+    GROUP BY p.category
+  )
+  SELECT category,
+         ROUND(revenue, 2) AS revenue,
+         ROUND(100.0 * revenue / SUM(revenue) OVER (), 1) AS pct_of_total
+  FROM category_revenue;
+hints:
+  - "To get a percentage, each category's revenue needs the overall total next to it."
+  - "SUM(revenue) OVER () (with empty brackets) is the total of ALL rows, shown on every row."
+  - "ROUND(100.0 * revenue / SUM(revenue) OVER (), 1) AS pct_of_total"
+explanation: |
+  An empty `OVER ()` makes the window the **whole result**, so `SUM(revenue) OVER ()` puts the grand total on every row.
+  Dividing by it gives each category's share, and the shares add up to 100%. It's the SQL behind every pie chart and
+  "percent of total" column.
+tests:
+  reject:
+    - "WITH category_revenue AS (SELECT p.category, SUM(oi.quantity * oi.unit_price) AS revenue FROM order_items AS oi JOIN orders AS o ON o.order_id = oi.order_id JOIN products AS p ON p.product_id = oi.product_id WHERE o.status = 'Delivered' GROUP BY p.category) SELECT category, ROUND(revenue, 2) AS revenue, ROUND(100.0 * revenue / SUM(revenue) OVER (ORDER BY revenue), 1) AS pct_of_total FROM category_revenue"
+    - "WITH category_revenue AS (SELECT p.category, SUM(oi.quantity * oi.unit_price) AS revenue FROM order_items AS oi JOIN products AS p ON p.product_id = oi.product_id GROUP BY p.category) SELECT category, ROUND(revenue, 2) AS revenue, ROUND(100.0 * revenue / SUM(revenue) OVER (), 1) AS pct_of_total FROM category_revenue"

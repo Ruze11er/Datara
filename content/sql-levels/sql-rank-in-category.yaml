@@ -1,0 +1,28 @@
+id: sql-rank-in-category
+title: Rank Within Each Category
+concepts: [window functions, RANK, PARTITION BY]
+lesson: sql-window-functions
+tables: [products]
+checkColumnNames: true
+task: |
+  Rank products by price **within their own category**: show `product_name`, `category`, `price`, and `rank_in_category`,
+  where the most expensive product **in each category** gets 1.
+solution: |
+  SELECT product_name,
+         category,
+         price,
+         RANK() OVER (PARTITION BY category ORDER BY price DESC) AS rank_in_category
+  FROM products;
+hints:
+  - "The numbering should start again at 1 for every category."
+  - "PARTITION BY inside OVER splits the rows into separate groups, and each group is ranked on its own."
+  - "RANK() OVER (PARTITION BY category ORDER BY price DESC) AS rank_in_category"
+explanation: |
+  `PARTITION BY category` works like a GROUP BY that doesn't collapse rows: the ranking restarts in each category, but every
+  product stays in the result. You'll use `PARTITION BY` whenever a question says "within each …".
+tests:
+  accept:
+    - "SELECT product_name, category, price, ROW_NUMBER() OVER (PARTITION BY category ORDER BY price DESC) AS rank_in_category FROM products"
+  reject:
+    - "SELECT product_name, category, price, RANK() OVER (ORDER BY price DESC) AS rank_in_category FROM products"
+    - "SELECT product_name, category, price, RANK() OVER (PARTITION BY category ORDER BY price) AS rank_in_category FROM products"

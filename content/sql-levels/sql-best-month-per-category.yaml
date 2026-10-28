@@ -1,0 +1,38 @@
+id: sql-best-month-per-category
+title: Each Category's Best Month
+concepts: [window functions, top N per group, dates, JOIN]
+lesson: sql-business-patterns
+tables: [order_items, orders, products]
+checkColumnNames: true
+task: |
+  When does each category sell best? For **Delivered** orders, find each `category`'s **best month** by sales value
+  (`quantity × unit_price`). Show `category`, `month` (`YYYY-MM`), and `revenue` (**rounded to 2 decimals**): one row per category.
+solution: |
+  WITH monthly AS (
+    SELECT p.category,
+           strftime('%Y-%m', o.order_date) AS month,
+           SUM(oi.quantity * oi.unit_price) AS revenue
+    FROM order_items AS oi
+    JOIN orders AS o ON o.order_id = oi.order_id
+    JOIN products AS p ON p.product_id = oi.product_id
+    WHERE o.status = 'Delivered'
+    GROUP BY p.category, month
+  ),
+  ranked AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY category ORDER BY revenue DESC) AS rn
+    FROM monthly
+  )
+  SELECT category, month, ROUND(revenue, 2) AS revenue
+  FROM ranked
+  WHERE rn = 1;
+hints:
+  - "Step 1: revenue per category per month. Step 2: rank months within each category. Step 3: keep rank 1."
+  - "GROUP BY p.category, month in the first CTE; PARTITION BY category ORDER BY revenue DESC in the second."
+  - "… ranked AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY category ORDER BY revenue DESC) AS rn FROM monthly) SELECT category, month, ROUND(revenue, 2) AS revenue FROM ranked WHERE rn = 1;"
+explanation: |
+  This combines a three-table join, date grouping, and "top N per group". The best months differ a lot between categories,
+  which is useful for planning stock and promotions.
+tests:
+  reject:
+    - "WITH monthly AS (SELECT p.category, strftime('%Y-%m', o.order_date) AS month, SUM(oi.quantity * oi.unit_price) AS revenue FROM order_items AS oi JOIN orders AS o ON o.order_id = oi.order_id JOIN products AS p ON p.product_id = oi.product_id WHERE o.status = 'Delivered' GROUP BY p.category, month), ranked AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY category ORDER BY revenue) AS rn FROM monthly) SELECT category, month, ROUND(revenue, 2) AS revenue FROM ranked WHERE rn = 1"
+    - "WITH monthly AS (SELECT p.category, strftime('%Y-%m', o.order_date) AS month, SUM(oi.quantity * oi.unit_price) AS revenue FROM order_items AS oi JOIN orders AS o ON o.order_id = oi.order_id JOIN products AS p ON p.product_id = oi.product_id GROUP BY p.category, month), ranked AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY category ORDER BY revenue DESC) AS rn FROM monthly) SELECT category, month, ROUND(revenue, 2) AS revenue FROM ranked WHERE rn = 1"

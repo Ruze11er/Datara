@@ -1,0 +1,31 @@
+id: sql-aov-by-country
+title: Average Order Value by Country
+concepts: [JOIN, GROUP BY, AVG, business metrics]
+lesson: sql-business-patterns
+tables: [orders, customers]
+orderMatters: true
+checkColumnNames: true
+task: |
+  **Average order value (AOV)** is total revenue divided by the number of orders. Compare it across markets.
+
+  For **Delivered** orders, show each customer `country` and its `avg_order_value` (**rounded to 2 decimals**), highest first.
+solution: |
+  SELECT c.country, ROUND(AVG(o.total_amount), 2) AS avg_order_value
+  FROM orders AS o
+  JOIN customers AS c ON c.customer_id = o.customer_id
+  WHERE o.status = 'Delivered'
+  GROUP BY c.country
+  ORDER BY avg_order_value DESC;
+hints:
+  - "The country is in customers and the amounts are in orders."
+  - "Average of total_amount per country = AVG(total_amount) grouped by country (or SUM ÷ COUNT)."
+  - "SELECT c.country, ROUND(AVG(o.total_amount), 2) AS avg_order_value FROM orders AS o JOIN customers AS c ON c.customer_id = o.customer_id WHERE o.status = 'Delivered' GROUP BY c.country ORDER BY avg_order_value DESC;"
+explanation: |
+  The country with the most revenue isn't necessarily the one with the biggest orders. Here, the smallest market has the highest
+  AOV. Looking at **both** total and per-order measures gives a fuller picture than either alone.
+tests:
+  accept:
+    - "SELECT c.country, ROUND(SUM(o.total_amount) / COUNT(*), 2) AS avg_order_value FROM orders o JOIN customers c ON c.customer_id = o.customer_id WHERE o.status = 'Delivered' GROUP BY c.country ORDER BY avg_order_value DESC"
+  reject:
+    - "SELECT c.country, ROUND(AVG(o.total_amount), 2) AS avg_order_value FROM orders AS o JOIN customers AS c ON c.customer_id = o.customer_id GROUP BY c.country ORDER BY avg_order_value DESC"
+    - "SELECT c.country, ROUND(SUM(o.total_amount), 2) AS avg_order_value FROM orders AS o JOIN customers AS c ON c.customer_id = o.customer_id WHERE o.status = 'Delivered' GROUP BY c.country ORDER BY avg_order_value DESC"

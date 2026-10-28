@@ -1,0 +1,33 @@
+id: sql-previous-month
+title: Compared with Last Month
+concepts: [LAG, window functions]
+lesson: sql-window-analytics
+tables: [orders]
+orderMatters: true
+checkColumnNames: true
+task: |
+  Show one row per month (`YYYY-MM`, sorted) with:
+
+  - `month`
+  - `orders`: the number of orders that month (all statuses)
+  - `prev_orders`: the number of orders in the **previous** month (empty for January)
+solution: |
+  WITH monthly AS (
+    SELECT strftime('%Y-%m', order_date) AS month, COUNT(*) AS orders
+    FROM orders
+    GROUP BY month
+  )
+  SELECT month, orders, LAG(orders) OVER (ORDER BY month) AS prev_orders
+  FROM monthly
+  ORDER BY month;
+hints:
+  - "First count orders per month in a CTE."
+  - "LAG(column) OVER (ORDER BY …) returns the value from the previous row in that order."
+  - "SELECT month, orders, LAG(orders) OVER (ORDER BY month) AS prev_orders FROM monthly ORDER BY month;"
+explanation: |
+  `LAG` looks back one row (or more: `LAG(orders, 2)`); `LEAD` looks ahead. January has no previous month, so its
+  `prev_orders` is NULL. Putting "this period" and "last period" side by side is the first step to calculating change.
+tests:
+  reject:
+    - "WITH monthly AS (SELECT strftime('%Y-%m', order_date) AS month, COUNT(*) AS orders FROM orders GROUP BY month) SELECT month, orders, LEAD(orders) OVER (ORDER BY month) AS prev_orders FROM monthly ORDER BY month"
+    - "WITH monthly AS (SELECT strftime('%Y-%m', order_date) AS month, COUNT(*) AS orders FROM orders GROUP BY month) SELECT month, orders, LAG(orders, 1, 0) OVER (ORDER BY month) AS prev_orders FROM monthly ORDER BY month"

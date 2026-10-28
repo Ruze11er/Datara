@@ -1,0 +1,38 @@
+id: sql-month-over-month
+title: Month-over-Month Growth
+concepts: [LAG, percentages, growth]
+lesson: sql-window-analytics
+tables: [orders]
+orderMatters: true
+checkColumnNames: true
+task: |
+  For **Delivered** orders, show one row per month (`YYYY-MM`, sorted) with:
+
+  - `month`
+  - `revenue`: **rounded to 2 decimals**
+  - `growth_pct`: the percentage change from the previous month's revenue, **rounded to 1 decimal**
+    (empty for January). For example, going from 200 to 250 is `25.0`.
+solution: |
+  WITH monthly AS (
+    SELECT strftime('%Y-%m', order_date) AS month, SUM(total_amount) AS revenue
+    FROM orders
+    WHERE status = 'Delivered'
+    GROUP BY month
+  )
+  SELECT month,
+         ROUND(revenue, 2) AS revenue,
+         ROUND(100.0 * (revenue - LAG(revenue) OVER (ORDER BY month)) / LAG(revenue) OVER (ORDER BY month), 1) AS growth_pct
+  FROM monthly
+  ORDER BY month;
+hints:
+  - "Growth % = (this month − last month) ÷ last month × 100."
+  - "Get last month's revenue with LAG(revenue) OVER (ORDER BY month). Use 100.0 to avoid whole-number division."
+  - "ROUND(100.0 * (revenue - LAG(revenue) OVER (ORDER BY month)) / LAG(revenue) OVER (ORDER BY month), 1) AS growth_pct"
+explanation: |
+  Month-over-month growth is one of the most-requested business metrics. Note that you divide by the **previous** month, not
+  the current one. When there is no previous month, `LAG` is NULL, so the whole calculation is NULL, which is the honest
+  answer for January.
+tests:
+  reject:
+    - "WITH monthly AS (SELECT strftime('%Y-%m', order_date) AS month, SUM(total_amount) AS revenue FROM orders WHERE status = 'Delivered' GROUP BY month) SELECT month, ROUND(revenue, 2) AS revenue, ROUND(100.0 * (revenue - LAG(revenue) OVER (ORDER BY month)) / revenue, 1) AS growth_pct FROM monthly ORDER BY month"
+    - "WITH monthly AS (SELECT strftime('%Y-%m', order_date) AS month, SUM(total_amount) AS revenue FROM orders WHERE status = 'Delivered' GROUP BY month) SELECT month, ROUND(revenue, 2) AS revenue, ROUND(revenue - LAG(revenue) OVER (ORDER BY month), 1) AS growth_pct FROM monthly ORDER BY month"

@@ -1,0 +1,29 @@
+id: sql-return-rate-by-category
+title: Return Rate by Category
+concepts: [JOIN, conditional aggregation, percentages]
+lesson: sql-business-patterns
+tables: [order_items, orders, products]
+orderMatters: true
+checkColumnNames: true
+task: |
+  Which categories get sent back most? For each `category`, calculate `return_rate_pct`: the units in **Returned** orders as a
+  **percentage of all units ordered** in that category (all statuses), **rounded to 1 decimal**. Highest first.
+solution: |
+  SELECT p.category,
+         ROUND(100.0 * SUM(CASE WHEN o.status = 'Returned' THEN oi.quantity ELSE 0 END) / SUM(oi.quantity), 1) AS return_rate_pct
+  FROM order_items AS oi
+  JOIN orders AS o ON o.order_id = oi.order_id
+  JOIN products AS p ON p.product_id = oi.product_id
+  GROUP BY p.category
+  ORDER BY return_rate_pct DESC;
+hints:
+  - "You need units (order_items), status (orders), and category (products), so three tables."
+  - "Numerator: SUM of quantity only for Returned orders (CASE inside SUM). Denominator: SUM of all quantity."
+  - "ROUND(100.0 * SUM(CASE WHEN o.status = 'Returned' THEN oi.quantity ELSE 0 END) / SUM(oi.quantity), 1) AS return_rate_pct"
+explanation: |
+  Conditional aggregation shines here: one pass over the data gives both the part (returned units) and the whole (all units).
+  A rate based on **units** can differ from one based on **orders**. State which one you used in any report.
+tests:
+  reject:
+    - "SELECT p.category, ROUND(100.0 * SUM(CASE WHEN o.status = 'Returned' THEN 1 ELSE 0 END) / COUNT(*), 1) AS return_rate_pct FROM order_items AS oi JOIN orders AS o ON o.order_id = oi.order_id JOIN products AS p ON p.product_id = oi.product_id GROUP BY p.category ORDER BY return_rate_pct DESC"
+    - "SELECT p.category, ROUND(100.0 * SUM(CASE WHEN o.status = 'Returned' THEN oi.quantity ELSE 0 END) / SUM(oi.quantity), 1) AS return_rate_pct FROM order_items AS oi JOIN orders AS o ON o.order_id = oi.order_id JOIN products AS p ON p.product_id = oi.product_id GROUP BY p.category ORDER BY return_rate_pct"

@@ -55,6 +55,15 @@
       lessons:
         - sql-subqueries
         - sql-ctes
+    - id: window-functions
+      title: Window Functions
+      lessons:
+        - sql-window-functions
+        - sql-window-analytics
+    - id: business-analysis
+      title: Business Analysis with SQL
+      lessons:
+        - sql-business-patterns
 
 - id: python
   title: Python for Data Analytics

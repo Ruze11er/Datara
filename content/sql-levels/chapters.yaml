@@ -121,3 +121,33 @@
     - sql-five-star-products
     - sql-above-category-average
     - sql-boss-customer-segments
+
+- id: ch9
+  title: Window Functions
+  description: Rank rows, find the top N per group, and calculate running totals, shares, and month-over-month change.
+  levels:
+    - sql-number-the-prices
+    - sql-rank-in-category
+    - sql-priciest-per-category
+    - sql-top-two-per-category
+    - sql-rank-vs-dense-rank
+    - sql-running-total
+    - sql-share-of-revenue
+    - sql-previous-month
+    - sql-month-over-month
+    - sql-boss-first-orders
+
+- id: ch10
+  title: Business Case Challenges
+  description: Real analyst questions that combine everything, from repeat rates and cohorts to the executive summary.
+  levels:
+    - sql-aov-by-country
+    - sql-repeat-rate
+    - sql-first-order-cohorts
+    - sql-return-rate-by-category
+    - sql-basket-size
+    - sql-bought-together
+    - sql-at-risk-customers
+    - sql-top-customer-share
+    - sql-best-month-per-category
+    - sql-boss-country-summary

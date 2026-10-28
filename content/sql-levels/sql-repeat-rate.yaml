@@ -1,0 +1,29 @@
+id: sql-repeat-rate
+title: Repeat Customer Rate
+concepts: [subquery, CASE, percentages, business metrics]
+lesson: sql-business-patterns
+tables: [orders]
+task: |
+  Do customers come back? Among customers with **at least one Delivered order**, what **percentage** have **2 or more**
+  Delivered orders? Return one number, **rounded to 1 decimal**.
+solution: |
+  SELECT ROUND(100.0 * SUM(CASE WHEN delivered_orders >= 2 THEN 1 ELSE 0 END) / COUNT(*), 1)
+  FROM (
+    SELECT customer_id, COUNT(*) AS delivered_orders
+    FROM orders
+    WHERE status = 'Delivered'
+    GROUP BY customer_id
+  );
+hints:
+  - "Step 1: delivered orders per customer (a derived table or CTE). Step 2: what share of those customers have 2 or more?"
+  - "Count the repeaters with SUM(CASE WHEN … >= 2 THEN 1 ELSE 0 END) and divide by COUNT(*). Remember 100.0."
+  - "SELECT ROUND(100.0 * SUM(CASE WHEN delivered_orders >= 2 THEN 1 ELSE 0 END) / COUNT(*), 1) FROM (SELECT customer_id, COUNT(*) AS delivered_orders FROM orders WHERE status = 'Delivered' GROUP BY customer_id);"
+explanation: |
+  A rate needs a clear **numerator** (customers with 2+ orders) and **denominator** (customers with at least 1).
+  Being explicit about the denominator is what makes a metric trustworthy: dividing by *all* 60 customers instead would
+  answer a different question.
+tests:
+  reject:
+    - "SELECT ROUND(100.0 * SUM(CASE WHEN delivered_orders >= 2 THEN 1 ELSE 0 END) / 60, 1) FROM (SELECT customer_id, COUNT(*) AS delivered_orders FROM orders WHERE status = 'Delivered' GROUP BY customer_id)"
+    - "SELECT ROUND(100 * SUM(CASE WHEN n >= 2 THEN 1 ELSE 0 END) / COUNT(*), 1) FROM (SELECT customer_id, COUNT(*) AS n FROM orders WHERE status = 'Delivered' GROUP BY customer_id)"
+    - "SELECT ROUND(100.0 * SUM(CASE WHEN n >= 2 THEN 1 ELSE 0 END) / COUNT(*), 1) FROM (SELECT customer_id, COUNT(*) AS n FROM orders GROUP BY customer_id)"
