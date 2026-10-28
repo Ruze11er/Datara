@@ -14,7 +14,8 @@
     "isolatedModules": true,
     "paths": {
       "@renderer/*": ["./src/renderer/src/*"],
-      "@shared/*": ["./src/shared/*"]
+      "@shared/*": ["./src/shared/*"],
+      "@content/*": ["./content/*"]
     }
   },
   "include": ["src/renderer/src/**/*", "src/shared/**/*"]

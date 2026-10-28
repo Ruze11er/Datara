@@ -1,0 +1,26 @@
+id: sql-mid-range-prices
+title: Mid-Range Prices
+concepts: [WHERE, BETWEEN]
+lesson: sql-and-or
+tables: [products]
+task: |
+  The shop is planning a "great gifts from 20 to 40" promotion.
+
+  Show the `product_name` and `price` of products priced **from 20 to 40**, including products that cost exactly 20 or 40.
+solution: |
+  SELECT product_name, price
+  FROM products
+  WHERE price BETWEEN 20 AND 40;
+hints:
+  - "You need prices that are at least 20 and at most 40."
+  - "BETWEEN low AND high includes both ends of the range."
+  - "SELECT product_name, price FROM products WHERE price BETWEEN 20 AND 40;"
+explanation: |
+  `BETWEEN 20 AND 40` means `price >= 20 AND price <= 40`. Both ends are **included**.
+  Writing it out with `>=` and `<=` gives exactly the same result.
+tests:
+  accept:
+    - "SELECT product_name, price FROM products WHERE price >= 20 AND price <= 40"
+  reject:
+    - "SELECT product_name, price FROM products WHERE price > 20 AND price > 40"
+    - "SELECT product_name, price FROM products WHERE price BETWEEN 20 AND 30"

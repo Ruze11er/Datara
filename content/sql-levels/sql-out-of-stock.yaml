@@ -1,0 +1,21 @@
+id: sql-out-of-stock
+title: Out of Stock
+concepts: [WHERE]
+lesson: sql-where
+tables: [products]
+task: |
+  Some products have sold out. The warehouse needs to know which ones.
+
+  Show the `product_name` and `category` of products with **0 units** in stock.
+solution: |
+  SELECT product_name, category FROM products WHERE stock_quantity = 0;
+hints:
+  - "Look at the products table to find the column that holds the number of units in stock."
+  - "Use WHERE with the = operator."
+  - "SELECT product_name, category FROM products WHERE stock_quantity = 0;"
+explanation: |
+  `stock_quantity = 0` keeps only products with nothing left in stock.
+  Questions like this are common in real reports: *which items need attention?*
+tests:
+  reject:
+    - "SELECT product_name, category FROM products WHERE stock_quantity > 0"

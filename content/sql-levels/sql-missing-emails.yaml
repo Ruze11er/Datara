@@ -1,0 +1,25 @@
+id: sql-missing-emails
+title: Missing Emails
+concepts: [WHERE, IS NULL]
+lesson: sql-like-null
+tables: [customers]
+task: |
+  Some customers signed up without giving an email address. The support team wants to contact them another way.
+
+  Show the `customer_id`, `first_name`, and `last_name` of customers who have **no email** (the email is missing).
+solution: |
+  SELECT customer_id, first_name, last_name
+  FROM customers
+  WHERE email IS NULL;
+hints:
+  - "A missing value in SQL is called NULL. It is not the same as an empty text or zero."
+  - "email = NULL never matches anything. NULL needs a special check."
+  - "SELECT customer_id, first_name, last_name FROM customers WHERE email IS NULL;"
+explanation: |
+  `NULL` means "unknown or missing". Comparing anything with `= NULL` gives *unknown*, not true, so no rows match.
+  Always use `IS NULL` (or `IS NOT NULL`) to find missing values.
+tests:
+  reject:
+    - "SELECT customer_id, first_name, last_name FROM customers WHERE email = NULL"
+    - "SELECT customer_id, first_name, last_name FROM customers WHERE email = ''"
+    - "SELECT customer_id, first_name, last_name FROM customers WHERE email IS NOT NULL"

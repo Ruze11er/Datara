@@ -1,0 +1,48 @@
+# SQL Lab chapters, in order. Each chapter lists its level IDs in play order.
+# The last level of each chapter is its milestone ("boss") level.
+# Finishing every level in a chapter unlocks the next chapter.
+
+- id: ch1
+  title: First Queries
+  description: Choose columns, rename them, remove duplicates, and filter rows with simple conditions.
+  levels:
+    - sql-meet-the-products
+    - sql-names-and-prices
+    - sql-customer-contacts
+    - sql-friendly-names
+    - sql-product-categories
+    - sql-customer-cities
+    - sql-books-only
+    - sql-premium-products
+    - sql-out-of-stock
+    - sql-boss-restock-categories
+
+- id: ch2
+  title: Filtering and Sorting
+  description: Combine conditions with AND, OR, IN, and BETWEEN, match patterns, handle missing values, and sort results.
+  levels:
+    - sql-budget-electronics
+    - sql-books-or-toys
+    - sql-customers-abroad
+    - sql-mid-range-prices
+    - sql-march-orders
+    - sql-product-sets
+    - sql-missing-emails
+    - sql-price-ranking
+    - sql-top-five
+    - sql-boss-big-paypal-orders
+
+- id: ch3
+  title: Summarizing Data
+  description: Count, total, and average your data with aggregate functions, and create calculated columns.
+  levels:
+    - sql-count-products
+    - sql-delivered-revenue
+    - sql-average-price
+    - sql-price-range
+    - sql-philippines-customers
+    - sql-count-emails
+    - sql-unique-buyers
+    - sql-product-profit
+    - sql-average-order-value
+    - sql-boss-inventory-value

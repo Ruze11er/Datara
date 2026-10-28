@@ -1,0 +1,26 @@
+id: sql-top-five
+title: Top Five
+concepts: [ORDER BY, LIMIT]
+lesson: sql-order-limit
+tables: [products]
+orderMatters: true
+task: |
+  The homepage has room to feature only five products.
+
+  Show the `product_name` and `price` of the **5 most expensive** products, from most to least expensive.
+solution: |
+  SELECT product_name, price
+  FROM products
+  ORDER BY price DESC
+  LIMIT 5;
+hints:
+  - "First sort the products so the most expensive come first."
+  - "LIMIT n keeps only the first n rows of the result. It goes at the very end."
+  - "SELECT product_name, price FROM products ORDER BY price DESC LIMIT 5;"
+explanation: |
+  The database sorts first (`ORDER BY price DESC`) and then keeps the first five rows (`LIMIT 5`).
+  This *sort, then limit* pattern answers every "top N" question.
+tests:
+  reject:
+    - "SELECT product_name, price FROM products LIMIT 5"
+    - "SELECT product_name, price FROM products ORDER BY price LIMIT 5"

@@ -1,0 +1,24 @@
+id: sql-philippines-customers
+title: Customers in the Philippines
+concepts: [COUNT, WHERE]
+lesson: sql-aggregates
+tables: [customers]
+task: |
+  The shop is considering a local warehouse in the Philippines.
+
+  Return **how many customers** live in the **Philippines**.
+solution: |
+  SELECT COUNT(*)
+  FROM customers
+  WHERE country = 'Philippines';
+hints:
+  - "Filter first, then count what is left."
+  - "Combine WHERE with COUNT(*)."
+  - "SELECT COUNT(*) FROM customers WHERE country = 'Philippines';"
+explanation: |
+  `WHERE` keeps only the customers in the Philippines, and `COUNT(*)` counts those rows.
+  "How many X match condition Y?" is one of the most common questions an analyst answers.
+tests:
+  reject:
+    - "SELECT COUNT(*) FROM customers"
+    - "SELECT COUNT(*) FROM customers WHERE country = 'philippines'"

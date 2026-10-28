@@ -1,0 +1,25 @@
+id: sql-price-ranking
+title: Price Ranking
+concepts: [ORDER BY]
+lesson: sql-order-limit
+tables: [products]
+orderMatters: true
+task: |
+  A shopper wants to see the most expensive products first.
+
+  Show the `product_name` and `price` of all products, sorted from the **highest price to the lowest**.
+solution: |
+  SELECT product_name, price
+  FROM products
+  ORDER BY price DESC;
+hints:
+  - "Sorting is done with ORDER BY, which goes at the end of the query."
+  - "ORDER BY sorts from smallest to largest by default. Add a keyword to reverse it."
+  - "SELECT product_name, price FROM products ORDER BY price DESC;"
+explanation: |
+  `ORDER BY price DESC` sorts by price in **descending** order (largest first). `ASC` (the default) sorts smallest first.
+  Without ORDER BY, the database does not promise any particular order, so always sort when order matters.
+tests:
+  reject:
+    - "SELECT product_name, price FROM products ORDER BY price"
+    - "SELECT product_name, price FROM products"

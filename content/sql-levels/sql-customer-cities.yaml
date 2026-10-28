@@ -1,0 +1,22 @@
+id: sql-customer-cities
+title: Where Are Our Customers?
+concepts: [DISTINCT]
+lesson: sql-distinct
+tables: [customers]
+task: |
+  The delivery team wants a list of every place they ship to.
+
+  Show each unique combination of `city` and `country` from the customers table.
+solution: |
+  SELECT DISTINCT city, country FROM customers;
+hints:
+  - "You need two columns, and each pair should appear only once."
+  - "DISTINCT works on the whole row: it removes rows where every selected column is the same."
+  - "SELECT DISTINCT city, country FROM customers;"
+explanation: |
+  With more than one column, `DISTINCT` removes rows only when **all** the selected columns match.
+  Each city and country pair appears once, however many customers live there.
+tests:
+  reject:
+    - "SELECT DISTINCT country FROM customers"
+    - "SELECT city, country FROM customers"

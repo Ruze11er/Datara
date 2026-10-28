@@ -1,0 +1,26 @@
+id: sql-product-profit
+title: Profit per Product
+concepts: [calculated columns, AS]
+lesson: sql-calculations
+tables: [products]
+task: |
+  The shop earns the difference between what a product sells for and what it costs to buy.
+
+  Show each product's `product_name` and its **profit per unit**: `price` minus `cost`.
+  Name the second column `profit`.
+solution: |
+  SELECT product_name, price - cost AS profit
+  FROM products;
+hints:
+  - "You can do arithmetic directly in SELECT, using + - * and /."
+  - "Subtract one column from the other, then give the result a name with AS."
+  - "SELECT product_name, price - cost AS profit FROM products;"
+explanation: |
+  `price - cost` is calculated for every row, creating a new column that does not exist in the table.
+  `AS profit` gives it a clear name. Without it, the column would be called `price - cost`.
+tests:
+  accept:
+    - "SELECT product_name, ROUND(price - cost, 2) AS profit FROM products"
+  reject:
+    - "SELECT product_name, cost - price AS profit FROM products"
+    - "SELECT product_name, price AS profit FROM products"

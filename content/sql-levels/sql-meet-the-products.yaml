@@ -1,0 +1,25 @@
+id: sql-meet-the-products
+title: Meet the Products
+concepts: [SELECT, FROM]
+lesson: sql-select
+tables: [products]
+task: |
+  Welcome to the shop! The product team wants to see the full catalogue.
+
+  Show **every column** for **all products** in the `products` table.
+solution: |
+  SELECT * FROM products;
+hints:
+  - "Every query starts with SELECT (which columns you want) and FROM (which table they come from)."
+  - "The `*` symbol is a shortcut that means \"all columns\"."
+  - "Write SELECT, then *, then FROM, then the table name: products."
+explanation: |
+  `SELECT *` asks for every column, and `FROM products` says which table to read.
+  With no filter, the database returns every row in the table.
+tests:
+  accept:
+    - "select * from products"
+    - "SELECT product_id, product_name, category, price, cost, stock_quantity FROM products"
+  reject:
+    - "SELECT product_name FROM products"
+    - "SELECT * FROM customers"

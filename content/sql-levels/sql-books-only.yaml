@@ -1,0 +1,22 @@
+id: sql-books-only
+title: Books Only
+concepts: [WHERE]
+lesson: sql-where
+tables: [products]
+task: |
+  A customer only wants to browse books.
+
+  Show **all columns** for products in the `Books` category.
+solution: |
+  SELECT * FROM products WHERE category = 'Books';
+hints:
+  - "To keep only some rows, add a WHERE clause after FROM."
+  - "Text values must be written in single quotes, and must match exactly, including capital letters."
+  - "SELECT * FROM products WHERE category = 'Books';"
+explanation: |
+  `WHERE` keeps only the rows where the condition is true. Here, only rows whose category is exactly `'Books'`.
+  Text values go in single quotes. Without quotes, SQL thinks `Books` is a column name.
+tests:
+  reject:
+    - "SELECT * FROM products WHERE category = 'books'"
+    - "SELECT * FROM products"

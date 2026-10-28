@@ -1,0 +1,22 @@
+id: sql-customer-contacts
+title: Customer Contact List
+concepts: [SELECT, FROM]
+lesson: sql-select
+tables: [customers]
+task: |
+  The marketing team is planning a newsletter.
+
+  Show the `first_name`, `last_name`, and `email` of every customer.
+solution: |
+  SELECT first_name, last_name, email FROM customers;
+hints:
+  - "This time the data lives in a different table. Check the table list."
+  - "You need three columns from the customers table."
+  - "SELECT first_name, last_name, email FROM customers;"
+explanation: |
+  The same `SELECT ... FROM ...` pattern works for any table.
+  Notice that some emails are empty (shown as NULL). You will learn how to find those in Chapter 2.
+tests:
+  reject:
+    - "SELECT first_name, last_name FROM customers"
+    - "SELECT * FROM customers"

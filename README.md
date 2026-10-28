@@ -12,7 +12,9 @@ See [docs/plan.md](docs/plan.md) for the agreed plan and roadmap.
 |---|---|
 | `npm install` | Install dependencies (first time only) |
 | `npm run dev` | Start the app in development mode with live reload |
-| `npm run build` | Type-check and build the app into `out/` |
+| `npm run build` | Type-check, verify all content, and build the app into `out/` |
+| `npm run verify` | Check every SQL level and lesson (solutions run, tests pass, citations verified) |
+| `npm run dataset` | Regenerate the practice shop database (`content/datasets/store.sql`) |
 | `npm start` | Run the built app from `out/` (works even with Smart App Control on) |
 | `npm run selftest` | Open the built app hidden and check the SQL and Python engines |
 | `npm run dist` | Build the Windows installer into `dist/` |
@@ -33,8 +35,21 @@ src/
     src/features/  One folder per screen (dashboard, learn, sql-lab, python-lab, progress, settings)
     src/engines/   SQL (sql.js) and Python (Pyodide) engines, each in a background worker
     src/lib/       Progress storage, engine checks
-scripts/       prepare-engines (bundles engines offline), selftest
+scripts/       prepare-engines, generate-dataset, verify-content, selftest
+content/
+  datasets/    The practice shop database (generated, do not edit by hand)
+  sql-levels/  chapters.yaml (order and chapters) + one .yaml file per level
+  lessons/     index.yaml (categories and modules) + one .md file per lesson
 ```
+
+## Adding content
+
+- **A SQL level:** create `content/sql-levels/<id>.yaml` (copy an existing one), add its id to
+  `chapters.yaml`, then run `npm run verify`. Add `tests.accept` and `tests.reject` queries so the
+  checker is tested too.
+- **A lesson:** create `content/lessons/<id>.md`, add it to `index.yaml`. Cite facts with `[^1]` and list
+  each source in the front matter. A source only passes `npm run verify` once `verified: true`, which means
+  someone has checked that the page supports the claim.
 
 ## Security model
 

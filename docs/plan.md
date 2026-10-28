@@ -22,7 +22,7 @@ Agreed 2026-10-28.
 | Phase | Scope | Status |
 |---|---|---|
 | 0. Foundation | Project setup, security, sidebar shell, installer, offline engine checks | Done |
-| 1. MVP | SQL Lab (editor, table browser, Run/Check, feedback, hints, stars, autosave), SQL chapters 1–3 (30 levels), ~12 lessons, progress, Dashboard, Settings (reset/export) | Next |
+| 1. MVP | SQL Lab (editor, table browser, Run/Check, feedback, hints, stars, autosave), SQL chapters 1–3 (30 levels), 12 lessons, progress, Dashboard, Settings (backup/restore/reset) | Built; content awaiting owner review |
 | 2. Python Lab | Python worker checks, DataFrame display, Python chapters 1–3, matching lessons | |
 | 3. Content | SQL to 100 levels, pandas chapters, statistics/spreadsheets/storytelling lessons, quizzes | |
 | 4. Extras | Playground, full Progress page, review queue, dark mode, hidden-test datasets, charts, notes | |

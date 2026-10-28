@@ -3,7 +3,7 @@ import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { IPC } from '@shared/api'
 import { APP_ORIGIN, CONTENT_SECURITY_POLICY, handleAppScheme, registerAppScheme } from './appProtocol'
-import { loadProgress, saveProgress } from './progressStore'
+import { exportProgress, importProgress, loadProgress, saveProgress } from './progressStore'
 
 const devServerUrl = !app.isPackaged ? process.env['ELECTRON_RENDERER_URL'] : undefined
 
@@ -74,6 +74,14 @@ function registerIpc(): void {
   ipcMain.handle(IPC.progressSave, (event, data: unknown) => {
     assertTrustedSender(event)
     return saveProgress(data)
+  })
+  ipcMain.handle(IPC.progressExport, (event, data: unknown) => {
+    assertTrustedSender(event)
+    return exportProgress(BrowserWindow.fromWebContents(event.sender), data)
+  })
+  ipcMain.handle(IPC.progressImport, (event) => {
+    assertTrustedSender(event)
+    return importProgress(BrowserWindow.fromWebContents(event.sender))
   })
 }
 

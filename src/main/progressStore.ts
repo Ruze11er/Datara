@@ -1,4 +1,4 @@
-import { app } from 'electron'
+import { app, BrowserWindow, dialog } from 'electron'
 import { copyFile, readFile, rename, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
@@ -53,6 +53,43 @@ export function saveProgress(data: unknown): Promise<void> {
   const task = writeQueue.then(() => writeAtomically(progressPath(), json))
   writeQueue = task.catch(() => undefined)
   return task
+}
+
+/** Saves a backup copy wherever the user chooses. Returns false if cancelled. */
+export async function exportProgress(window: BrowserWindow | null, data: unknown): Promise<boolean> {
+  if (!isProgressLike(data)) throw new Error('Nothing valid to export')
+  const today = new Date().toISOString().slice(0, 10)
+  const options = {
+    title: 'Save a backup of your Datara progress',
+    defaultPath: join(app.getPath('documents'), `datara-progress-${today}.json`),
+    filters: [{ name: 'Datara progress backup', extensions: ['json'] }]
+  }
+  const result = window ? await dialog.showSaveDialog(window, options) : await dialog.showSaveDialog(options)
+  if (result.canceled || !result.filePath) return false
+  await writeFile(result.filePath, JSON.stringify(data, null, 2), 'utf8')
+  return true
+}
+
+/** Reads a backup file the user picks. Returns null if cancelled. Throws if the file isn't a backup. */
+export async function importProgress(window: BrowserWindow | null): Promise<unknown | null> {
+  const options = {
+    title: 'Open a Datara progress backup',
+    properties: ['openFile' as const],
+    filters: [{ name: 'Datara progress backup', extensions: ['json'] }]
+  }
+  const result = window ? await dialog.showOpenDialog(window, options) : await dialog.showOpenDialog(options)
+  const file = result.filePaths[0]
+  if (result.canceled || !file) return null
+  const raw = await readFile(file, 'utf8')
+  if (Buffer.byteLength(raw) > MAX_BYTES) throw new Error('That file is too large to be a Datara backup.')
+  let data: unknown
+  try {
+    data = JSON.parse(raw)
+  } catch {
+    throw new Error('That file is not a Datara backup (it is not valid JSON).')
+  }
+  if (!isProgressLike(data)) throw new Error('That file is not a Datara backup.')
+  return data
 }
 
 async function writeAtomically(file: string, contents: string): Promise<void> {

@@ -1,0 +1,24 @@
+id: sql-count-products
+title: How Many Products?
+concepts: [COUNT]
+lesson: sql-aggregates
+tables: [products]
+task: |
+  The owner asks a simple question: how big is our catalogue?
+
+  Return **one number**: the total number of products in the `products` table.
+solution: |
+  SELECT COUNT(*) FROM products;
+hints:
+  - "You don't need to list the products, just count them."
+  - "COUNT(*) counts the rows in a table."
+  - "SELECT COUNT(*) FROM products;"
+explanation: |
+  `COUNT(*)` counts rows. It turns the whole table into a single summary row with one number.
+  Functions that summarize many rows into one value are called **aggregate functions**.
+tests:
+  accept:
+    - "SELECT COUNT(product_id) AS total_products FROM products"
+  reject:
+    - "SELECT * FROM products"
+    - "SELECT COUNT(*) FROM customers"

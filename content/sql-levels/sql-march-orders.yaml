@@ -1,0 +1,26 @@
+id: sql-march-orders
+title: March Orders
+concepts: [WHERE, BETWEEN, dates]
+lesson: sql-and-or
+tables: [orders]
+task: |
+  The manager wants to review sales from March 2025.
+
+  Show the `order_id`, `order_date`, and `total_amount` of orders placed from **2025-03-01** to **2025-03-31**.
+solution: |
+  SELECT order_id, order_date, total_amount
+  FROM orders
+  WHERE order_date BETWEEN '2025-03-01' AND '2025-03-31';
+hints:
+  - "Dates in this database are text in the format YYYY-MM-DD, so they go in single quotes."
+  - "BETWEEN works with dates too, and includes both the first and last day."
+  - "SELECT order_id, order_date, total_amount FROM orders WHERE order_date BETWEEN '2025-03-01' AND '2025-03-31';"
+explanation: |
+  Because dates are stored as `YYYY-MM-DD` text, they sort and compare in calendar order, so `BETWEEN` works as expected.
+  This only works because the year comes first. A format like `03/15/2025` would not compare correctly.
+tests:
+  accept:
+    - "SELECT order_id, order_date, total_amount FROM orders WHERE order_date >= '2025-03-01' AND order_date < '2025-04-01'"
+    - "SELECT order_id, order_date, total_amount FROM orders WHERE order_date LIKE '2025-03-%'"
+  reject:
+    - "SELECT order_id, order_date, total_amount FROM orders WHERE order_date > '2025-03-01' AND order_date < '2025-03-31'"

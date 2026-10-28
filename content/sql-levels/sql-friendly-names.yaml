@@ -1,0 +1,23 @@
+id: sql-friendly-names
+title: Friendly Column Names
+concepts: [SELECT, AS]
+lesson: sql-select
+tables: [products]
+checkColumnNames: true
+task: |
+  A report needs clearer column headings.
+
+  Show each product's name and price, but name the columns `product` and `price_usd`.
+solution: |
+  SELECT product_name AS product, price AS price_usd FROM products;
+hints:
+  - "You can rename a column in the result without changing the table."
+  - "Use the keyword AS after a column: column_name AS new_name."
+  - "SELECT product_name AS product, price AS price_usd FROM products;"
+explanation: |
+  `AS` gives a column a new name (an *alias*) in the result only. The table itself does not change.
+  Aliases make results easier to read and become very useful once you start calculating new columns.
+tests:
+  reject:
+    - "SELECT product_name, price FROM products"
+    - "SELECT product_name AS product, price FROM products"

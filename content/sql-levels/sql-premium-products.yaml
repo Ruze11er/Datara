@@ -1,0 +1,21 @@
+id: sql-premium-products
+title: Premium Products
+concepts: [WHERE, comparison]
+lesson: sql-where
+tables: [products]
+task: |
+  The shop wants to promote its premium range.
+
+  Show the `product_name` and `price` of products that cost **more than 100**.
+solution: |
+  SELECT product_name, price FROM products WHERE price > 100;
+hints:
+  - "You need WHERE with a comparison."
+  - "Numbers are written without quotes. The \"greater than\" symbol is >."
+  - "SELECT product_name, price FROM products WHERE price > 100;"
+explanation: |
+  Comparison operators like `>`, `<`, `>=`, `<=`, `=`, and `<>` (not equal) work on numbers, text, and dates.
+  Numbers are written without quotes.
+tests:
+  reject:
+    - "SELECT product_name, price FROM products WHERE price < 100"

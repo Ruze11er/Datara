@@ -1,0 +1,24 @@
+id: sql-names-and-prices
+title: Names and Prices
+concepts: [SELECT, FROM]
+lesson: sql-select
+tables: [products]
+task: |
+  A shopper asks for a simple price list. They only care about two things.
+
+  Show the `product_name` and `price` of every product.
+solution: |
+  SELECT product_name, price FROM products;
+hints:
+  - "Instead of `*`, you can list the exact columns you want."
+  - "Separate column names with a comma."
+  - "SELECT product_name, price FROM products;"
+explanation: |
+  Listing column names after `SELECT` returns only those columns, in the order you list them.
+  Asking for just the columns you need keeps results easy to read.
+tests:
+  accept:
+    - "SELECT price, product_name FROM products"
+  reject:
+    - "SELECT * FROM products"
+    - "SELECT product_name FROM products"

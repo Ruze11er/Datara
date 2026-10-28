@@ -38,7 +38,7 @@ export const engineChecks: { name: string; run: () => Promise<CheckResult> }[] =
     run: () =>
       timed('SQL engine runs a query', async () => {
         const res = await runSql({
-          setupSql: SAMPLE_TABLE,
+          dataset: { id: 'engine-check', setupSql: SAMPLE_TABLE },
           sql: 'SELECT region, SUM(amount) AS total FROM sales GROUP BY region ORDER BY region'
         })
         expect(JSON.stringify(res.rows) === '[["North",150],["South",250]]', `Unexpected result: ${JSON.stringify(res.rows)}`)

@@ -1,0 +1,26 @@
+id: sql-product-sets
+title: Sets and Bundles
+concepts: [WHERE, LIKE]
+lesson: sql-like-null
+tables: [products]
+task: |
+  The shop wants to feature its bundles. Bundle products have the word "Set" somewhere in their name.
+
+  Show the `product_name` of every product whose name **contains "Set"**.
+solution: |
+  SELECT product_name
+  FROM products
+  WHERE product_name LIKE '%Set%';
+hints:
+  - "You are matching part of a text value, not the whole value, so = will not work."
+  - "LIKE matches patterns. The % sign stands for \"any characters, or none\"."
+  - "SELECT product_name FROM products WHERE product_name LIKE '%Set%';"
+explanation: |
+  `LIKE '%Set%'` matches any name with "Set" anywhere in it: `%` before and after means anything can come before or after.
+  In SQLite, LIKE ignores upper/lower case for English letters, so `'%set%'` works too. Other databases may behave differently.
+tests:
+  accept:
+    - "SELECT product_name FROM products WHERE product_name LIKE '%set%'"
+  reject:
+    - "SELECT product_name FROM products WHERE product_name = 'Set'"
+    - "SELECT product_name FROM products WHERE product_name LIKE 'Set%'"

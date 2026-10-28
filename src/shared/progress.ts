@@ -6,21 +6,26 @@
 export const PROGRESS_VERSION = 1
 
 export type LevelStatus = 'unsolved' | 'solved'
+export type Stars = 0 | 1 | 2 | 3
 
 export interface LevelProgress {
   status: LevelStatus
-  /** 3 = no hints, 2 = used hints, 1 = viewed the solution */
-  stars: 0 | 1 | 2 | 3
+  /** Best result so far: 3 = no hints, 2 = used hints, 1 = viewed the solution. */
+  stars: Stars
+  /** Number of times Check was pressed. */
   attempts: number
+  /** Hints revealed in the current try. */
   hintsUsed: number
-  /** Last code typed in the editor (autosaved) */
+  /** Solution revealed in the current try. */
+  solutionViewed: boolean
+  /** Last code typed in the editor (autosaved). */
   lastCode?: string
   solvedAt?: string
 }
 
 export interface LessonProgress {
   completedAt?: string
-  /** 0–1 */
+  /** Best quiz score, 0–1 */
   quizScore?: number
 }
 
@@ -33,6 +38,7 @@ export interface ProgressData {
   lessons: Record<string, LessonProgress>
   sqlLevels: Record<string, LevelProgress>
   pythonLevels: Record<string, LevelProgress>
+  /** Bookmarked lesson IDs ("topics to revisit"). */
   bookmarks: string[]
   settings: Settings
 }
@@ -46,4 +52,8 @@ export function emptyProgress(): ProgressData {
     bookmarks: [],
     settings: { editorFontSize: 14 }
   }
+}
+
+export function emptyLevelProgress(): LevelProgress {
+  return { status: 'unsolved', stars: 0, attempts: 0, hintsUsed: 0, solutionViewed: false }
 }

@@ -1,0 +1,25 @@
+id: sql-price-range
+title: Cheapest and Priciest
+concepts: [MIN, MAX]
+lesson: sql-aggregates
+tables: [products]
+task: |
+  To understand the price range, show two numbers in **one row**:
+
+  the **lowest** `price` and the **highest** `price` of all products.
+solution: |
+  SELECT MIN(price), MAX(price) FROM products;
+hints:
+  - "You can put more than one aggregate function in the same SELECT, separated by a comma."
+  - "MIN(column) finds the smallest value and MAX(column) the largest."
+  - "SELECT MIN(price), MAX(price) FROM products;"
+explanation: |
+  Several aggregates can share one query. Each one summarizes the same set of rows, so you get them all in a single row.
+  Together, MIN and MAX show the full range of the data.
+tests:
+  accept:
+    - "SELECT MIN(price) AS lowest, MAX(price) AS highest FROM products"
+    - "SELECT MAX(price), MIN(price) FROM products"
+  reject:
+    - "SELECT MIN(price) FROM products"
+    - "SELECT MIN(cost), MAX(cost) FROM products"

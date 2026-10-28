@@ -1,0 +1,22 @@
+id: sql-unique-buyers
+title: Unique Buyers
+concepts: [COUNT, DISTINCT]
+lesson: sql-aggregates
+tables: [orders]
+task: |
+  Many customers order more than once. The owner wants to know how many **different** customers have bought something.
+
+  Return the number of **unique** `customer_id` values in the `orders` table.
+solution: |
+  SELECT COUNT(DISTINCT customer_id) FROM orders;
+hints:
+  - "COUNT(customer_id) counts every order, so repeat customers are counted many times."
+  - "You can put DISTINCT inside COUNT to count each value only once."
+  - "SELECT COUNT(DISTINCT customer_id) FROM orders;"
+explanation: |
+  `COUNT(DISTINCT customer_id)` counts each customer once, however many orders they placed.
+  Comparing it with `COUNT(*)` (the number of orders) tells you how often customers come back.
+tests:
+  reject:
+    - "SELECT COUNT(customer_id) FROM orders"
+    - "SELECT COUNT(*) FROM customers"

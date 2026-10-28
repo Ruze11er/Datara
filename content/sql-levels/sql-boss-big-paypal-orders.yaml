@@ -1,0 +1,38 @@
+id: sql-boss-big-paypal-orders
+title: "Milestone: Recent Big PayPal Orders"
+concepts: [WHERE, AND, ORDER BY, LIMIT]
+lesson: sql-order-limit
+tables: [orders]
+orderMatters: true
+task: |
+  **Milestone level.** This one combines everything from Chapter 2.
+
+  The payments team is checking recent large PayPal orders. Show the `order_id`, `order_date`, and `total_amount` of the
+  **3 most recent** orders that meet **all** of these conditions:
+
+  - status is **Delivered**
+  - payment method is **PayPal**
+  - total amount is **over 100**
+
+  Show the newest order first.
+solution: |
+  SELECT order_id, order_date, total_amount
+  FROM orders
+  WHERE status = 'Delivered'
+    AND payment_method = 'PayPal'
+    AND total_amount > 100
+  ORDER BY order_date DESC
+  LIMIT 3;
+hints:
+  - "Work in steps: filter the rows (WHERE), sort them (ORDER BY), then keep the first few (LIMIT)."
+  - "All three conditions must be true, so join them with AND. \"Most recent\" means the latest date first."
+  - "... WHERE status = 'Delivered' AND payment_method = 'PayPal' AND total_amount > 100 ORDER BY order_date DESC LIMIT 3;"
+explanation: |
+  The clauses always run in this logical order: `FROM` (which table) → `WHERE` (which rows) → `SELECT` (which columns) →
+  `ORDER BY` (sort) → `LIMIT` (how many). Writing queries in that order of thinking makes complex questions manageable.
+  Note that "over 100" means `> 100`, so an order of exactly 100 would not count.
+tests:
+  reject:
+    - "SELECT order_id, order_date, total_amount FROM orders WHERE status = 'Delivered' AND payment_method = 'PayPal' AND total_amount > 100 ORDER BY order_date LIMIT 3"
+    - "SELECT order_id, order_date, total_amount FROM orders WHERE payment_method = 'PayPal' AND total_amount > 100 ORDER BY order_date DESC LIMIT 3"
+    - "SELECT order_id, order_date, total_amount FROM orders WHERE status = 'Delivered' AND payment_method = 'PayPal' ORDER BY order_date DESC LIMIT 3"

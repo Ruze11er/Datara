@@ -1,0 +1,28 @@
+id: sql-customers-abroad
+title: Customers Abroad
+concepts: [WHERE, NOT IN]
+lesson: sql-and-or
+tables: [customers]
+task: |
+  Most customers live in the USA or the Philippines. The marketing team wants to reach everyone else.
+
+  Show the `first_name`, `last_name`, and `country` of customers who live **outside the USA and the Philippines**.
+solution: |
+  SELECT first_name, last_name, country
+  FROM customers
+  WHERE country NOT IN ('USA', 'Philippines');
+hints:
+  - "IN checks whether a value is in a list. Is there a way to check that it is NOT in a list?"
+  - "Write the list in brackets, with each text value in single quotes: ('USA', 'Philippines')."
+  - "SELECT first_name, last_name, country FROM customers WHERE country NOT IN ('USA', 'Philippines');"
+explanation: |
+  `IN (...)` is a short way of writing several `=` conditions joined with OR, and `NOT IN (...)` keeps everything else.
+  Listing the other countries with `IN ('Canada', 'UK', 'Australia')` also works today, but `NOT IN` keeps working
+  when customers from a new country sign up.
+tests:
+  accept:
+    - "SELECT first_name, last_name, country FROM customers WHERE country IN ('Canada', 'UK', 'Australia')"
+    - "SELECT first_name, last_name, country FROM customers WHERE country <> 'USA' AND country <> 'Philippines'"
+  reject:
+    - "SELECT first_name, last_name, country FROM customers WHERE country <> 'USA' OR country <> 'Philippines'"
+    - "SELECT first_name, last_name, country FROM customers WHERE country IN ('USA', 'Philippines')"

@@ -1,0 +1,32 @@
+id: sql-boss-restock-categories
+title: "Milestone: Restock Report"
+concepts: [DISTINCT, WHERE, AS]
+lesson: sql-where
+tables: [products]
+checkColumnNames: true
+task: |
+  **Milestone level.** This one combines everything from Chapter 1.
+
+  The warehouse manager is planning next month's orders. Show each **category** that has
+  at least one product with **fewer than 20 units** in stock.
+
+  - Each category should appear **only once**.
+  - Name the column `category_to_restock`.
+solution: |
+  SELECT DISTINCT category AS category_to_restock
+  FROM products
+  WHERE stock_quantity < 20;
+hints:
+  - "Break it into steps. First, which rows do you need? Then which column? Then how should it be named?"
+  - "Filter with WHERE stock_quantity < 20, remove repeats with DISTINCT, and rename with AS."
+  - "SELECT DISTINCT category AS category_to_restock FROM products WHERE stock_quantity < 20;"
+explanation: |
+  The database first keeps rows where `stock_quantity < 20` (WHERE), then takes their category,
+  removes duplicates (DISTINCT), and labels the column (AS).
+  Breaking a question into *which rows, which columns, how to present them* is a habit that works for every SQL problem.
+tests:
+  reject:
+    - "SELECT category AS category_to_restock FROM products WHERE stock_quantity < 20"
+    - "SELECT DISTINCT category AS category_to_restock FROM products"
+    - "SELECT DISTINCT category AS category_to_restock FROM products WHERE stock_quantity = 0"
+    - "SELECT DISTINCT category FROM products WHERE stock_quantity < 20"

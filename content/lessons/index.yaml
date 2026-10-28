@@ -1,0 +1,36 @@
+# Course structure: categories -> modules -> lessons (in reading order).
+# Each lesson ID must match a file in this folder: <id>.md
+
+- id: fundamentals
+  title: Data Analytics Fundamentals
+  description: What data analysts do, how data is organized, and the steps of an analysis.
+  modules:
+    - id: getting-started
+      title: Getting Started
+      lessons:
+        - fund-what-analysts-do
+        - fund-data-and-tables
+        - fund-analysis-process
+
+- id: sql
+  title: SQL
+  description: Ask questions of a database, from your first SELECT to summarizing data.
+  modules:
+    - id: sql-basics
+      title: SQL Basics
+      lessons:
+        - sql-intro
+        - sql-select
+        - sql-distinct
+        - sql-where
+    - id: filtering-sorting
+      title: Filtering and Sorting
+      lessons:
+        - sql-and-or
+        - sql-like-null
+        - sql-order-limit
+    - id: summarizing
+      title: Summarizing Data
+      lessons:
+        - sql-aggregates
+        - sql-calculations

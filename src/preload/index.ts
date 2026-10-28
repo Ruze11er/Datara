@@ -5,7 +5,9 @@ import { IPC, type DataraDesktopApi } from '@shared/api'
 const api: DataraDesktopApi = {
   progress: {
     load: () => ipcRenderer.invoke(IPC.progressLoad),
-    save: (data) => ipcRenderer.invoke(IPC.progressSave, data)
+    save: (data) => ipcRenderer.invoke(IPC.progressSave, data),
+    exportBackup: (data) => ipcRenderer.invoke(IPC.progressExport, data),
+    importBackup: () => ipcRenderer.invoke(IPC.progressImport)
   }
 }
 

@@ -1,0 +1,23 @@
+id: sql-product-categories
+title: What Do We Sell?
+concepts: [DISTINCT]
+lesson: sql-distinct
+tables: [products]
+task: |
+  A new team member wants to know which product categories the shop sells.
+
+  Show each `category` **once**, with no duplicates.
+solution: |
+  SELECT DISTINCT category FROM products;
+hints:
+  - "SELECT category FROM products returns one row per product, so categories repeat."
+  - "There is a keyword that removes duplicate rows. It goes right after SELECT."
+  - "SELECT DISTINCT category FROM products;"
+explanation: |
+  `DISTINCT` removes duplicate rows from the result, so each category appears only once.
+  It is a quick way to see which different values a column contains.
+tests:
+  accept:
+    - "SELECT category FROM products GROUP BY category"
+  reject:
+    - "SELECT category FROM products"

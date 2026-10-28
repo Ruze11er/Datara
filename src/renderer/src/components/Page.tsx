@@ -12,8 +12,11 @@ export function Page({ title, subtitle, children }: { title: string; subtitle?: 
   )
 }
 
-export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <section className={`rounded-xl border border-slate-200 bg-white p-5 ${className}`}>{children}</section>
+/** A white panel. `flush` removes the inner padding (for lists that run edge to edge). */
+export function Card({ children, className = '', flush = false }: { children: ReactNode; className?: string; flush?: boolean }) {
+  return (
+    <section className={`rounded-xl border border-slate-200 bg-white ${flush ? '' : 'p-5'} ${className}`}>{children}</section>
+  )
 }
 
 /** Placeholder for sections that are planned but not built yet. */

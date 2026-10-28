@@ -1,0 +1,24 @@
+id: sql-average-order-value
+title: Average Order Value
+concepts: [AVG, ROUND]
+lesson: sql-calculations
+tables: [orders]
+task: |
+  **Average order value** is a key number for any online shop.
+
+  Return the average `total_amount` of **Delivered** orders, **rounded to 2 decimal places**.
+solution: |
+  SELECT ROUND(AVG(total_amount), 2)
+  FROM orders
+  WHERE status = 'Delivered';
+hints:
+  - "Start with the average of total_amount for delivered orders."
+  - "ROUND(value, 2) rounds a number to 2 decimal places. You can wrap it around AVG(...)."
+  - "SELECT ROUND(AVG(total_amount), 2) FROM orders WHERE status = 'Delivered';"
+explanation: |
+  Functions can be nested: `AVG` calculates the mean first, then `ROUND(..., 2)` rounds it to cents.
+  Rounding is for presentation. Keep full precision while calculating and round only at the end.
+tests:
+  reject:
+    - "SELECT AVG(total_amount) FROM orders WHERE status = 'Delivered'"
+    - "SELECT ROUND(AVG(total_amount), 2) FROM orders"

@@ -1,0 +1,22 @@
+id: sql-average-price
+title: Average Price
+concepts: [AVG]
+lesson: sql-aggregates
+tables: [products]
+task: |
+  A competitor claims their products are cheaper on average. Let's check ours.
+
+  Return the **average** `price` of all products.
+solution: |
+  SELECT AVG(price) FROM products;
+hints:
+  - "There is an aggregate function for the average (the mean)."
+  - "AVG(column) adds the values and divides by how many there are."
+  - "SELECT AVG(price) FROM products;"
+explanation: |
+  `AVG(price)` returns the mean price. Averages are easy to calculate but can be pulled up or down by a few
+  very cheap or very expensive items, so analysts often look at the minimum and maximum too.
+tests:
+  reject:
+    - "SELECT SUM(price) FROM products"
+    - "SELECT AVG(cost) FROM products"

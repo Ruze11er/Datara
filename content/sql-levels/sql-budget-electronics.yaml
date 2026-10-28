@@ -1,0 +1,26 @@
+id: sql-budget-electronics
+title: Budget Electronics
+concepts: [WHERE, AND]
+lesson: sql-and-or
+tables: [products]
+task: |
+  A student is shopping for gadgets on a budget.
+
+  Show the `product_name` and `price` of **Electronics** products that cost **less than 50**.
+solution: |
+  SELECT product_name, price
+  FROM products
+  WHERE category = 'Electronics' AND price < 50;
+hints:
+  - "There are two conditions, and both must be true."
+  - "Join two conditions with AND: WHERE condition1 AND condition2."
+  - "SELECT product_name, price FROM products WHERE category = 'Electronics' AND price < 50;"
+explanation: |
+  `AND` keeps a row only when **both** conditions are true: the category is Electronics *and* the price is under 50.
+  You can chain as many conditions with AND as you need.
+tests:
+  accept:
+    - "SELECT product_name, price FROM products WHERE price < 50 AND category = 'Electronics'"
+  reject:
+    - "SELECT product_name, price FROM products WHERE category = 'Electronics' OR price < 50"
+    - "SELECT product_name, price FROM products WHERE category = 'Electronics'"

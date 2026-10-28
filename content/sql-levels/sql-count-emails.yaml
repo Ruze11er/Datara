@@ -1,0 +1,24 @@
+id: sql-count-emails
+title: Reachable by Email
+concepts: [COUNT, "NULL"]
+lesson: sql-aggregates
+tables: [customers]
+task: |
+  Before sending a newsletter, marketing wants to know how many people it will reach.
+
+  Return **how many customers have an email address** (an email that is not missing).
+solution: |
+  SELECT COUNT(email) FROM customers;
+hints:
+  - "Some customers have NULL in the email column."
+  - "COUNT(*) counts every row, but COUNT(column) skips rows where that column is NULL."
+  - "SELECT COUNT(email) FROM customers;"
+explanation: |
+  `COUNT(email)` counts only rows where `email` is not NULL, while `COUNT(*)` counts every row.
+  `SELECT COUNT(*) FROM customers WHERE email IS NOT NULL` gives the same answer, and is a little more explicit.
+tests:
+  accept:
+    - "SELECT COUNT(*) FROM customers WHERE email IS NOT NULL"
+  reject:
+    - "SELECT COUNT(*) FROM customers"
+    - "SELECT COUNT(*) FROM customers WHERE email IS NULL"

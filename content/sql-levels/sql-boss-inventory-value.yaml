@@ -1,0 +1,31 @@
+id: sql-boss-inventory-value
+title: "Milestone: Electronics Stock Check"
+concepts: [COUNT, SUM, ROUND, calculated columns, AND]
+lesson: sql-calculations
+tables: [products]
+task: |
+  **Milestone level.** This one combines everything from Chapter 3.
+
+  The accountant needs a quick summary of **Electronics** products that are **in stock** (more than 0 units).
+  Return **one row** with two numbers, in this order:
+
+  1. how many such products there are
+  2. their total **inventory value** (`price` × `stock_quantity`, added up), **rounded to 2 decimal places**
+solution: |
+  SELECT COUNT(*), ROUND(SUM(price * stock_quantity), 2)
+  FROM products
+  WHERE category = 'Electronics' AND stock_quantity > 0;
+hints:
+  - "Filter to the right products first: two conditions, both must be true."
+  - "You can do arithmetic inside an aggregate: SUM(price * stock_quantity) multiplies each row, then adds the results."
+  - "SELECT COUNT(*), ROUND(SUM(price * stock_quantity), 2) FROM products WHERE category = 'Electronics' AND stock_quantity > 0;"
+explanation: |
+  For each in-stock Electronics product, `price * stock_quantity` gives the value of that product's stock.
+  `SUM` adds those values, and `ROUND` tidies the result.
+  Did you notice the trap? Out-of-stock products add 0 to the total, but they would still be **counted**
+  if you left out `stock_quantity > 0`.
+tests:
+  reject:
+    - "SELECT COUNT(*), ROUND(SUM(price * stock_quantity), 2) FROM products WHERE category = 'Electronics'"
+    - "SELECT COUNT(*), ROUND(SUM(price), 2) FROM products WHERE category = 'Electronics' AND stock_quantity > 0"
+    - "SELECT COUNT(*), ROUND(SUM(price * stock_quantity), 2) FROM products WHERE stock_quantity > 0"

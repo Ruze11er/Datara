@@ -32,3 +32,140 @@ body {
   outline: 2px solid var(--color-brand-500);
   outline-offset: 2px;
 }
+
+/* Code fonts like Cascadia Code merge != into ≠ and <> into a diamond.
+   Learners must see the exact characters they type, so ligatures are off. */
+code,
+pre,
+.font-mono,
+.cm-editor {
+  font-variant-ligatures: none;
+  font-feature-settings: 'calt' 0, 'liga' 0;
+}
+
+/* ---------- Text written in Markdown (tasks, hints, lessons) ---------- */
+
+.prose-datara {
+  color: var(--color-slate-700);
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+.prose-datara > * + * {
+  margin-top: 0.7em;
+}
+.prose-datara strong {
+  color: var(--color-slate-900);
+  font-weight: 600;
+}
+.prose-datara a {
+  color: var(--color-brand-700);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose-datara code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: var(--color-slate-100);
+  color: var(--color-slate-800);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+.prose-datara pre {
+  background: var(--color-slate-900);
+  color: var(--color-slate-100);
+  border-radius: 8px;
+  padding: 0.8em 1em;
+  overflow-x: auto;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+.prose-datara pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+  font-size: inherit;
+}
+.prose-datara ul,
+.prose-datara ol {
+  padding-left: 1.4em;
+}
+.prose-datara ul {
+  list-style: disc;
+}
+.prose-datara ol {
+  list-style: decimal;
+}
+.prose-datara li + li {
+  margin-top: 0.25em;
+}
+.prose-datara table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.93em;
+}
+.prose-datara th,
+.prose-datara td {
+  border: 1px solid var(--color-slate-200);
+  padding: 0.4em 0.7em;
+  text-align: left;
+  vertical-align: top;
+}
+.prose-datara th {
+  background: var(--color-slate-50);
+  color: var(--color-slate-900);
+  font-weight: 600;
+}
+.prose-datara blockquote {
+  border-left: 3px solid var(--color-brand-500);
+  background: var(--color-brand-50);
+  padding: 0.6em 1em;
+  border-radius: 0 6px 6px 0;
+}
+
+/* Lessons: roomier text for long reading sessions. */
+.prose-lesson {
+  font-size: 16px;
+  line-height: 1.7;
+}
+.prose-lesson h2 {
+  margin-top: 1.8em;
+  font-size: 1.35em;
+  font-weight: 600;
+  color: var(--color-slate-900);
+}
+.prose-lesson h3 {
+  margin-top: 1.4em;
+  font-size: 1.1em;
+  font-weight: 600;
+  color: var(--color-slate-900);
+}
+.prose-lesson h2 + *,
+.prose-lesson h3 + * {
+  margin-top: 0.5em;
+}
+
+/* Hints: no outer spacing. */
+.prose-compact {
+  font-size: 14px;
+}
+.prose-compact > * + * {
+  margin-top: 0.4em;
+}
+
+/* Citation markers like [1] */
+.prose-datara sup.cite {
+  line-height: 0;
+}
+.prose-datara sup.cite button {
+  color: var(--color-brand-700);
+  font-size: 0.78em;
+  font-weight: 600;
+  padding: 0 1px;
+  cursor: pointer;
+}
+.prose-datara sup.cite button:hover {
+  text-decoration: underline;
+}
+.source-flash {
+  background: var(--color-amber-100);
+}

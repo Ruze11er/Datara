@@ -1,0 +1,26 @@
+id: sql-delivered-revenue
+title: Delivered Revenue
+concepts: [SUM, WHERE]
+lesson: sql-aggregates
+tables: [orders]
+task: |
+  The finance team only counts money from orders that actually reached the customer.
+
+  Return the **total** of `total_amount` for orders with status **Delivered**.
+solution: |
+  SELECT SUM(total_amount)
+  FROM orders
+  WHERE status = 'Delivered';
+hints:
+  - "First keep only the Delivered orders, then add up their amounts."
+  - "SUM(column) adds up all the values in a column. WHERE filters the rows before they are added."
+  - "SELECT SUM(total_amount) FROM orders WHERE status = 'Delivered';"
+explanation: |
+  `WHERE` runs **before** the aggregate, so `SUM` only adds the delivered orders.
+  Leaving out the filter would include cancelled and returned orders, which would overstate revenue.
+tests:
+  accept:
+    - "SELECT ROUND(SUM(total_amount), 2) AS revenue FROM orders WHERE status = 'Delivered'"
+  reject:
+    - "SELECT SUM(total_amount) FROM orders"
+    - "SELECT COUNT(total_amount) FROM orders WHERE status = 'Delivered'"

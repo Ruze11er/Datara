@@ -1,0 +1,27 @@
+id: sql-books-or-toys
+title: Books or Toys
+concepts: [WHERE, OR]
+lesson: sql-and-or
+tables: [products]
+task: |
+  A parent is looking for a birthday gift: either a book or a toy.
+
+  Show the `product_name` and `category` of products in the **Books** category **or** the **Toys & Games** category.
+solution: |
+  SELECT product_name, category
+  FROM products
+  WHERE category = 'Books' OR category = 'Toys & Games';
+hints:
+  - "A product only needs to match one of the two categories."
+  - "Use OR between two full conditions: category = '...' OR category = '...'."
+  - "SELECT product_name, category FROM products WHERE category = 'Books' OR category = 'Toys & Games';"
+explanation: |
+  `OR` keeps a row when **at least one** condition is true.
+  A common mistake is `category = 'Books' AND category = 'Toys & Games'`, which returns nothing,
+  because one product cannot be in two categories at once.
+tests:
+  accept:
+    - "SELECT product_name, category FROM products WHERE category IN ('Books', 'Toys & Games')"
+  reject:
+    - "SELECT product_name, category FROM products WHERE category = 'Books' AND category = 'Toys & Games'"
+    - "SELECT product_name, category FROM products WHERE category = 'Books'"
