@@ -35,6 +35,62 @@ export interface SqlChapter {
   levels: string[]
 }
 
+/** Chapters look the same in every lab. */
+export type Chapter = SqlChapter
+
+// ---------- Python levels ----------
+
+export interface PythonLevel {
+  id: string
+  title: string
+  concepts: string[]
+  lesson?: string
+  task: string
+  /** "Given data": code that runs before the learner's code. Shown read-only. */
+  setup: string
+  starter: string
+  solution: string
+  /** Variable names compared with the reference solution. */
+  expect: string[]
+  /** Compare printed output with the reference solution. */
+  checkOutput: boolean
+  /**
+   * Other versions of the given data. The learner's code must also give the same
+   * answers as the solution on these, so typing in the answer directly won't pass.
+   */
+  variants: string[]
+  hints: string[]
+  explanation: string
+  tests: { accept: string[]; reject: string[] }
+}
+
+const DEFAULT_PY_STARTER = '# Write your code below, then press Check.\n'
+
+export function parsePythonLevel(text: string, where: string): PythonLevel {
+  const raw = parseYaml(text) as Record<string, unknown>
+  const tests = (raw.tests ?? {}) as Record<string, unknown>
+  const level: PythonLevel = {
+    id: requireString(raw, 'id', where),
+    title: requireString(raw, 'title', where),
+    concepts: stringList(raw, 'concepts'),
+    lesson: typeof raw.lesson === 'string' ? raw.lesson : undefined,
+    task: requireString(raw, 'task', where),
+    setup: typeof raw.setup === 'string' ? raw.setup.trimEnd() : '',
+    starter: typeof raw.starter === 'string' ? raw.starter : DEFAULT_PY_STARTER,
+    solution: requireString(raw, 'solution', where),
+    expect: stringList(raw, 'expect'),
+    checkOutput: raw.checkOutput === true,
+    variants: stringList(raw, 'variants'),
+    hints: stringList(raw, 'hints'),
+    explanation: requireString(raw, 'explanation', where),
+    tests: { accept: stringList(tests, 'accept'), reject: stringList(tests, 'reject') }
+  }
+  if (level.expect.length === 0 && !level.checkOutput) {
+    throw new Error(`${where}: a Python level must list variables in "expect" or set checkOutput: true`)
+  }
+  return level
+}
+
 const DEFAULT_STARTER = '-- Write your query below, then press Check.\n'
 
 function requireString(obj: Record<string, unknown>, key: string, where: string): string {
@@ -47,7 +103,8 @@ function stringList(obj: Record<string, unknown>, key: string): string[] {
   const v = obj[key]
   if (v === undefined) return []
   if (!Array.isArray(v) || v.some((x) => typeof x !== 'string')) throw new Error(`"${key}" must be a list of text`)
-  return v.map((x: string) => x.trim())
+  // trimEnd only: leading spaces matter in Python code.
+  return v.map((x: string) => x.trimEnd())
 }
 
 export function parseSqlLevel(text: string, where: string): SqlLevel {

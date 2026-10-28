@@ -1,0 +1,46 @@
+id: py-stock-status
+title: Stock Status
+concepts: [if, elif, else]
+lesson: py-conditions
+task: |
+  The website shows a stock label for each product. Create `status` based on `stock`:
+
+  | Stock | `status` |
+  |---|---|
+  | 0 | `Out of stock` |
+  | 1 to 9 | `Low stock` |
+  | 10 or more | `In stock` |
+setup: |
+  stock = 8
+starter: |
+  # Use if / elif / else to set status
+solution: |
+  if stock == 0:
+      status = "Out of stock"
+  elif stock < 10:
+      status = "Low stock"
+  else:
+      status = "In stock"
+expect: [status]
+variants:
+  - |
+    stock = 0
+  - |
+    stock = 10
+  - |
+    stock = 250
+hints:
+  - "if checks a condition; elif checks another only when the first was False; else catches everything left."
+  - "Each line starting with if, elif, or else ends with a colon, and the code under it is indented 4 spaces. Use == to compare."
+  - "if stock == 0: status = \"Out of stock\" / elif stock < 10: status = \"Low stock\" / else: status = \"In stock\" (each on its own indented line)"
+explanation: |
+  Python checks the conditions **from top to bottom** and runs only the first block that is true.
+  That's why `elif stock < 10` doesn't need `stock > 0`: zero was already handled above.
+  Your code was also tested with stock values of 0, 10, and 250.
+tests:
+  accept:
+    - "if stock >= 10:\n    status = 'In stock'\nelif stock > 0:\n    status = 'Low stock'\nelse:\n    status = 'Out of stock'"
+  reject:
+    - "status = 'Low stock'"
+    - "if stock == 0:\n    status = 'Out of stock'\nelif stock <= 10:\n    status = 'Low stock'\nelse:\n    status = 'In stock'"
+    - "if stock < 10:\n    status = 'Low stock'\nelif stock == 0:\n    status = 'Out of stock'\nelse:\n    status = 'In stock'"

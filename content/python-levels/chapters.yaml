@@ -1,0 +1,48 @@
+# Python Lab chapters, in order. Each chapter lists its level IDs in play order.
+# The last level of each chapter is its milestone ("boss") level.
+# Finishing every level in a chapter unlocks the next chapter.
+
+- id: py-ch1
+  title: Variables and Values
+  description: Store numbers and text in variables, do calculations, round results, and print clear messages.
+  levels:
+    - py-hello-data
+    - py-first-variables
+    - py-order-total
+    - py-price-with-tax
+    - py-average-of-three
+    - py-round-revenue
+    - py-boxes-and-leftovers
+    - py-f-string-report
+    - py-text-to-number
+    - py-boss-receipt
+
+- id: py-ch2
+  title: Lists and Dictionaries
+  description: Keep many values together in lists and dictionaries, look things up, and summarize them.
+  levels:
+    - py-first-list
+    - py-first-and-last
+    - py-list-stats
+    - py-average-rating
+    - py-add-to-cart
+    - py-sorting-prices
+    - py-product-lookup
+    - py-update-inventory
+    - py-safe-lookup
+    - py-boss-order-summary
+
+- id: py-ch3
+  title: Conditions and Loops
+  description: Make decisions with if, repeat work with for loops, and process lists of records like an analyst.
+  levels:
+    - py-free-shipping
+    - py-stock-status
+    - py-sale-rules
+    - py-print-each-product
+    - py-loop-total
+    - py-count-big-orders
+    - py-filter-affordable
+    - py-out-of-stock-list
+    - py-delivered-revenue
+    - py-boss-category-totals

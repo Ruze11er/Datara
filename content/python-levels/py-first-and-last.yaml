@@ -1,0 +1,34 @@
+id: py-first-and-last
+title: First and Last
+concepts: [lists, indexing]
+lesson: py-lists
+task: |
+  `prices` holds today's order values, in the order they arrived.
+
+  - Create `first_price`: the **first** value in the list.
+  - Create `last_price`: the **last** value in the list.
+setup: |
+  prices = [19.99, 45.0, 12.5, 89.9, 5.25]
+starter: |
+  # Get the first and last values from prices
+solution: |
+  first_price = prices[0]
+  last_price = prices[-1]
+expect: [first_price, last_price]
+variants:
+  - |
+    prices = [7.5, 120.0, 33.3]
+hints:
+  - "You get one item from a list with its position in square brackets: prices[position]."
+  - "Positions start at 0, not 1. Negative positions count from the end."
+  - "first_price = prices[0] and last_price = prices[-1]"
+explanation: |
+  Python counts positions (*indexes*) from **0**, so `prices[0]` is the first item.
+  `prices[-1]` is the last item, whatever the length of the list. That's safer than `prices[4]`,
+  which only works when the list has exactly 5 items.
+tests:
+  accept:
+    - "first_price = prices[0]\nlast_price = prices[len(prices) - 1]"
+  reject:
+    - "first_price = prices[1]\nlast_price = prices[-1]"
+    - "first_price = prices[0]\nlast_price = prices[4]"

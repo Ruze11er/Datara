@@ -1,0 +1,33 @@
+id: py-product-lookup
+title: Product Lookup
+concepts: [dictionaries]
+lesson: py-dicts
+task: |
+  A dictionary stores values under names called **keys**. Here, one product is described with three keys.
+
+  - Create `product_price`: the product's price.
+  - Create `stock_value`: the price **times** the number in stock.
+setup: |
+  product = {"name": "Air Fryer", "price": 119.0, "stock": 25}
+starter: |
+  # Look up values in the product dictionary
+solution: |
+  product_price = product["price"]
+  stock_value = product["price"] * product["stock"]
+expect: [product_price, stock_value]
+variants:
+  - |
+    product = {"name": "Yoga Mat", "price": 28.0, "stock": 130}
+hints:
+  - "Get a value from a dictionary with its key in square brackets: product[\"key\"]."
+  - "The keys here are \"name\", \"price\", and \"stock\"."
+  - "product_price = product[\"price\"] and stock_value = product[\"price\"] * product[\"stock\"]"
+explanation: |
+  `product["price"]` looks up the value stored under the key `"price"`. Dictionaries are perfect for records:
+  one product, customer, or order with named fields, like one row of a table.
+tests:
+  accept:
+    - "product_price = product.get('price')\nstock_value = product_price * product.get('stock')"
+  reject:
+    - "product_price = 119.0\nstock_value = 2975.0"
+    - "product_price = product['price']\nstock_value = product['price'] + product['stock']"

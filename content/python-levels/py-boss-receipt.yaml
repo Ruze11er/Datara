@@ -1,0 +1,54 @@
+id: py-boss-receipt
+title: "Milestone: The Receipt"
+concepts: [variables, arithmetic, types, round, f-strings]
+lesson: py-strings
+task: |
+  **Milestone level.** This one combines everything from Chapter 1.
+
+  A customer buys several units of one item with a discount. The quantity arrived as **text**. Create:
+
+  1. `subtotal`: unit price × quantity (as a number)
+  2. `discount`: subtotal × discount rate
+  3. `total`: subtotal minus discount, **rounded to 2 decimal places**
+
+  Then print one line in exactly this format (with 2 decimal places):
+
+  ```
+  Wireless Mouse x4: $88.20
+  ```
+setup: |
+  item = "Wireless Mouse"
+  unit_price = 24.5
+  quantity_text = "4"
+  discount_rate = 0.1
+starter: |
+  # 1. subtotal
+  # 2. discount
+  # 3. total (rounded)
+  # 4. print the receipt line
+solution: |
+  quantity = int(quantity_text)
+  subtotal = unit_price * quantity
+  discount = subtotal * discount_rate
+  total = round(subtotal - discount, 2)
+  print(f"{item} x{quantity}: ${total:.2f}")
+expect: [subtotal, discount, total]
+checkOutput: true
+variants:
+  - |
+    item = "Yoga Mat"
+    unit_price = 28.0
+    quantity_text = "3"
+    discount_rate = 0.25
+hints:
+  - "Work step by step: convert the quantity first, then calculate each variable in order."
+  - "In an f-string, {total:.2f} shows a number with exactly 2 decimal places (88.2 becomes 88.20)."
+  - "quantity = int(quantity_text), subtotal = unit_price * quantity, discount = subtotal * discount_rate, total = round(subtotal - discount, 2), then print(f\"{item} x{quantity}: ${total:.2f}\")"
+explanation: |
+  Breaking a problem into small, named steps (`subtotal`, `discount`, `total`) makes it easy to check each part.
+  `:.2f` inside the curly brackets is a *format specifier*: it shows the number with exactly 2 decimals,
+  which is how money is usually displayed. `round()` changes the value; `:.2f` only changes how it is shown.
+tests:
+  reject:
+    - "quantity = int(quantity_text)\nsubtotal = unit_price * quantity\ndiscount = subtotal * discount_rate\ntotal = round(subtotal - discount, 2)\nprint(f'{item} x{quantity}: ${total}')"
+    - "subtotal = 98.0\ndiscount = 9.8\ntotal = 88.2\nprint('Wireless Mouse x4: $88.20')"

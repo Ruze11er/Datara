@@ -1,0 +1,53 @@
+id: py-boss-order-summary
+title: "Milestone: Order Summary"
+concepts: [dictionaries, lists, len, sum, max, round]
+lesson: py-dicts
+task: |
+  **Milestone level.** This one combines everything from Chapter 2.
+
+  `order` is a dictionary describing one order. Its `"items"` and `"prices"` keys hold **lists**
+  (the first price belongs to the first item, and so on). Create:
+
+  1. `item_count`: how many items are in the order
+  2. `order_total`: the sum of the prices, **rounded to 2 decimal places**
+  3. `most_expensive`: the highest price in the order
+  4. `summary`: a **new dictionary** with exactly these keys and values:
+     - `"order_id"`: the order's ID
+     - `"items"`: `item_count`
+     - `"total"`: `order_total`
+setup: |
+  order = {
+      "order_id": 1042,
+      "items": ["Yoga Mat", "Resistance Bands Set", "Stainless Steel Water Bottle"],
+      "prices": [28.0, 21.49, 22.0],
+  }
+starter: |
+  # 1. item_count
+  # 2. order_total
+  # 3. most_expensive
+  # 4. summary
+solution: |
+  item_count = len(order["items"])
+  order_total = round(sum(order["prices"]), 2)
+  most_expensive = max(order["prices"])
+  summary = {"order_id": order["order_id"], "items": item_count, "total": order_total}
+expect: [item_count, order_total, most_expensive, summary]
+variants:
+  - |
+    order = {
+        "order_id": 2001,
+        "items": ["Air Fryer", "Electric Kettle"],
+        "prices": [119.0, 49.99],
+    }
+hints:
+  - "order[\"items\"] gives you a list, so you can use len(), sum(), and max() on it directly."
+  - "Create a dictionary with curly brackets: {\"key\": value, \"key2\": value2}."
+  - "summary = {\"order_id\": order[\"order_id\"], \"items\": item_count, \"total\": order_total}"
+explanation: |
+  Data is often **nested**: a dictionary holding lists, or a list of dictionaries. `order["prices"]` is a list,
+  so list functions work on it straight away. Building a new `summary` dictionary is how you prepare clean,
+  labelled results to share, like a single row in a report.
+tests:
+  reject:
+    - "item_count = len(order)\norder_total = round(sum(order['prices']), 2)\nmost_expensive = max(order['prices'])\nsummary = {'order_id': order['order_id'], 'items': item_count, 'total': order_total}"
+    - "item_count = len(order['items'])\norder_total = round(sum(order['prices']), 2)\nmost_expensive = max(order['prices'])\nsummary = {'id': order['order_id'], 'items': item_count, 'total': order_total}"

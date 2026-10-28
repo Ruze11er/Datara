@@ -1,0 +1,37 @@
+id: py-f-string-report
+title: A Sales Message
+concepts: [f-strings, print]
+lesson: py-strings
+task: |
+  Reports often mix text and numbers. Using the given variables, print a line in exactly this format:
+
+  ```
+  Yoga Mat: 42 units sold
+  ```
+
+  The product name and number must come from the variables, so the message updates when the data changes.
+setup: |
+  product = "Yoga Mat"
+  units_sold = 42
+starter: |
+  # Print the message using an f-string
+solution: |
+  print(f"{product}: {units_sold} units sold")
+checkOutput: true
+variants:
+  - |
+    product = "Air Fryer"
+    units_sold = 7
+hints:
+  - "An f-string starts with f before the quote: f\"...\". Inside it, {variable} is replaced by the variable's value."
+  - "Put the variables in curly brackets where their values should appear."
+  - "print(f\"{product}: {units_sold} units sold\")"
+explanation: |
+  In an *f-string* (formatted string), anything inside `{ }` is calculated and inserted into the text.
+  It is the easiest way to combine text and numbers. Joining them with `+` fails unless you convert the number with `str()` first.
+tests:
+  accept:
+    - "print(product + ': ' + str(units_sold) + ' units sold')"
+  reject:
+    - "print('Yoga Mat: 42 units sold')"
+    - "print(f'{product} {units_sold} units sold')"

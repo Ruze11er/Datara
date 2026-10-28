@@ -1,9 +1,11 @@
 import { useEffect, useImperativeHandle, useRef, type Ref } from 'react'
 import { basicSetup } from 'codemirror'
-import { Compartment, EditorState, Prec } from '@codemirror/state'
+import { Compartment, EditorState, Prec, type Extension } from '@codemirror/state'
 import { EditorView, keymap } from '@codemirror/view'
 import { indentWithTab } from '@codemirror/commands'
+import { indentUnit } from '@codemirror/language'
 import { sql, SQLite } from '@codemirror/lang-sql'
+import { python } from '@codemirror/lang-python'
 
 export interface CodeEditorHandle {
   setValue(text: string): void
@@ -11,13 +13,14 @@ export interface CodeEditorHandle {
 }
 
 interface CodeEditorProps {
+  language: 'sql' | 'python'
   initialValue: string
   onChange: (text: string) => void
   /** Ctrl+Enter */
   onRun: () => void
   /** Ctrl+Shift+Enter */
   onCheck: () => void
-  /** Table name -> column names, for autocomplete. */
+  /** SQL only: table name -> column names, for autocomplete. */
   schema?: Record<string, string[]>
   fontSize: number
   ref?: Ref<CodeEditorHandle>
@@ -35,7 +38,15 @@ const editorTheme = EditorView.theme({
 
 const fontTheme = (size: number) => EditorView.theme({ '&': { fontSize: `${size}px` } })
 
-export function CodeEditor({ initialValue, onChange, onRun, onCheck, schema, fontSize, ref }: CodeEditorProps) {
+function languageSupport(language: 'sql' | 'python', schema?: Record<string, string[]>): Extension {
+  if (language === 'python') {
+    // Python code is indented with 4 spaces.
+    return [python(), indentUnit.of('    '), EditorState.tabSize.of(4)]
+  }
+  return sql({ dialect: SQLite, schema, upperCaseKeywords: true })
+}
+
+export function CodeEditor({ language, initialValue, onChange, onRun, onCheck, schema, fontSize, ref }: CodeEditorProps) {
   const host = useRef<HTMLDivElement>(null)
   const view = useRef<EditorView | null>(null)
   const fontCompartment = useRef(new Compartment())
@@ -59,7 +70,7 @@ export function CodeEditor({ initialValue, onChange, onRun, onCheck, schema, fon
           shortcuts,
           basicSetup,
           keymap.of([indentWithTab]),
-          sql({ dialect: SQLite, schema, upperCaseKeywords: true }),
+          languageSupport(language, schema),
           editorTheme,
           fontCompartment.current.of(fontTheme(fontSize)),
           EditorView.updateListener.of((update) => {

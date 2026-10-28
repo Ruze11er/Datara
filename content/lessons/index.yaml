@@ -34,3 +34,25 @@
       lessons:
         - sql-aggregates
         - sql-calculations
+
+- id: python
+  title: Python for Data Analytics
+  description: Python from your first line of code to looping through records, always with data in mind.
+  modules:
+    - id: python-basics
+      title: Python Basics
+      lessons:
+        - py-intro
+        - py-variables
+        - py-strings
+        - py-types
+    - id: python-collections
+      title: Lists and Dictionaries
+      lessons:
+        - py-lists
+        - py-dicts
+    - id: python-control-flow
+      title: Conditions and Loops
+      lessons:
+        - py-conditions
+        - py-loops

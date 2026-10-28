@@ -1,0 +1,57 @@
+id: py-boss-category-totals
+title: "Milestone: Sales by Category"
+concepts: [dictionaries, for loops, if, grouping, round]
+lesson: py-loops
+task: |
+  **Milestone level.** This one combines everything from Chapters 2 and 3.
+
+  `sales` is a list of sales, each with a `"category"` and an `"amount"`. Create:
+
+  1. `totals_by_category`: a dictionary mapping **each category** to the **total amount** sold in it,
+     with every total **rounded to 2 decimal places**
+  2. `best_category`: the name of the category with the **highest** total
+setup: |
+  sales = [
+      {"category": "Books", "amount": 29.99},
+      {"category": "Electronics", "amount": 59.99},
+      {"category": "Books", "amount": 12.99},
+      {"category": "Beauty", "amount": 26.9},
+      {"category": "Electronics", "amount": 24.5},
+      {"category": "Beauty", "amount": 9.99},
+      {"category": "Books", "amount": 34.5},
+  ]
+starter: |
+  totals_by_category = {}
+  # 1. Loop over sales and add each amount to its category's total
+  # 2. Round the totals
+  # 3. Find the best category
+solution: |
+  totals_by_category = {}
+  for sale in sales:
+      category = sale["category"]
+      totals_by_category[category] = totals_by_category.get(category, 0) + sale["amount"]
+  for category in totals_by_category:
+      totals_by_category[category] = round(totals_by_category[category], 2)
+  best_category = max(totals_by_category, key=totals_by_category.get)
+expect: [totals_by_category, best_category]
+variants:
+  - |
+    sales = [
+        {"category": "Toys & Games", "amount": 44.95},
+        {"category": "Home & Kitchen", "amount": 119.0},
+        {"category": "Toys & Games", "amount": 15.6},
+    ]
+hints:
+  - "For each sale, add its amount to the total for its category. The first time you see a category, its total starts at 0."
+  - "totals.get(category, 0) gives the current total, or 0 for a new category. To find the best, max(totals, key=totals.get) compares the values."
+  - "for sale in sales:  then  totals_by_category[sale[\"category\"]] = totals_by_category.get(sale[\"category\"], 0) + sale[\"amount\"]. Round each total in a second loop, then best_category = max(totals_by_category, key=totals_by_category.get)"
+explanation: |
+  You just wrote a **group by** by hand: one running total per category, stored in a dictionary.
+  It's the same idea as SQL's `GROUP BY category` with `SUM(amount)`, which you'll meet in the SQL Lab,
+  and pandas' `groupby()`, which you'll meet later. `max(d, key=d.get)` returns the key with the largest value.
+tests:
+  accept:
+    - "totals_by_category = {}\nfor s in sales:\n    c = s['category']\n    if c not in totals_by_category:\n        totals_by_category[c] = 0\n    totals_by_category[c] += s['amount']\ntotals_by_category = {c: round(t, 2) for c, t in totals_by_category.items()}\nbest_category = max(totals_by_category, key=totals_by_category.get)"
+  reject:
+    - "totals_by_category = {}\nfor sale in sales:\n    totals_by_category[sale['category']] = sale['amount']\nbest_category = max(totals_by_category, key=totals_by_category.get)"
+    - "totals_by_category = {'Books': 77.48, 'Electronics': 84.49, 'Beauty': 36.89}\nbest_category = 'Electronics'"

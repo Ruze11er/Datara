@@ -11,8 +11,10 @@ import { readdir, readFile } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import initSqlJs from 'sql.js'
+import { loadPyodide } from 'pyodide'
 import {
   citationsInBody,
+  parsePythonLevel,
   parseLesson,
   parseLessonIndex,
   parseSqlChapters,
@@ -117,6 +119,93 @@ for (const chapter of chapters) {
   }
 }
 
+// ---------- Python levels ----------
+
+const pyDir = join(contentDir, 'python-levels')
+const pyLevels = new Map<string, ReturnType<typeof parsePythonLevel>>()
+let pyChapterCount = 0
+
+try {
+  const pyChapters = parseSqlChapters(await readFile(join(pyDir, 'chapters.yaml'), 'utf8'))
+  pyChapterCount = pyChapters.length
+  for (const file of (await readdir(pyDir)).filter((f) => f.endsWith('.yaml') && f !== 'chapters.yaml')) {
+    try {
+      const level = parsePythonLevel(await readFile(join(pyDir, file), 'utf8'), file)
+      if (level.id !== basename(file, '.yaml')) error(`${file}: id "${level.id}" must match the file name`)
+      if (levels.has(level.id)) error(`${file}: id "${level.id}" is also used by a SQL level`)
+      pyLevels.set(level.id, level)
+    } catch (e) {
+      error(`${file}: ${(e as Error).message}`)
+    }
+  }
+  const listed = new Set<string>()
+  for (const chapter of pyChapters) {
+    for (const id of chapter.levels) {
+      if (listed.has(id)) error(`Python level "${id}" appears in more than one chapter`)
+      listed.add(id)
+      if (!pyLevels.has(id)) error(`Python chapter ${chapter.id} lists "${id}", but there is no file for it`)
+    }
+  }
+  for (const id of pyLevels.keys()) if (!listed.has(id)) warn(`Python level "${id}" is not in any chapter`)
+
+  // The same checker the app uses, running in Pyodide under Node.
+  const pyodide = await loadPyodide()
+  const checkerNs = pyodide.globals.get('dict')()
+  pyodide.runPython(await readFile(join(root, 'src', 'shared', 'python', 'datara_check.py'), 'utf8'), {
+    globals: checkerNs
+  })
+  const handle = checkerNs.get('handle') as (kind: string, spec: string) => string
+  const call = (kind: 'run' | 'check', spec: object) => JSON.parse(handle(kind, JSON.stringify(spec)))
+
+  let n = 0
+  for (const chapter of pyChapters) {
+    for (const id of chapter.levels) {
+      n++
+      const level = pyLevels.get(id)
+      if (!level) continue
+      const where = `Python level ${n} (${id})`
+      const spec = {
+        setup: level.setup,
+        solution: level.solution,
+        expect: level.expect,
+        checkOutput: level.checkOutput,
+        variants: level.variants
+      }
+      try {
+        const solved = call('run', { setup: level.setup, code: level.solution })
+        if (solved.error) {
+          error(`${where}: the solution fails: ${solved.error.type}: ${solved.error.message}`)
+          continue
+        }
+        const names = new Set((solved.variables as { name: string }[]).map((v) => v.name))
+        for (const name of level.expect) if (!names.has(name)) error(`${where}: the solution never creates "${name}"`)
+        if (level.checkOutput && !String(solved.output).trim()) error(`${where}: checkOutput is on, but the solution prints nothing`)
+        if (verbose) console.log(`${where}: output ${JSON.stringify(String(solved.output).slice(0, 60))}`)
+
+        const self = call('check', { ...spec, code: level.solution })
+        if (!self.pass) error(`${where}: the solution does not pass its own check: ${self.message}`)
+        if (level.hints.length !== 3) warn(`${where}: has ${level.hints.length} hints (3 recommended)`)
+
+        for (const code of level.tests.accept) {
+          const r = call('check', { ...spec, code })
+          if (!r.pass) error(`${where}: should ACCEPT ${JSON.stringify(code)} but says: ${r.message}`)
+        }
+        for (const code of level.tests.reject) {
+          const r = call('check', { ...spec, code })
+          if (r.pass) error(`${where}: should REJECT ${JSON.stringify(code)}, but it passes`)
+          else if (verbose) console.log(`    rejects ${JSON.stringify(code).slice(0, 70)}: ${r.message}`)
+        }
+      } catch (e) {
+        error(`${where}: checker crashed: ${(e as Error).message}`)
+      }
+    }
+  }
+  checkerNs.destroy()
+} catch (e) {
+  if ((e as NodeJS.ErrnoException).code === 'ENOENT') warn('No Python levels yet (content/python-levels/chapters.yaml not found)')
+  else error(`Python levels: ${(e as Error).message}`)
+}
+
 // ---------- Lessons ----------
 
 const lessonDir = join(contentDir, 'lessons')
@@ -152,7 +241,7 @@ try {
         if (q.answer < 0 || q.answer >= q.options.length) error(`${id}: quiz question ${i + 1} has an invalid answer index`)
       }
       for (const levelId of lesson.practice) {
-        if (!levels.has(levelId)) error(`${id}: practice link "${levelId}" is not a real level`)
+        if (!levels.has(levelId) && !pyLevels.has(levelId)) error(`${id}: practice link "${levelId}" is not a real level`)
       }
     } catch (e) {
       error(`${id}.md: ${(e as Error).message}`)
@@ -162,7 +251,7 @@ try {
   warn('No lessons yet (content/lessons/index.yaml not found)')
 }
 
-for (const level of levels.values()) {
+for (const level of [...levels.values(), ...pyLevels.values()]) {
   if (level.lesson && lessonIds.size > 0 && !lessonIds.has(level.lesson)) {
     error(`Level ${level.id}: lesson "${level.lesson}" does not exist`)
   }
@@ -173,7 +262,7 @@ for (const level of levels.values()) {
 for (const w of warnings) console.log(`WARN   ${w}`)
 for (const e of errors) console.log(`ERROR  ${e}`)
 console.log(
-  `\nChecked ${levels.size} SQL levels in ${chapters.length} chapters and ${lessonIds.size} lessons: ` +
-    `${errors.length} errors, ${warnings.length} warnings.`
+  `\nChecked ${levels.size} SQL levels (${chapters.length} chapters), ${pyLevels.size} Python levels ` +
+    `(${pyChapterCount} chapters) and ${lessonIds.size} lessons: ${errors.length} errors, ${warnings.length} warnings.`
 )
 process.exit(errors.length > 0 ? 1 : 0)

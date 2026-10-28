@@ -1,0 +1,33 @@
+id: py-boxes-and-leftovers
+title: Boxes and Leftovers
+concepts: [floor division, remainder]
+lesson: py-variables
+task: |
+  The warehouse packs mugs into boxes of a fixed size.
+
+  - Create `full_boxes`: how many **completely full** boxes can be packed (a whole number).
+  - Create `leftover`: how many mugs are **left over** after filling those boxes.
+setup: |
+  mugs = 47
+  box_size = 6
+starter: |
+  # How many full boxes? How many mugs left over?
+solution: |
+  full_boxes = mugs // box_size
+  leftover = mugs % box_size
+expect: [full_boxes, leftover]
+variants:
+  - |
+    mugs = 100
+    box_size = 8
+hints:
+  - "Normal division (/) gives a decimal, like 7.83. You need a whole number of boxes."
+  - "// divides and drops the decimal part. % gives the remainder."
+  - "full_boxes = mugs // box_size and leftover = mugs % box_size"
+explanation: |
+  `//` is *floor division*: it divides and rounds down to a whole number (47 // 6 is 7).
+  `%` gives the *remainder* (47 % 6 is 5). Together they answer "how many groups, and how many left over?"
+tests:
+  reject:
+    - "full_boxes = mugs / box_size\nleftover = mugs % box_size"
+    - "full_boxes = 7\nleftover = 5"

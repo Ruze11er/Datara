@@ -1,0 +1,29 @@
+id: py-average-rating
+title: Average Rating
+concepts: [lists, sum, len, round]
+lesson: py-lists
+task: |
+  Customers rated a product from 1 to 5 stars.
+
+  Create `average_rating`: the average of `ratings`, **rounded to 2 decimal places**.
+setup: |
+  ratings = [5, 4, 4, 3, 5, 5, 2, 4]
+starter: |
+  # average = total / count, then round
+solution: |
+  average_rating = round(sum(ratings) / len(ratings), 2)
+expect: [average_rating]
+variants:
+  - |
+    ratings = [1, 2, 2]
+hints:
+  - "The average is the total divided by the number of ratings."
+  - "Use sum() for the total and len() for the count, then round() the result."
+  - "average_rating = round(sum(ratings) / len(ratings), 2)"
+explanation: |
+  `sum(ratings) / len(ratings)` is the mean. Using `len()` instead of typing `8` means the code still works
+  when new ratings are added. `/` always gives a decimal number in Python, even when both sides are whole numbers.
+tests:
+  reject:
+    - "average_rating = sum(ratings) / len(ratings)"
+    - "average_rating = round(sum(ratings) / 8, 2)"

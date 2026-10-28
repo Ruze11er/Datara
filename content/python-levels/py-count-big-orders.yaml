@@ -1,0 +1,38 @@
+id: py-count-big-orders
+title: Count the Big Orders
+concepts: [for loops, if, counting]
+lesson: py-loops
+task: |
+  Management wants to know how many orders were **over 100**.
+
+  Create `big_orders`: the number of values in `order_values` that are **greater than 100**.
+setup: |
+  order_values = [45.0, 120.5, 99.99, 310.0, 100.0, 15.25, 187.3]
+starter: |
+  big_orders = 0
+  # Loop over order_values and count the ones over 100
+solution: |
+  big_orders = 0
+  for value in order_values:
+      if value > 100:
+          big_orders += 1
+expect: [big_orders]
+variants:
+  - |
+    order_values = [101.0, 5.0]
+  - |
+    order_values = [10.0, 20.0]
+hints:
+  - "Start a counter at 0. Loop over the values, and add 1 to the counter only when a value is over 100."
+  - "Put an if inside the for loop. The if line needs its own extra indentation."
+  - "for value in order_values:  then  if value > 100:  then  big_orders += 1 (each one indented further)"
+explanation: |
+  Combining a loop with an `if` lets you count only the items that match a condition, just like SQL's
+  `SELECT COUNT(*) ... WHERE value > 100`. Note that 100.0 is **not** counted: "over 100" means `> 100`.
+tests:
+  accept:
+    - "big_orders = len([v for v in order_values if v > 100])"
+  reject:
+    - "big_orders = 0\nfor value in order_values:\n    if value >= 100:\n        big_orders += 1"
+    - "big_orders = len(order_values)"
+    - "big_orders = 3"

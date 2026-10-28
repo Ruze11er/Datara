@@ -1,0 +1,37 @@
+id: py-print-each-product
+title: Print Each Product
+concepts: [for loops, print]
+lesson: py-loops
+task: |
+  Use a `for` loop to print **each product** in `products` on its own line, with a dash in front:
+
+  ```
+  - Yoga Mat
+  - Air Fryer
+  - Smartwatch
+  ```
+setup: |
+  products = ["Yoga Mat", "Air Fryer", "Smartwatch"]
+starter: |
+  # Loop over products and print each one
+solution: |
+  for product in products:
+      print(f"- {product}")
+checkOutput: true
+variants:
+  - |
+    products = ["Lip Balm Trio", "Wooden Puzzle", "4K Webcam", "Yoga Mat"]
+hints:
+  - "for item in some_list: runs the indented code once for every item in the list."
+  - "Inside the loop, the loop variable holds the current item. Print it with \"- \" in front."
+  - "for product in products:  then, indented on the next line: print(f\"- {product}\")"
+explanation: |
+  `for product in products:` repeats the indented block once per item, with `product` holding the current one.
+  Loops let you do the same work for 3 items or 3 million without writing more code.
+tests:
+  accept:
+    - "for p in products:\n    print('- ' + p)"
+  reject:
+    - "print('- Yoga Mat')\nprint('- Air Fryer')\nprint('- Smartwatch')"
+    - "for product in products:\n    print(product)"
+    - "print(products)"

@@ -1,0 +1,38 @@
+id: py-filter-affordable
+title: Affordable Picks
+concepts: [for loops, if, append, filtering]
+lesson: py-loops
+task: |
+  Build a "gifts under 30" list.
+
+  Create `affordable`: a **new list** containing only the prices from `prices` that are **under 30**,
+  in their original order.
+setup: |
+  prices = [24.5, 189.0, 9.99, 59.99, 28.0, 34.95, 14.99]
+starter: |
+  affordable = []
+  # Loop over prices and append the ones under 30
+solution: |
+  affordable = []
+  for price in prices:
+      if price < 30:
+          affordable.append(price)
+expect: [affordable]
+variants:
+  - |
+    prices = [30.0, 29.99, 100.0]
+hints:
+  - "Start with an empty list: affordable = []."
+  - "Loop over prices. When a price is under 30, add it with affordable.append(price)."
+  - "for price in prices:  then  if price < 30:  then  affordable.append(price)"
+explanation: |
+  Looping, testing each item, and appending the matches is called **filtering**. It's the Python version of SQL's
+  `WHERE`. Python also has a one-line form called a *list comprehension*:
+  `affordable = [p for p in prices if p < 30]`.
+tests:
+  accept:
+    - "affordable = [p for p in prices if p < 30]"
+  reject:
+    - "affordable = []\nfor price in prices:\n    if price <= 30:\n        affordable.append(price)"
+    - "affordable = sorted([p for p in prices if p < 30])"
+    - "affordable = [24.5, 9.99, 28.0, 14.99]"

@@ -1,0 +1,34 @@
+id: py-text-to-number
+title: Numbers Stored as Text
+concepts: [types, int, float]
+lesson: py-types
+task: |
+  Data imported from a spreadsheet often arrives as **text**, even when it looks like a number.
+  The price and quantity below are text (look at the quotes).
+
+  Create `total`: the price **times** the quantity, as a **number**.
+setup: |
+  price_text = "19.99"
+  qty_text = "3"
+starter: |
+  # Convert the text to numbers, then multiply
+solution: |
+  total = float(price_text) * int(qty_text)
+expect: [total]
+variants:
+  - |
+    price_text = "4.50"
+    qty_text = "10"
+hints:
+  - "Try price_text * qty_text and read the error. You can't multiply two pieces of text."
+  - "float() turns text into a decimal number. int() turns text into a whole number."
+  - "total = float(price_text) * int(qty_text)"
+explanation: |
+  `"19.99"` with quotes is text (a `str`), not a number. `float()` converts it to a decimal number, and `int()` to a whole number.
+  Converting types is one of the most common data-cleaning steps, because spreadsheets and CSV files often store numbers as text.
+tests:
+  accept:
+    - "total = float(price_text) * float(qty_text)"
+  reject:
+    - "total = price_text * 3"
+    - "total = 59.97"

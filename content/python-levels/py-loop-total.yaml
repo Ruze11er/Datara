@@ -1,0 +1,39 @@
+id: py-loop-total
+title: Running Total
+concepts: [for loops, accumulator]
+lesson: py-loops
+task: |
+  Add up all the values in `sales` **using a `for` loop**, and store the result in `total`.
+
+  (Python's `sum()` would do this in one step. Here you'll learn the loop pattern that `sum()` uses behind the scenes,
+  which you'll need for trickier totals later.)
+setup: |
+  sales = [120.0, 85.5, 240.25, 60.0, 99.99]
+starter: |
+  total = 0
+  # Loop over sales and add each value to total
+solution: |
+  total = 0
+  for amount in sales:
+      total = total + amount
+expect: [total]
+variants:
+  - |
+    sales = [10.0, 20.0]
+  - |
+    sales = []
+hints:
+  - "Start total at 0 before the loop. Inside the loop, add the current value to total."
+  - "total = total + amount (or the shortcut total += amount) updates the running total."
+  - "total = 0, then: for amount in sales:  and, indented on the next line: total += amount"
+explanation: |
+  This is the **accumulator** pattern: start with an empty result (0), then update it once per item.
+  It's how you'll calculate totals that `sum()` can't do directly, like the total of *only delivered* orders.
+  It also works for an empty list: the loop runs zero times and `total` stays 0.
+tests:
+  accept:
+    - "total = 0\nfor s in sales:\n    total += s"
+    - "total = sum(sales)"
+  reject:
+    - "total = 0\nfor amount in sales:\n    total = amount"
+    - "total = 605.74"

@@ -1,10 +1,10 @@
 import { Link } from 'react-router'
 import { Bookmark, RotateCcw } from 'lucide-react'
 import { Card, Page } from '../../components/Page'
-import { lessonCategories, lessonsInOrder, sqlChapters } from '../../content'
+import { labs, lessonCategories, lessonsInOrder, type Lab } from '../../content'
 import { useProgress } from '../../lib/ProgressContext'
 import { topicsToRevisit } from '../../lib/revisit'
-import { chapterStats, isChapterUnlocked, overallSqlStats } from '../../lib/sqlProgress'
+import { chapterStats, isChapterUnlocked, overallStats } from '../../lib/labProgress'
 
 function Stat({ label, value, detail }: { label: string; value: string; detail?: string }) {
   return (
@@ -20,55 +20,73 @@ function Bar({ label, done, total, note }: { label: string; done: number; total:
   const pct = total === 0 ? 0 : Math.round((done / total) * 100)
   return (
     <div>
-      <div className="mb-1 flex justify-between text-sm">
+      <div className="mb-1 flex justify-between gap-3 text-sm">
         <span className="text-slate-700">{label}</span>
-        <span className="text-slate-500 tabular-nums">
-          {note ?? `${done}/${total}`}
-        </span>
+        <span className="shrink-0 text-slate-500 tabular-nums">{note ?? `${done}/${total}`}</span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={label}>
+      <div
+        className="h-2 overflow-hidden rounded-full bg-slate-100"
+        role="progressbar"
+        aria-valuenow={pct}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={label}
+      >
         <div className="h-full rounded-full bg-brand-500" style={{ width: `${pct}%` }} />
       </div>
     </div>
   )
 }
 
+function LabChapters({ lab }: { lab: Lab }) {
+  const { progress } = useProgress()
+  return (
+    <Card>
+      <h2 className="mb-4 font-semibold text-slate-900">{lab.name} chapters</h2>
+      <div className="space-y-4">
+        {lab.chapters.map((c, i) => {
+          const s = chapterStats(progress, lab, i)
+          const open = isChapterUnlocked(progress, lab, i)
+          return (
+            <Bar
+              key={c.id}
+              label={`Chapter ${i + 1}: ${c.title}`}
+              done={s.solved}
+              total={s.total}
+              note={open ? `${s.solved}/${s.total} · ${s.stars}★` : 'Locked'}
+            />
+          )
+        })}
+      </div>
+    </Card>
+  )
+}
+
 export default function ProgressPage() {
   const { progress } = useProgress()
-  const sql = overallSqlStats(progress)
   const done = lessonsInOrder.filter((p) => progress?.lessons[p.lesson.id]?.completedAt)
   const scores = done.map((p) => progress?.lessons[p.lesson.id]?.quizScore).filter((s): s is number => s !== undefined)
   const avgQuiz = scores.length ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 100) : null
+  const totals = labs.map((lab) => overallStats(progress, lab))
+  const solved = totals.reduce((s, t) => s + t.solved, 0)
+  const levelCount = totals.reduce((s, t) => s + t.total, 0)
+  const stars = totals.reduce((s, t) => s + t.stars, 0)
+  const maxStars = totals.reduce((s, t) => s + t.maxStars, 0)
   const revisit = topicsToRevisit(progress)
 
   return (
     <Page title="Progress" subtitle="Everything you've completed, and what to revisit.">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat label="Lessons completed" value={`${done.length}/${lessonsInOrder.length}`} />
-        <Stat label="SQL levels solved" value={`${sql.solved}/${sql.total}`} />
-        <Stat label="Stars earned" value={`${sql.stars}/${sql.maxStars}`} detail="3 stars = solved without help" />
+        <Stat label="Levels solved" value={`${solved}/${levelCount}`} detail="SQL Lab and Python Lab" />
+        <Stat label="Stars earned" value={`${stars}/${maxStars}`} detail="3 stars = solved without help" />
         <Stat label="Average quiz score" value={avgQuiz === null ? '–' : `${avgQuiz}%`} detail="Best score per lesson" />
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        <Card>
-          <h2 className="mb-4 font-semibold text-slate-900">SQL Lab chapters</h2>
-          <div className="space-y-4">
-            {sqlChapters.map((c, i) => {
-              const s = chapterStats(progress, i)
-              const open = isChapterUnlocked(progress, i)
-              return (
-                <Bar
-                  key={c.id}
-                  label={`Chapter ${i + 1}: ${c.title}`}
-                  done={s.solved}
-                  total={s.total}
-                  note={open ? `${s.solved}/${s.total} · ${s.stars}★` : 'Locked'}
-                />
-              )
-            })}
-          </div>
-        </Card>
+      <div className="mt-6 grid gap-4 md:grid-cols-3">
+        {labs.map((lab) => (
+          <LabChapters key={lab.id} lab={lab} />
+        ))}
         <Card>
           <h2 className="mb-4 font-semibold text-slate-900">Lessons</h2>
           <div className="space-y-4">
@@ -108,13 +126,13 @@ export default function ProgressPage() {
             </ul>
           </Card>
           <Card flush>
-            <h3 className="border-b border-slate-100 px-5 py-3 text-sm font-semibold text-slate-700">SQL levels to practise again</h3>
+            <h3 className="border-b border-slate-100 px-5 py-3 text-sm font-semibold text-slate-700">Levels to practise again</h3>
             <ul className="divide-y divide-slate-100">
-              {revisit.levels.map(({ level, reason }) => (
-                <li key={level.id}>
-                  <Link to={`/sql/${level.id}`} className="flex items-center justify-between gap-3 px-5 py-2.5 hover:bg-slate-50">
+              {revisit.levels.map(({ lab, level, reason }) => (
+                <li key={`${lab.id}-${level.id}`}>
+                  <Link to={`${lab.path}/${level.id}`} className="flex items-center justify-between gap-3 px-5 py-2.5 hover:bg-slate-50">
                     <span className="text-sm text-slate-800">
-                      Level {level.number}: {level.title}
+                      {lab.name} {level.number}: {level.title}
                     </span>
                     <span className="shrink-0 text-xs text-slate-500">{reason}</span>
                   </Link>

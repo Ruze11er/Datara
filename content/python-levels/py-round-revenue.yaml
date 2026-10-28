@@ -1,0 +1,30 @@
+id: py-round-revenue
+title: Round the Revenue
+concepts: [round]
+lesson: py-variables
+task: |
+  A calculation produced a revenue number with too many decimal places for a report.
+
+  Create `rounded_revenue`: `revenue` **rounded to 2 decimal places**.
+setup: |
+  revenue = 1234.5678
+starter: |
+  # Round revenue to 2 decimal places
+solution: |
+  rounded_revenue = round(revenue, 2)
+expect: [rounded_revenue]
+variants:
+  - |
+    revenue = 98.7654
+hints:
+  - "Python has a built-in function for rounding."
+  - "round(number, digits) rounds to that many digits after the decimal point."
+  - "rounded_revenue = round(revenue, 2)"
+explanation: |
+  `round(revenue, 2)` keeps 2 digits after the decimal point. Without the second number, `round()` rounds to a
+  whole number. Round only when you present results: keep full precision while calculating.
+tests:
+  reject:
+    - "rounded_revenue = round(revenue)"
+    - "rounded_revenue = 1234.57"
+    - "rounded_revenue = revenue"

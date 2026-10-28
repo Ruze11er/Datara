@@ -1,0 +1,35 @@
+id: py-list-stats
+title: A Week of Orders
+concepts: [lists, len, sum, max]
+lesson: py-lists
+task: |
+  `daily_orders` holds the number of orders for each day of last week.
+
+  Create three variables:
+
+  - `total_orders`: the total number of orders for the week
+  - `best_day`: the highest number of orders on a single day
+  - `num_days`: how many days are in the list
+setup: |
+  daily_orders = [12, 18, 9, 22, 15, 30, 11]
+starter: |
+  # Use Python's built-in functions to summarize the list
+solution: |
+  total_orders = sum(daily_orders)
+  best_day = max(daily_orders)
+  num_days = len(daily_orders)
+expect: [total_orders, best_day, num_days]
+variants:
+  - |
+    daily_orders = [5, 3, 8]
+hints:
+  - "Python has built-in functions that work on a whole list at once."
+  - "sum() adds the items, max() finds the largest, len() counts the items."
+  - "total_orders = sum(daily_orders), best_day = max(daily_orders), num_days = len(daily_orders)"
+explanation: |
+  `sum()`, `max()`, `min()`, and `len()` summarize a whole list in one step, much like SQL's aggregate functions
+  `SUM`, `MAX`, `MIN`, and `COUNT`.
+tests:
+  reject:
+    - "total_orders = sum(daily_orders)\nbest_day = max(daily_orders)\nnum_days = 7"
+    - "total_orders = len(daily_orders)\nbest_day = max(daily_orders)\nnum_days = len(daily_orders)"

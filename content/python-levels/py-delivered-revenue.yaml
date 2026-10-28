@@ -1,0 +1,48 @@
+id: py-delivered-revenue
+title: Delivered Revenue
+concepts: [lists of dictionaries, for loops, if]
+lesson: py-loops
+task: |
+  `orders` is a **list of dictionaries**, where each dictionary is one order, like a row in a table.
+
+  Create `delivered_revenue`: the total of `"total"` for orders whose `"status"` is `Delivered`,
+  **rounded to 2 decimal places**.
+setup: |
+  orders = [
+      {"id": 1001, "status": "Delivered", "total": 45.0},
+      {"id": 1002, "status": "Cancelled", "total": 120.5},
+      {"id": 1003, "status": "Delivered", "total": 89.99},
+      {"id": 1004, "status": "Shipped", "total": 30.0},
+      {"id": 1005, "status": "Delivered", "total": 15.25},
+  ]
+starter: |
+  delivered_revenue = 0
+  # Loop over the orders and add up the delivered ones
+solution: |
+  delivered_revenue = 0
+  for order in orders:
+      if order["status"] == "Delivered":
+          delivered_revenue += order["total"]
+  delivered_revenue = round(delivered_revenue, 2)
+expect: [delivered_revenue]
+variants:
+  - |
+    orders = [
+        {"id": 2001, "status": "Returned", "total": 99.0},
+        {"id": 2002, "status": "Delivered", "total": 10.1},
+        {"id": 2003, "status": "Delivered", "total": 20.2},
+    ]
+hints:
+  - "Each item in the loop is one order dictionary, so use order[\"status\"] and order[\"total\"]."
+  - "Add order[\"total\"] to the running total only when the status is \"Delivered\". Round once, after the loop."
+  - "for order in orders:  then  if order[\"status\"] == \"Delivered\":  then  delivered_revenue += order[\"total\"], and finally round(delivered_revenue, 2)"
+explanation: |
+  A list of dictionaries is how Python often holds table-like data: each dictionary is a row, and each key is a column.
+  Looping with an `if` and a running total is exactly what SQL does for
+  `SELECT SUM(total) FROM orders WHERE status = 'Delivered'`, and what pandas will do for you in a later chapter.
+tests:
+  accept:
+    - "delivered_revenue = round(sum(o['total'] for o in orders if o['status'] == 'Delivered'), 2)"
+  reject:
+    - "delivered_revenue = 0\nfor order in orders:\n    delivered_revenue += order['total']\ndelivered_revenue = round(delivered_revenue, 2)"
+    - "delivered_revenue = 150.24"

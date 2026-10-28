@@ -1,0 +1,34 @@
+id: py-free-shipping
+title: Free Shipping?
+concepts: [comparisons, booleans]
+lesson: py-conditions
+task: |
+  Orders of **50 or more** get free shipping.
+
+  Create `free_shipping`: `True` if `order_total` qualifies, otherwise `False`.
+setup: |
+  order_total = 64.5
+starter: |
+  # Compare order_total with 50
+solution: |
+  free_shipping = order_total >= 50
+expect: [free_shipping]
+variants:
+  - |
+    order_total = 30.0
+  - |
+    order_total = 50.0
+hints:
+  - "A comparison like a > b is itself a value: True or False."
+  - "\"50 or more\" means greater than or equal to: >="
+  - "free_shipping = order_total >= 50"
+explanation: |
+  Comparisons (`==`, `!=`, `<`, `<=`, `>`, `>=`) produce a *boolean*: `True` or `False`. You can store it in a variable
+  directly. No `if` is needed. Notice the hidden test with exactly 50: `>=` includes it, `>` would not.
+tests:
+  accept:
+    - "if order_total >= 50:\n    free_shipping = True\nelse:\n    free_shipping = False"
+  reject:
+    - "free_shipping = order_total > 50"
+    - "free_shipping = True"
+    - "free_shipping = 'True'"

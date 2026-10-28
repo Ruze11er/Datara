@@ -1,9 +1,9 @@
 // Works out which topics the learner may want to revisit.
 
-import type { ProgressData } from '@shared/progress'
-import { getLesson, lessonsInOrder, sqlLevels, type NumberedLevel } from '../content'
 import type { Lesson } from '@shared/content'
-import { levelProgress } from './sqlProgress'
+import type { ProgressData } from '@shared/progress'
+import { getLesson, labs, lessonsInOrder, type BaseLevel, type Lab, type Numbered } from '../content'
+import { levelProgress } from './labProgress'
 
 /** Unsolved levels with at least this many checks count as "struggling". */
 const STRUGGLE_ATTEMPTS = 4
@@ -11,7 +11,8 @@ const STRUGGLE_ATTEMPTS = 4
 const LOW_QUIZ = 0.67
 
 export interface LevelToRevisit {
-  level: NumberedLevel
+  lab: Lab
+  level: Numbered<BaseLevel>
   reason: string
 }
 
@@ -23,12 +24,14 @@ export interface RevisitSummary {
 
 export function topicsToRevisit(progress: ProgressData | null): RevisitSummary {
   const levels: LevelToRevisit[] = []
-  for (const level of sqlLevels) {
-    const lp = levelProgress(progress, level.id)
-    if (lp.status === 'solved' && lp.stars === 1) levels.push({ level, reason: 'You viewed the solution' })
-    else if (lp.status === 'solved' && lp.stars === 2) levels.push({ level, reason: 'You used hints' })
-    else if (lp.status !== 'solved' && lp.attempts >= STRUGGLE_ATTEMPTS)
-      levels.push({ level, reason: `${lp.attempts} tries, not solved yet` })
+  for (const lab of labs) {
+    for (const level of lab.levels) {
+      const lp = levelProgress(progress, lab, level.id)
+      if (lp.status === 'solved' && lp.stars === 1) levels.push({ lab, level, reason: 'You viewed the solution' })
+      else if (lp.status === 'solved' && lp.stars === 2) levels.push({ lab, level, reason: 'You used hints' })
+      else if (lp.status !== 'solved' && lp.attempts >= STRUGGLE_ATTEMPTS)
+        levels.push({ lab, level, reason: `${lp.attempts} tries, not solved yet` })
+    }
   }
 
   const lessons = new Map<string, { lesson: Lesson; reason: string }>()
@@ -41,9 +44,9 @@ export function topicsToRevisit(progress: ProgressData | null): RevisitSummary {
     if (score !== undefined && score < LOW_QUIZ && !lessons.has(lesson.id))
       lessons.set(lesson.id, { lesson, reason: `Quiz score ${Math.round(score * 100)}%` })
   }
-  for (const { level } of levels) {
+  for (const { lab, level } of levels) {
     const lesson = level.lesson ? getLesson(level.lesson) : undefined
-    if (lesson && !lessons.has(lesson.id)) lessons.set(lesson.id, { lesson, reason: `Covers Level ${level.number}` })
+    if (lesson && !lessons.has(lesson.id)) lessons.set(lesson.id, { lesson, reason: `Covers ${lab.name} level ${level.number}` })
   }
 
   return { levels, lessons: [...lessons.values()] }

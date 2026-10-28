@@ -1,0 +1,33 @@
+id: py-safe-lookup
+title: Safe Lookups
+concepts: [dictionaries, get, in]
+lesson: py-dicts
+task: |
+  `prices` maps product names to prices, but not every product is listed.
+
+  - Create `lamp_price`: the price of `Desk Lamp`, or `0` if it isn't in the dictionary.
+  - Create `has_kettle`: `True` if `Electric Kettle` is in the dictionary, otherwise `False`.
+setup: |
+  prices = {"Electric Kettle": 49.99, "Air Fryer": 119.0, "Bamboo Cutting Board": 18.25}
+starter: |
+  # Look up a key that might not exist, and check whether a key exists
+solution: |
+  lamp_price = prices.get("Desk Lamp", 0)
+  has_kettle = "Electric Kettle" in prices
+expect: [lamp_price, has_kettle]
+variants:
+  - |
+    prices = {"Desk Lamp": 34.5, "Scented Soy Candle": 14.99}
+hints:
+  - "prices[\"Desk Lamp\"] causes a KeyError when the key is missing. There is a safer method."
+  - "dictionary.get(key, default) returns the default when the key is missing. The keyword in checks whether a key exists."
+  - "lamp_price = prices.get(\"Desk Lamp\", 0) and has_kettle = \"Electric Kettle\" in prices"
+explanation: |
+  `.get(key, default)` never fails: it returns the default when the key is missing. `key in dictionary`
+  gives `True` or `False`. Real data is often incomplete, so safe lookups prevent your analysis from crashing.
+tests:
+  accept:
+    - "lamp_price = prices['Desk Lamp'] if 'Desk Lamp' in prices else 0\nhas_kettle = 'Electric Kettle' in prices.keys()"
+  reject:
+    - "lamp_price = 0\nhas_kettle = True"
+    - "lamp_price = prices.get('Desk Lamp')\nhas_kettle = 'Electric Kettle' in prices"

@@ -1,0 +1,35 @@
+id: py-out-of-stock-list
+title: What's Sold Out?
+concepts: [dictionaries, for loops, items]
+lesson: py-loops
+task: |
+  `stock` maps product names to units in stock.
+
+  Create `out_of_stock`: a list of the **names** of products with **0** units, in the same order as in `stock`.
+setup: |
+  stock = {"Smartwatch": 0, "Yoga Mat": 130, "4K Webcam": 0, "Air Fryer": 25, "Hair Dryer": 0}
+starter: |
+  out_of_stock = []
+  # Loop over the dictionary and collect names with 0 units
+solution: |
+  out_of_stock = []
+  for name, units in stock.items():
+      if units == 0:
+          out_of_stock.append(name)
+expect: [out_of_stock]
+variants:
+  - |
+    stock = {"Lip Balm Trio": 400, "Wooden Puzzle": 0}
+hints:
+  - "Looping over a dictionary with .items() gives you each key and value together."
+  - "for name, units in stock.items():  then check whether units == 0."
+  - "for name, units in stock.items():  then  if units == 0:  then  out_of_stock.append(name)"
+explanation: |
+  `stock.items()` gives pairs of (key, value), and `for name, units in ...` unpacks each pair into two variables.
+  Dictionaries remember the order keys were added, so the result keeps that order.
+tests:
+  accept:
+    - "out_of_stock = [name for name in stock if stock[name] == 0]"
+  reject:
+    - "out_of_stock = []\nfor name, units in stock.items():\n    if units == 0:\n        out_of_stock.append(units)"
+    - "out_of_stock = ['Smartwatch', '4K Webcam', 'Hair Dryer']"

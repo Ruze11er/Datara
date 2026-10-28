@@ -1,0 +1,26 @@
+id: py-first-list
+title: Your First List
+concepts: [lists]
+lesson: py-lists
+task: |
+  A list keeps several values together, in order.
+
+  Create a list called `categories` containing these three texts, in this order:
+  `Books`, `Beauty`, `Electronics`.
+starter: |
+  # Create the list below
+solution: |
+  categories = ["Books", "Beauty", "Electronics"]
+expect: [categories]
+hints:
+  - "A list is written with square brackets [ ]."
+  - "Separate the items with commas, and put each text in quotes."
+  - "categories = [\"Books\", \"Beauty\", \"Electronics\"]"
+explanation: |
+  Square brackets create a list, and commas separate the items. Lists keep their order, so
+  `["Books", "Beauty", "Electronics"]` is a different list from `["Beauty", "Books", "Electronics"]`.
+tests:
+  reject:
+    - "categories = ['Beauty', 'Books', 'Electronics']"
+    - "categories = 'Books, Beauty, Electronics'"
+    - "categories = ['Books', 'Beauty']"

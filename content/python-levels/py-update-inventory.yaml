@@ -1,0 +1,38 @@
+id: py-update-inventory
+title: Update the Inventory
+concepts: [dictionaries]
+lesson: py-dicts
+task: |
+  `inventory` maps product names to units in stock. Two things just happened:
+
+  1. **5 Yoga Mats** were sold, so reduce the Yoga Mat count by 5.
+  2. A new product arrived: **Lip Balm Trio**, with **400** units.
+
+  Update the `inventory` dictionary to reflect both changes.
+setup: |
+  inventory = {"Yoga Mat": 130, "Stainless Steel Water Bottle": 260}
+starter: |
+  # 1. Sell 5 Yoga Mats
+  # 2. Add Lip Balm Trio with 400 units
+solution: |
+  inventory["Yoga Mat"] = inventory["Yoga Mat"] - 5
+  inventory["Lip Balm Trio"] = 400
+expect: [inventory]
+variants:
+  - |
+    inventory = {"Yoga Mat": 12, "Air Fryer": 25}
+hints:
+  - "Assigning to a key changes its value: inventory[\"key\"] = new_value. If the key doesn't exist yet, it is added."
+  - "To reduce a value, use the current value: inventory[\"Yoga Mat\"] - 5. The shortcut -= 5 does the same."
+  - "inventory[\"Yoga Mat\"] -= 5 and inventory[\"Lip Balm Trio\"] = 400"
+explanation: |
+  The same syntax, `inventory[key] = value`, both **updates** an existing key and **adds** a new one.
+  `x -= 5` is shorthand for `x = x - 5`. Calculating from the current value (instead of typing 125) keeps
+  the code correct whatever the stock level was.
+tests:
+  accept:
+    - "inventory['Yoga Mat'] -= 5\ninventory['Lip Balm Trio'] = 400"
+  reject:
+    - "inventory['Yoga Mat'] = 125\ninventory['Lip Balm Trio'] = 400"
+    - "inventory['Yoga Mat'] -= 5"
+    - "inventory['Yoga Mat'] -= 5\ninventory['lip balm trio'] = 400"

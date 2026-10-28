@@ -1,11 +1,11 @@
 import { Link, Navigate, useParams } from 'react-router'
-import { ArrowLeft, ArrowRight, Bookmark, CircleCheck, Clock, Database, ExternalLink, Lock } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Bookmark, CircleCheck, Clock, Dumbbell, ExternalLink, Lock } from 'lucide-react'
 import { Card } from '../../components/Page'
 import { Markdown } from '../../components/Markdown'
 import { Stars } from '../../components/Stars'
-import { getLessonPlace, getSqlLevel, lessonsInOrder } from '../../content'
+import { findLevel, getLessonPlace, lessonsInOrder } from '../../content'
 import { useProgress } from '../../lib/ProgressContext'
-import { isLevelUnlocked, levelProgress } from '../../lib/sqlProgress'
+import { isLevelUnlocked, levelProgress } from '../../lib/labProgress'
 import { Quiz } from './Quiz'
 
 export default function LessonRoute() {
@@ -85,17 +85,18 @@ function LessonPage({ lessonId }: { lessonId: string }) {
       {lesson.practice.length > 0 && (
         <Card className="mt-8">
           <h2 className="flex items-center gap-2 font-semibold text-slate-900">
-            <Database size={17} className="text-brand-600" aria-hidden /> Practice this in the SQL Lab
+            <Dumbbell size={17} className="text-brand-600" aria-hidden /> Practice this
           </h2>
           <ul className="mt-3 grid gap-2 sm:grid-cols-2">
             {lesson.practice.map((id) => {
-              const level = getSqlLevel(id)
-              if (!level) return null
-              const open = isLevelUnlocked(progress, level)
-              const stars = levelProgress(progress, id).stars
+              const found = findLevel(id)
+              if (!found) return null
+              const { lab, level } = found
+              const open = isLevelUnlocked(progress, lab, level)
+              const stars = levelProgress(progress, lab, id).stars
               const content = (
                 <>
-                  <span className="text-xs text-slate-500">Level {level.number}</span>
+                  <span className="text-xs text-slate-500">{lab.id === 'sql' ? 'SQL' : 'Python'} {level.number}</span>
                   <span className="flex-1 truncate font-medium">{level.title}</span>
                   {open ? <Stars count={stars} size={12} /> : <Lock size={14} className="text-slate-400" aria-label="Locked" />}
                 </>
@@ -104,7 +105,7 @@ function LessonPage({ lessonId }: { lessonId: string }) {
                 <li key={id}>
                   {open ? (
                     <Link
-                      to={`/sql/${id}`}
+                      to={`${lab.path}/${id}`}
                       className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 hover:border-brand-500"
                     >
                       {content}

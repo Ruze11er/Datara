@@ -1,0 +1,34 @@
+id: py-average-of-three
+title: Average Daily Sales
+concepts: [arithmetic, order of operations]
+lesson: py-variables
+task: |
+  Here are the shop's sales for three days.
+
+  Create `average_sales`: the **average** (mean) of the three days.
+setup: |
+  sales_mon = 1250.0
+  sales_tue = 980.5
+  sales_wed = 1430.0
+starter: |
+  # average = add the three days, then divide by 3
+solution: |
+  average_sales = (sales_mon + sales_tue + sales_wed) / 3
+expect: [average_sales]
+variants:
+  - |
+    sales_mon = 300.0
+    sales_tue = 450.0
+    sales_wed = 600.0
+hints:
+  - "The average is the total divided by how many values there are."
+  - "Division happens before addition, so you need brackets around the addition."
+  - "average_sales = (sales_mon + sales_tue + sales_wed) / 3"
+explanation: |
+  Brackets make Python add the three days first, then divide by 3.
+  Without them, `sales_mon + sales_tue + sales_wed / 3` would divide only Wednesday's sales.
+  This is one of the most common beginner mistakes, so always check your brackets.
+tests:
+  reject:
+    - "average_sales = sales_mon + sales_tue + sales_wed / 3"
+    - "average_sales = 1220.17"

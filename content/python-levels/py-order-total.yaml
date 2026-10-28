@@ -1,0 +1,37 @@
+id: py-order-total
+title: Order Total
+concepts: [variables, arithmetic]
+lesson: py-variables
+task: |
+  A customer is buying several units of one product. The price and quantity are already stored for you
+  (see **Given data**).
+
+  Create a variable `total` that holds the **price multiplied by the quantity**.
+setup: |
+  price = 24.5
+  quantity = 3
+starter: |
+  # Calculate the total from price and quantity
+solution: |
+  total = price * quantity
+expect: [total]
+variants:
+  - |
+    price = 10.0
+    quantity = 7
+  - |
+    price = 3.25
+    quantity = 12
+hints:
+  - "Use the variables price and quantity, which already exist."
+  - "In Python, * means multiply."
+  - "total = price * quantity"
+explanation: |
+  `price * quantity` multiplies the two stored values. Because you used the **variables** instead of typing `73.5`,
+  your code still works when the price or quantity changes. That's why analysts calculate instead of copying numbers.
+tests:
+  accept:
+    - "total = quantity * price"
+  reject:
+    - "total = 73.5"
+    - "total = price + quantity"

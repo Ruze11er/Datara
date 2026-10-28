@@ -1,0 +1,28 @@
+id: py-first-variables
+title: Your First Variables
+concepts: [variables, strings, numbers]
+lesson: py-variables
+task: |
+  Variables are named boxes that hold values. Set up two facts about the shop:
+
+  - a variable `store_name` holding the text `Datara Shop`
+  - a variable `year_opened` holding the number `2021`
+starter: |
+  # Create the two variables below
+solution: |
+  store_name = "Datara Shop"
+  year_opened = 2021
+expect: [store_name, year_opened]
+hints:
+  - "Create a variable with a name, an equals sign, and a value: name = value."
+  - "Text goes in quotes. Numbers don't."
+  - "store_name = \"Datara Shop\" and, on the next line, year_opened = 2021"
+explanation: |
+  `=` stores the value on the right in the variable on the left. `store_name` holds text (a *string*),
+  and `year_opened` holds a whole number (an *int*). Writing `"2021"` in quotes would make it text, which you
+  could not do maths with.
+tests:
+  reject:
+    - "store_name = 'Datara Shop'\nyear_opened = '2021'"
+    - "store_name = 'datara shop'\nyear_opened = 2021"
+    - "storename = 'Datara Shop'\nyear_opened = 2021"

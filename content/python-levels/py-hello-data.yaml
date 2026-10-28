@@ -1,0 +1,30 @@
+id: py-hello-data
+title: Hello, Data!
+concepts: [print]
+lesson: py-intro
+task: |
+  Every programmer's first step: make the computer say something.
+
+  Use `print()` to show exactly this message:
+
+  ```
+  Hello, data!
+  ```
+starter: |
+  # Use print() to show the message
+solution: |
+  print("Hello, data!")
+checkOutput: true
+hints:
+  - "print() shows whatever you put between its brackets."
+  - "Text must be inside quotes, like \"this\"."
+  - "print(\"Hello, data!\")"
+explanation: |
+  `print()` displays a value. Text (called a *string*) goes inside quotes, so Python knows it is text and not a variable name.
+  Single quotes `'...'` and double quotes `"..."` both work.
+tests:
+  accept:
+    - "print('Hello, data!')"
+  reject:
+    - "print('hello, data')"
+    - "x = 'Hello, data!'"

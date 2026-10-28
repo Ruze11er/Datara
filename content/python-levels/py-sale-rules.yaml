@@ -1,0 +1,40 @@
+id: py-sale-rules
+title: Sale Rules
+concepts: [and, or, booleans]
+lesson: py-conditions
+task: |
+  This week's promotion has two rules:
+
+  - `on_sale` is `True` when the product is a **Book** that costs **under 20**.
+  - `gift_eligible` is `True` when the category is **Toys & Games** *or* the price is **over 100**.
+setup: |
+  category = "Books"
+  price = 15.0
+starter: |
+  # Combine conditions with and / or
+solution: |
+  on_sale = category == "Books" and price < 20
+  gift_eligible = category == "Toys & Games" or price > 100
+expect: [on_sale, gift_eligible]
+variants:
+  - |
+    category = "Books"
+    price = 25.0
+  - |
+    category = "Toys & Games"
+    price = 18.9
+  - |
+    category = "Electronics"
+    price = 149.5
+hints:
+  - "and is True only when both sides are True. or is True when at least one side is True."
+  - "Each side must be a full comparison: category == \"Books\" and price < 20."
+  - "on_sale = category == \"Books\" and price < 20 and gift_eligible = category == \"Toys & Games\" or price > 100"
+explanation: |
+  `and` needs **every** condition to be true; `or` needs **at least one**. These work just like SQL's `AND` and `OR`.
+  A common mistake is `category == "Books" or "Toys & Games"`, which is always truthy because a non-empty text counts as true.
+tests:
+  reject:
+    - "on_sale = category == 'Books' or price < 20\ngift_eligible = category == 'Toys & Games' or price > 100"
+    - "on_sale = category == 'Books' and price < 20\ngift_eligible = category == 'Toys & Games' and price > 100"
+    - "on_sale = True\ngift_eligible = False"

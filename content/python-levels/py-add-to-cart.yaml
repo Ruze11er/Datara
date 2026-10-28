@@ -1,0 +1,32 @@
+id: py-add-to-cart
+title: Add to Cart
+concepts: [lists, append]
+lesson: py-lists
+task: |
+  A shopper's cart is stored as a list. They just clicked "Add to cart" on **Running Shoes**.
+
+  Add the text `Running Shoes` to the **end** of the `cart` list.
+setup: |
+  cart = ["Yoga Mat", "Stainless Steel Water Bottle"]
+starter: |
+  # Add "Running Shoes" to the end of cart
+solution: |
+  cart.append("Running Shoes")
+expect: [cart]
+variants:
+  - |
+    cart = []
+hints:
+  - "Lists have methods: functions you call with a dot after the list's name."
+  - "The append() method adds one item to the end of a list."
+  - "cart.append(\"Running Shoes\")"
+explanation: |
+  `cart.append("Running Shoes")` changes the list **in place**: it adds an item and returns nothing (`None`).
+  That's why `cart = cart.append(...)` is a classic mistake: it replaces your list with `None`.
+tests:
+  accept:
+    - "cart = cart + ['Running Shoes']"
+  reject:
+    - "cart = cart.append('Running Shoes')"
+    - "cart = ['Yoga Mat', 'Stainless Steel Water Bottle', 'Running Shoes']"
+    - "cart.insert(0, 'Running Shoes')"

@@ -38,8 +38,10 @@ src/
 scripts/       prepare-engines, generate-dataset, verify-content, selftest
 content/
   datasets/    The practice shop database (generated, do not edit by hand)
-  sql-levels/  chapters.yaml (order and chapters) + one .yaml file per level
-  lessons/     index.yaml (categories and modules) + one .md file per lesson
+  sql-levels/     chapters.yaml (order and chapters) + one .yaml file per level
+  python-levels/  same structure as sql-levels
+  lessons/        index.yaml (categories and modules) + one .md file per lesson
+src/shared/python/datara_check.py   The Python Lab checker (used by the app and by verify)
 ```
 
 ## Adding content
@@ -47,6 +49,10 @@ content/
 - **A SQL level:** create `content/sql-levels/<id>.yaml` (copy an existing one), add its id to
   `chapters.yaml`, then run `npm run verify`. Add `tests.accept` and `tests.reject` queries so the
   checker is tested too.
+- **A Python level:** create `content/python-levels/<id>.yaml`. `setup` is the given data, `expect` lists
+  the variables to compare with the solution, `checkOutput: true` compares printed output, and each
+  entry in `variants` is alternative given data the learner's code must also handle (so typing in the
+  answer can't pass). Add `tests.accept` and `tests.reject` code, then run `npm run verify`.
 - **A lesson:** create `content/lessons/<id>.md`, add it to `index.yaml`. Cite facts with `[^1]` and list
   each source in the front matter. A source only passes `npm run verify` once `verified: true`, which means
   someone has checked that the page supports the claim.
