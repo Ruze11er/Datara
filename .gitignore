@@ -1,0 +1,8 @@
+node_modules/
+out/
+dist/
+*.log
+
+# Engine files copied/downloaded by scripts/prepare-engines.mjs
+src/renderer/public/pyodide/
+src/renderer/public/sqljs/
